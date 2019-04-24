@@ -31,8 +31,8 @@ import Elmish.Foreign (class CanPassToJavaScript, class CanReceiveFromJavaScript
 -- | the right type.
 -- |
 -- | Admittedly, this is only weak protection, because the JSX code can still,
--- | if it really wanted to, construct a hash like `{ "ref:name":
--- | "abracadabra"}` and pass it to the PureScript code, which would happily
+-- | if it really wanted to, construct a hash like `{ "ref:name": "abracadabra"}`
+-- | and pass it to the PureScript code, which would happily
 -- | accept the "abracadabra" value as if it was the right type.
 -- |
 -- | Here are my arguments for why this weak protection is enough:
@@ -43,8 +43,7 @@ import Elmish.Foreign (class CanPassToJavaScript, class CanReceiveFromJavaScript
 -- |      `Generic` or to provide type name, etc.), and without losing some
 -- |      performance.
 -- |   3) If such corruption proves to be a problem in the future, we can always
--- |      fall back to encoding/decoding `Json` with `Data.Aeson`, and pay some
--- |      performance for it.
+-- |      fall back to encoding/decoding `Json`, and pay some performance for it.
 -- |
 newtype Ref (name :: Symbol) a = Ref (M.Object a)
 

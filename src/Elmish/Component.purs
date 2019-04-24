@@ -35,9 +35,9 @@ data Transition m msg state = Transition state (Array (m msg))
 -- |
 -- | Type parameters:
 -- |
--- |     * `m` - a monad in which the effects produced by `update` and `init` functions run.
--- |     * `msg` - component's message.
--- |     * `state` - component's state.
+-- |   * `m` - a monad in which the effects produced by `update` and `init` functions run.
+-- |   * `msg` - component's message.
+-- |   * `state` - component's state.
 type ComponentDef m msg state = {
     init :: Transition m msg state,
     view :: state -> DispatchMsgFn msg -> React.ReactElement,

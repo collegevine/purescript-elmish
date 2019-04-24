@@ -74,28 +74,28 @@ type DispatchError = String
 -- | `DispatchMsgFn`, unless the parameters passed from JS cannot be decoded, in
 -- | which case an error is reported via `DispatchMsgFn`.
 -- |
--- | Example of the intended usage:
+-- | Example of intended usage:
 -- |
--- |    -- PureScript
--- |    data Message = A | B Int | C String Boolean
+-- |      -- PureScript
+-- |      data Message = A | B Int | C String Boolean
 -- |
--- |    view state dispatch = createElement' viewCtor_
--- |        { foo: "bar"
--- |        , onA: handle dispatch A
--- |        , onB: handle dispatch B
--- |        , onC: handle dispatch C
--- |        , onBaz: handle dispatch \x y -> B (x+y)
--- |        }
+-- |      view state dispatch = createElement' viewCtor_
+-- |          { foo: "bar"
+-- |          , onA: handle dispatch A
+-- |          , onB: handle dispatch B
+-- |          , onC: handle dispatch C
+-- |          , onBaz: handle dispatch \x y -> B (x+y)
+-- |          }
 -- |
--- |    // JSX:
--- |    export const viewCtor_ = args =>
--- |        <div>
--- |            Foo is {args.bar}<br />
--- |            <button onClick={args.onA}>A</button>
--- |            <button onClick={() => args.onB(42)}>B</button>
--- |            <button onClick={() => args.onC("hello", true)}>C</button>
--- |            <button onClick={() => args.onBaz(21, 21)}>Baz</button>
--- |        </div>
+-- |      // JSX:
+-- |      export const viewCtor_ = args =>
+-- |          <div>
+-- |              Foo is {args.bar}<br />
+-- |              <button onClick={args.onA}>A</button>
+-- |              <button onClick={() => args.onB(42)}>B</button>
+-- |              <button onClick={() => args.onC("hello", true)}>C</button>
+-- |              <button onClick={() => args.onBaz(21, 21)}>Baz</button>
+-- |          </div>
 -- |
 handle :: forall msg fn effFn
      . MkEventHandler msg fn effFn
