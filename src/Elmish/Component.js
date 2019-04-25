@@ -15,7 +15,7 @@ exports.withFreshComponent = function(f) {
 
 exports.instantiateBaseComponent = React.createElement
 
-export const mkFreshComponent = function() {
+function mkFreshComponent() {
   function ElmishComponent() {}
   ElmishComponent.prototype = Object.create(React.Component.prototype)
   ElmishComponent.prototype.render = function() {
