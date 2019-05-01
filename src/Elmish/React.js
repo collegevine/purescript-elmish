@@ -23,6 +23,8 @@ exports.reactUnmount = function(el) {
   }
 }
 
+exports.cloneElement_ = React.cloneElement
+
 exports.createElement_ = function(component, props, children) {
   // The type of `children` is `Array ReactElement`. If we pass that in as
   // third parameter of `React.createElement` directly, React complains about

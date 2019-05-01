@@ -1,6 +1,5 @@
 module Elmish.React.Import
-    ( CommonProps
-    , EmptyProps
+    ( EmptyProps
     , ImportedReactComponentConstructor'
     , ImportedReactComponentConstructor
     , ImportedReactComponentConstructorWithContent
@@ -12,10 +11,6 @@ import Elmish.React (class ReactChildren, class ValidReactProps, ReactComponent,
 import Type.Row (type (+))
 import Prim.Row as Row
 
--- | Row of props that are common to all React components, without having to
--- | declare them.
-type CommonProps = ( id :: String, key :: String )
-
 -- | And empty open row. To be used for components that don't have any optional
 -- | or any required props.
 type EmptyProps (r :: #Type) = ( | r )
@@ -25,8 +20,8 @@ type EmptyProps (r :: #Type) = ( | r )
 -- | (including an empty subset) to be passed in.
 type ImportedReactComponentConstructor' reqProps optProps result =
     forall props
-     . IsSubsetOf props (reqProps + optProps + CommonProps)
-    => IsSubsetOf (reqProps ()) props
+     . IsSubsetOf props (reqProps + optProps + ())
+    => IsSubsetOf (reqProps + ()) props
     => ValidReactProps { | props }
     => { | props }
     -> result

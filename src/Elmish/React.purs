@@ -4,6 +4,7 @@ module Elmish.React
     , ReactComponentInstance
     , class ValidReactProps, class ValidReactPropsRL
     , class ReactChildren, asReactChildren
+    , cloneElement
     , createElement
     , createElement'
     , getState
@@ -14,14 +15,14 @@ module Elmish.React
 
 import Prelude
 
-import Data.Function.Uncurried (Fn2, Fn3, runFn3)
+import Data.Function.Uncurried (Fn2, Fn3, runFn2, runFn3)
 import Data.Nullable (Nullable)
 import Effect (Effect)
+import Elmish.Foreign (class CanPassToJavaScript)
 import Prim.RowList (class RowToList, kind RowList, Cons, Nil)
 import Prim.TypeError (Text, class Fail)
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM (Element)
-import Elmish.Foreign (class CanPassToJavaScript)
 
 -- | Instantiated subtree of React DOM. JSX syntax produces values of this type.
 foreign import data ReactElement :: Type
@@ -35,8 +36,6 @@ foreign import data ReactComponent :: Type -> Type
 -- | A specific instance of a React component - i.e. an object that has `state`
 -- | and `props` properties on it.
 foreign import data ReactComponentInstance :: Type
-
-foreign import createElement_ :: forall props. Fn3 (ReactComponent props) props (Array ReactElement) ReactElement
 
 -- | The PureScript import of the React's `createElement` function. Takes a
 -- | component constructor, a record of props, some children, and returns a
@@ -54,10 +53,17 @@ createElement component props content = runFn3 createElement_ component props $ 
 createElement' :: forall props
      . ValidReactProps props
     => ReactComponent props
-    -> props                        -- Props
+    -> props
     -> ReactElement
 createElement' component props = createElement component props ([] :: Array ReactElement)
 
+-- | The PureScript import of the React's `cloneElement` function
+cloneElement :: forall props
+     . ValidReactProps props
+    => ReactElement
+    -> props
+    -> ReactElement
+cloneElement = runFn2 cloneElement_
 
 -- | Asserts that the given type is a valid React props structure. Currently
 -- | there are three rules for what is considered "valid":
@@ -111,6 +117,9 @@ foreign import setState :: forall state. Fn3 ReactComponentInstance state (Effec
 
 foreign import reactMount :: Fn2 Element ReactElement (Effect Unit)
 foreign import reactUnmount :: Element -> Effect Unit
+
+foreign import createElement_ :: forall props. Fn3 (ReactComponent props) props (Array ReactElement) ReactElement
+foreign import cloneElement_ :: forall props. Fn2 ReactElement props ReactElement
 
 -- This instance allows including `ReactElement` in view arguments.
 instance tojsReactElement :: CanPassToJavaScript ReactElement
