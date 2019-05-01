@@ -1,0 +1,16 @@
+version: 2.1
+
+jobs:
+  build:
+    working_directory: ~/elmish
+
+    docker:
+    - image: circleci/node:10.15.3-stretch
+
+    parallelism: 1
+
+    steps:
+    - checkout: { path: "~/elmish" }
+    - run: npx yarn@1.9.4
+    - run: npx bower install
+    - run: npx pulp build   # test   -- No tests yet
