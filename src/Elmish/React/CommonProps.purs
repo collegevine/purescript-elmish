@@ -18,8 +18,8 @@ type CommonProps = ( key :: String )
 withKey :: String -> ReactElement -> ReactElement
 withKey key = withCommonProps { key }
 
--- | To an existing `ReactElement`, adds some props that are member of
--- | `CommonProps`. At the momnent, `CommonProps` has exactly one member
+-- | To an existing `ReactElement`, adds some props that are members of
+-- | `CommonProps`. At the moment, `CommonProps` has exactly one member
 -- | (`key`), so this function is here mostly just as a template for defining a
 -- | similar function locally in your project for adding your own project-local
 -- | common props.
