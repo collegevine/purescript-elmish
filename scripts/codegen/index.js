@@ -1,6 +1,11 @@
-const fs = require("fs");
-const { props, voids, types, typesByElement, reserved } = require("./consts");
-const genFile = "../src/React/Basic/DOM/Generated.purs";
+const fs = require("fs")
+const path = require("path")
+
+const { props, voids, types, typesByElement, reserved } = require("./consts")
+const genFile = path.join(
+  __dirname,
+  "../../src/Elmish/React/DOM/Generated.purs"
+)
 
 const header = `-- | ----------------------------------------
 -- | THIS FILE IS GENERATED -- DO NOT EDIT IT
@@ -15,17 +20,17 @@ import React.Basic (JSX, Ref, element)
 import React.Basic.DOM.Internal (CSS, unsafeCreateDOMComponent)
 import React.Basic.Events (EventHandler)
 
-`;
+`
 
 const propType = (e, p) => {
-  const elPropTypes = typesByElement[p];
+  const elPropTypes = typesByElement[p]
   if (elPropTypes) {
     if (types[p]) {
-      throw new TypeError(`${p} appears in both types and typesByElement`);
+      throw new TypeError(`${p} appears in both types and typesByElement`)
     }
-    return elPropTypes[e] || elPropTypes["*"] || "String";
+    return elPropTypes[e] || elPropTypes["*"] || "String"
   } else {
-    return types[p] || "String";
+    return types[p] || "String"
   }
 }
 
@@ -34,15 +39,18 @@ const printRecord = (e, elProps) =>
     ? `
   ( ${elProps.map(p => `${p} :: ${propType(e, p)}`).join("\n  , ")}
   )`
-    : "()";
+    : "()"
 
 const domTypes = props.elements.html
   .map(e => {
-    const noChildren = voids.includes(e);
-    const symbol = reserved.includes(e) ? `${e}'` : e;
+    const noChildren = voids.includes(e)
+    const symbol = reserved.includes(e) ? `${e}'` : e
     return `
-    type Props_${e} =${printRecord(e,
-      (noChildren ? [] : ["children"]).concat(props[e] || [], props["*"] || []).sort()
+    type Props_${e} =${printRecord(
+      e,
+      (noChildren ? [] : ["children"])
+        .concat(props[e] || [], props["*"] || [])
+        .sort()
     )}
 
     ${symbol}
@@ -58,11 +66,11 @@ const domTypes = props.elements.html
     ${e}_ :: Array JSX -> JSX
     ${e}_ children = ${symbol} { children }`
     }
-`;
+`
   })
   .map(x => x.replace(/^\n\ {4}/, "").replace(/\n\ {4}/g, "\n"))
-  .join("\n");
+  .join("\n")
 
-console.log(`Writing "${genFile}" ...`);
-fs.writeFileSync(genFile, header + domTypes);
-console.log("Done.");
+console.log(`Writing "${genFile}" ...`)
+fs.writeFileSync(genFile, header + domTypes)
+console.log("Done.")
