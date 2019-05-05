@@ -6,3 +6,11 @@
 ______
 
 More documentation is forthcoming
+
+
+### Acknowledgements
+
+- Code generation for React bindings is based on [purescript-react-basic].
+
+
+[purescript-react-basic]: https://github.com/lumihq/purescript-react-basic
