@@ -29,7 +29,7 @@ instance jsCbToJs :: MkJsCallback fn => CanPassToJavaScript (JsCallback fn)
 type JsCallback0 = JsCallback (Effect Unit)
 
 -- | Represents an error that may occur as a result of JS code calling a
--- | functuion wrapped as `JsCallback`.
+-- | function wrapped as `JsCallback`.
 data JsCallbackError
     = InvalidParameter { args :: Array Foreign, index :: Int }
     | InsufficientParameters { args :: Array Foreign, expected :: Int }
