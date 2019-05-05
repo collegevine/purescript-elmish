@@ -11,6 +11,5 @@ jobs:
 
     steps:
     - checkout: { path: "~/elmish" }
-    - run: npx yarn@1.9.4
-    - run: npx bower install
-    - run: npx pulp build   # test   -- No tests yet
+    - run: npm install
+    - run: npx pulp build # test   -- No tests yet
