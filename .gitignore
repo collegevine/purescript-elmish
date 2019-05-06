@@ -14,3 +14,7 @@ node_modules
 
 # Visual Studio Code
 /.vscode
+
+# Parcel
+.cache
+dist
