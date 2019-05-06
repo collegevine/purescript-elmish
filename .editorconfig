@@ -1,0 +1,21 @@
+# This file should override whatever file you may have in your home dir
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+[*.{md,purs}]
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+[*.{css,js,jsx,json}]
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
+
+# `config.yml` --> CircleCI config
+# `psc-package` formats `psc-package.json` with two spaces
+[{config.yml,package.json,psc-package.json}]
+indent_size = 2
