@@ -11,14 +11,14 @@ const header = `-- | ----------------------------------------
 -- | THIS FILE IS GENERATED -- DO NOT EDIT IT
 -- | ----------------------------------------
 
-module React.Basic.DOM.Generated where
+module Elmish.React.DOM.Generated where
 
-import Data.Nullable (Nullable)
-import Prim.Row (class Union)
-import Web.DOM (Node)
-import React.Basic (JSX, Ref, element)
-import React.Basic.DOM.Internal (CSS, unsafeCreateDOMComponent)
-import React.Basic.Events (EventHandler)
+import Prelude
+
+import Elmish (JsCallback0)
+import Elmish.React (ReactElement, createElement, createElement')
+import Elmish.React.DOM.Internal (CSS, unsafeCreateDOMComponent)
+import Elmish.React.Import (EmptyProps, ImportedReactComponentConstructor, ImportedReactComponentConstructorWithContent)
 
 `
 
@@ -34,37 +34,34 @@ const propType = (e, p) => {
   }
 }
 
-const printRecord = (e, elProps) =>
-  elProps.length
+const printRow = (e, elProps) =>
+  elProps.length > 0
     ? `
   ( ${elProps.map(p => `${p} :: ${propType(e, p)}`).join("\n  , ")}
+  | r
   )`
-    : "()"
+    : "( | r )"
 
 const domTypes = props.elements.html
   .map(e => {
-    const noChildren = voids.includes(e)
+    const hasChildren = !voids.includes(e)
     const symbol = reserved.includes(e) ? `${e}'` : e
     return `
-    type Props_${e} =${printRecord(
+    type OptProps_${e} r =${printRow(
       e,
-      (noChildren ? [] : ["children"])
-        .concat(props[e] || [], props["*"] || [])
-        .sort()
+      [].concat(props[e] || [], props["*"] || []).sort()
     )}
 
-    ${symbol}
-      :: forall attrs attrs_
-       . Union attrs attrs_ Props_${e}
-      => Record attrs
-      -> JSX
-    ${symbol} = element (unsafeCreateDOMComponent "${e}")${
-      noChildren
-        ? ""
+    ${
+      hasChildren
+        ? `
+    ${symbol} :: ImportedReactComponentConstructorWithContent EmptyProps OptProps_${e}
+    ${symbol} = createElement $ unsafeCreateDOMComponent "${e}"
+    `
         : `
-
-    ${e}_ :: Array JSX -> JSX
-    ${e}_ children = ${symbol} { children }`
+    ${symbol} :: ImportedReactComponentConstructor EmptyProps OptProps_${e}
+    ${symbol} = createElement' $ unsafeCreateDOMComponent "${e}"
+    `
     }
 `
   })
