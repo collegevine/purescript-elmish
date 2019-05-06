@@ -13,22 +13,34 @@ import Web.HTML (window) as DOM
 import Web.HTML.HTMLDocument (toDocument) as DOM
 import Web.HTML.Window (document) as DOM
 
-import Elmish.React as R
-import Elmish.React.DOM as R
+import Elmish.React (ReactElement)
+import Elmish.React (reactMount) as R
+import Elmish.React.DOM (a, div, h1, p, text) as R
 
-
-getElementById :: String -> Effect (Maybe Element)
-getElementById id =
-    DOM.getElementById id
-    =<< (pure <<< DOM.toNonElementParentNode <<< DOM.toDocument)
-    =<< DOM.document
-    =<< DOM.window
 
 main :: Effect Unit
 main = do
-    mApp <- getElementById "app"
-    case mApp of
-        Just app ->
-            runFn2 R.reactMount app (R.text "Hello World")
+    mContainer <- getElementById "app"
+    case mContainer of
+        Just container ->
+            runFn2 R.reactMount container helloWorld
         Nothing ->
             Console.error "Couldn’t find #app container"
+    where
+    getElementById :: String -> Effect (Maybe Element)
+    getElementById id =
+        DOM.getElementById id
+        =<< (pure <<< DOM.toNonElementParentNode <<< DOM.toDocument)
+        =<< DOM.document
+        =<< DOM.window
+
+helloWorld :: ReactElement
+helloWorld =
+    R.div {}
+        [ R.h1 {} "Hello World"
+        , R.p {}
+            [ R.text "This is a "
+            , R.a { href: "https://www.example.com" } "link"
+            , R.text " to example.com."
+            ]
+        ]
