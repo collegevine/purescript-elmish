@@ -2,10 +2,7 @@ const fs = require("fs")
 const path = require("path")
 
 const { props, voids, types, typesByElement, reserved } = require("./consts")
-const genFile = path.join(
-  __dirname,
-  "../../src/Elmish/React/DOM/Generated.purs"
-)
+const genFile = path.join(__dirname, "../src/Elmish/React/DOM/Generated.purs")
 
 const header = `-- | ---------------------------------------------------------------------------
 -- | THIS FILE IS GENERATED -- DO NOT EDIT IT
