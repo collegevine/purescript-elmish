@@ -90,7 +90,7 @@ module.exports.types = {
   open: "Boolean",
   playsInline: "Boolean",
   readOnly: "Boolean",
-  ref: "Ref (Nullable Node)",
+  // ref: "Ref (Nullable Node)",
   required: "Boolean",
   reversed: "Boolean",
   rowSpan: "Int",
