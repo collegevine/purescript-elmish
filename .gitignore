@@ -1,13 +1,13 @@
 # PureScript
-/.pulp-cache/
-/output/
-/generated-docs/
-/.psc*
-/.purs*
-/.psa*
+.pulp-cache
+output
+generated-docs
+.psc*
+.purs*
+.psa*
 
 # Bower
-/bower_components/
+bower_components
 
 # npm
 node_modules
