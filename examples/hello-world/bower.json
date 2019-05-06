@@ -4,7 +4,6 @@
   "dependencies": {
     "purescript-console": "^4.2.0",
     "purescript-debug": "^4.0.0",
-    "purescript-elmish": "../../",
     "purescript-maybe": "^4.0.1",
     "purescript-web-dom": "^2.0.0"
   }

@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "postinstall": "bower install ../../bower.json && bower install",
-    "start": "pulp build && concurrently \"pulp --watch build\" \"parcel index.html\""
+    "start": "pulp build --include ../../src && concurrently \"pulp --watch build --include ../../src\" \"parcel index.html\""
   },
   "devDependencies": {
     "bower": "^1.8.8",
