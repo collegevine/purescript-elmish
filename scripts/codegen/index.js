@@ -7,9 +7,9 @@ const genFile = path.join(
   "../../src/Elmish/React/DOM/Generated.purs"
 )
 
-const header = `-- | ----------------------------------------
+const header = `-- | ---------------------------------------------------------------------------
 -- | THIS FILE IS GENERATED -- DO NOT EDIT IT
--- | ----------------------------------------
+-- | ---------------------------------------------------------------------------
 
 module Elmish.React.DOM.Generated where
 
