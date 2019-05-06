@@ -3,6 +3,7 @@
   "description": "A PureScript implementation of The Elm Architecture (TEA)",
   "authors": [
     "Fyodor Soikin <fyodor@collegevine.com>",
+    "Daniel Gasienica <daniel@gasienica.ch>",
     "CollegeVine"
   ],
   "license": "MIT",
