@@ -10,7 +10,6 @@
     "type": "git",
     "url": "https://github.com/collegevine/purescript-elmish.git"
   },
-
   "ignore": [
     "**/.*",
     "node_modules",
