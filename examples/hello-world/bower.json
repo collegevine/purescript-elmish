@@ -1,0 +1,7 @@
+{
+  "name": "purescript-elmish-examples-hello-world",
+  "description": "Elmish Hello World",
+  "dependencies": {
+    "purescript-console": "^4.2.0"
+  }
+}
