@@ -14,7 +14,7 @@ import Prim.Row as Row
 
 -- | Row of props that are common to all React components, without having to
 -- | declare them.
-type CommonProps = ( id :: String, key :: String )
+type CommonProps = ( key :: String )
 
 -- | And empty open row. To be used for components that don't have any optional
 -- | or any required props.
