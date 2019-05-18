@@ -1,6 +1,7 @@
 module Elmish.Component
     ( Transition(..)
     , ComponentDef
+    , ComponentReturnCallback
     , mapCmds, (<$$>)
     , pureUpdate
     , withTrace
@@ -52,6 +53,27 @@ type ComponentDef m msg state = {
     view :: state -> DispatchMsgFn msg -> ReactElement,
     update :: state -> msg -> Transition m msg state
 }
+
+-- | A callback used to return multiple components of different types. See below
+-- | for more a detailed explanation.
+-- |
+-- | This callback is handy in situations where a function must return different
+-- | components (with different `state` and `message` types) depending on
+-- | parameters. The prime example of such situation is routing.
+-- |
+-- | Because most routes are served by different UI components, with different
+-- | `state` and `message` type parameters, the instantiating functions cannot
+-- | have the naive signature `route -> component`: they need to "return"
+-- | differently-typed results depending on the route. In order to make that
+-- | happen, these functions instead take a polymorphic callback, to which they
+-- | pass the UI component. This type alias is the type of such callback: it
+-- | takes a polymorphically-typed UI component and returns "some value", a la
+-- | continuation-passing style.
+-- |
+-- | Even though this type is rather trivial, it is included in the library for
+-- | the purpose of attaching this documentation to it.
+type ComponentReturnCallback m a =
+    forall state msg. ComponentDef m msg state -> a
 
 -- | A nested `map` - useful for mapping over commands in an array: first `map`
 -- | maps over the array, second `map` maps over the monad `m`.
