@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `Bifunctor`, `Functor`, `Applicative` instances for `Transition`
+- `ComponentReturnCallback` - a CPS-style way of returning polymorphically typed
+  components.
 
 ### Changed
 
