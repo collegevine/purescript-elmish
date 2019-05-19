@@ -1,5 +1,4 @@
 const React = require("react")
-const ReactDOM = require("react-dom")
 
 exports.getState = function(component) {
   return function() {
@@ -9,17 +8,6 @@ exports.getState = function(component) {
 exports.setState = function(component, state, callback) {
   return function() {
     component.setState({ s: state }, callback)
-  }
-}
-
-exports.reactMount = function(el, jsxDom) {
-  return function() {
-    ReactDOM.render(jsxDom, el)
-  }
-}
-exports.reactUnmount = function(el) {
-  return function() {
-    ReactDOM.unmountComponentAtNode(el)
   }
 }
 

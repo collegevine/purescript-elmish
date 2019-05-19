@@ -8,19 +8,16 @@ module Elmish.React
     , createElement'
     , getState
     , setState
-    , reactMount
-    , reactUnmount
     ) where
 
 import Prelude
 
-import Data.Function.Uncurried (Fn2, Fn3, runFn3)
+import Data.Function.Uncurried (Fn3, runFn3)
 import Data.Nullable (Nullable)
 import Effect (Effect)
 import Prim.RowList (class RowToList, kind RowList, Cons, Nil)
 import Prim.TypeError (Text, class Fail)
 import Unsafe.Coerce (unsafeCoerce)
-import Web.DOM (Element)
 import Elmish.Foreign (class CanPassToJavaScript)
 
 -- | Instantiated subtree of React DOM. JSX syntax produces values of this type.
@@ -108,9 +105,6 @@ instance reactChildrenSingle :: ReactChildren ReactElement where
 
 foreign import getState :: forall state. ReactComponentInstance -> Effect (Nullable state)
 foreign import setState :: forall state. Fn3 ReactComponentInstance state (Effect Unit) (Effect Unit)
-
-foreign import reactMount :: Fn2 Element ReactElement (Effect Unit)
-foreign import reactUnmount :: Element -> Effect Unit
 
 -- This instance allows including `ReactElement` in view arguments.
 instance tojsReactElement :: CanPassToJavaScript ReactElement

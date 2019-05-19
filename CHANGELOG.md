@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of `(DispatchError -> Effect Unit)` for reporting view errors.
 - `construct` now takes the error-reporting function after execution of the
   effect, to improve composability.
+- Drop redundant `react*` prefix and match React DOM API naming:
+  - Rename and move `Elmish.React.reactMount` to `Elmish.React.DOM.render`
+  - Rename and move `Elmish.React.reactUnmount` to
+    `Elmish.React.DOM.unmountComponentAtNode`.
 
 ### Deprecated
 
@@ -30,4 +34,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.0.4
 
-Initial release
+Initial release.
