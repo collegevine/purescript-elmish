@@ -56,7 +56,7 @@ type ImportedReactComponentConstructorWithContent reqProps optProps =
 -- safety is supposed to come from a wrapper function of type
 -- `ImportedReactComponentConstructor` (see above), which would have the
 -- appropriate props constraints.
-type ImportedReactComponent  = forall r. ReactComponent r
+type ImportedReactComponent = forall r. ReactComponent r
 
 
 -- Asserts that one type row is a (non-strict) subset of the other type row
