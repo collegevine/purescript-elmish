@@ -1,6 +1,7 @@
 module Elmish.Component
     ( Transition(..)
     , ComponentDef
+    , ComponentReturnCallback
     , mapCmds, (<$$>)
     , pureUpdate
     , withTrace
@@ -12,22 +13,31 @@ module Elmish.Component
 
 import Prelude
 
+import Data.Bifunctor (class Bifunctor)
 import Data.Either (Either(..))
 import Data.Function.Uncurried (Fn2, runFn2)
 import Debug.Trace as Trace
 import Effect (Effect, foreachE)
 import Effect.Aff (Aff, launchAff_)
 import Effect.Class (liftEffect)
-import Elmish.Trace (traceTime)
-import Elmish.Dispatch (DispatchMsg, DispatchMsgFn(..), DispatchError)
-import Elmish.React (ReactComponent, ReactComponentInstance)
-import Elmish.React (ReactElement) as React
+import Elmish.Dispatch (DispatchError, DispatchMsg, DispatchMsgFn(..), issueError)
+import Elmish.React (ReactComponent, ReactComponentInstance, ReactElement)
 import Elmish.State (StateStrategy, dedicatedStorage, localState)
+import Elmish.Trace (traceTime)
 
 -- | A UI component state transition: wraps the new state value together with a
 -- | (possibly empty) list of effects that the transition has caused, with each
 -- | effect ultimately producing a new message.
 data Transition m msg state = Transition state (Array (m msg))
+
+instance trBifunctor :: Functor m => Bifunctor (Transition m) where
+    bimap f g (Transition s cmds) = Transition (g s) (f <$$> cmds)
+instance trFunctor :: Functor (Transition m msg) where
+    map f (Transition x cmds) = Transition (f x) cmds
+instance trApply :: Apply (Transition m msg) where
+    apply (Transition f cmds1) (Transition x cmds2) = Transition (f x) (cmds1 <> cmds2)
+instance trApplicative :: Applicative (Transition m msg) where
+    pure a = Transition a []
 
 -- | Definition of a component according to The Elm Architecture. Consists of
 -- | three functions - init, view, update, - that together describe the
@@ -40,9 +50,30 @@ data Transition m msg state = Transition state (Array (m msg))
 -- |   * `state` - component's state.
 type ComponentDef m msg state = {
     init :: Transition m msg state,
-    view :: state -> DispatchMsgFn msg -> React.ReactElement,
+    view :: state -> DispatchMsgFn msg -> ReactElement,
     update :: state -> msg -> Transition m msg state
 }
+
+-- | A callback used to return multiple components of different types. See below
+-- | for more a detailed explanation.
+-- |
+-- | This callback is handy in situations where a function must return different
+-- | components (with different `state` and `message` types) depending on
+-- | parameters. The prime example of such situation is routing.
+-- |
+-- | Because most routes are served by different UI components, with different
+-- | `state` and `message` type parameters, the instantiating functions cannot
+-- | have the naive signature `route -> component`: they need to "return"
+-- | differently-typed results depending on the route. In order to make that
+-- | happen, these functions instead take a polymorphic callback, to which they
+-- | pass the UI component. This type alias is the type of such callback: it
+-- | takes a polymorphically-typed UI component and returns "some value", a la
+-- | continuation-passing style.
+-- |
+-- | Even though this type is rather trivial, it is included in the library for
+-- | the purpose of attaching this documentation to it.
+type ComponentReturnCallback m a =
+    forall state msg. ComponentDef m msg state -> a
 
 -- | A nested `map` - useful for mapping over commands in an array: first `map`
 -- | maps over the array, second `map` maps over the monad `m`.
@@ -55,9 +86,10 @@ infix 8 mapCmds as <$$>
 mapCmds :: forall m msg innerMsg. Functor m => (msg -> innerMsg) -> Array (m msg) -> Array (m innerMsg)
 mapCmds mapMsg cmds = map mapMsg <$> cmds
 
--- | Creates a `Transition` without any commands
+-- | Creates a `Transition` without any commands.
+-- | This function will be deprecated soon in favor of `pure`.
 pureUpdate :: forall m msg state. state -> Transition m msg state
-pureUpdate s = Transition s []
+pureUpdate = pure
 
 -- | Wraps the given component, intercepts its update cycle, and traces (i.e.
 -- | prints to dev console) every command and every state value (as JSON
@@ -81,8 +113,8 @@ bindComponent :: forall msg state
      . BaseComponent                 -- ^ A JS class inheriting from React.Component to serve as base
     -> ComponentDef Aff msg state    -- ^ The component definition
     -> StateStrategy state           -- ^ Strategy of storing state
-    -> (DispatchError -> Effect Unit)      -- ^ View error handler
-    -> React.ReactElement
+    -> DispatchMsgFn Unit            -- ^ For reporting view errors
+    -> ReactElement
 bindComponent cmpt def stateStrategy onViewError =
     runFn2 instantiateBaseComponent cmpt { render, componentDidMount: runCmds initialCmds }
     where
@@ -90,13 +122,13 @@ bindComponent cmpt def stateStrategy onViewError =
 
         {getState, setState} = stateStrategy {initialState}
 
-        render :: ReactComponentInstance -> Effect React.ReactElement
+        render :: ReactComponentInstance -> Effect ReactElement
         render component = do
             state <- getState component
             pure $ def.view state (DispatchMsgFn $ dispatchMsg component)
 
         dispatchMsg :: ReactComponentInstance -> Either DispatchError msg -> DispatchMsg
-        dispatchMsg _ (Left err) = onViewError err
+        dispatchMsg _ (Left err) = issueError onViewError err
         dispatchMsg component (Right msg) = do
             oldState <- getState component
             let Transition newState cmds = def.update oldState msg
@@ -111,19 +143,22 @@ bindComponent cmpt def stateStrategy onViewError =
                     liftEffect $ dispatchMsg component $ Right msg
 
 -- | Given a ComponentDef, binds that def to a freshly created React class,
--- | instantiates that class, and returns the resulting JSX DOM tree.
+-- | instantiates that class, and returns a rendering function. Note that the
+-- | return type of this function is almost the same as that of
+-- | `ComponentDef::view` - except for state. This is not a coincidence: it is
+-- | done this way on purpose, so that the result of this call can be used to
+-- | construct another `ComponentDef`.
 -- |
 -- | Unlike `wrapWithLocalState`, this function uses the bullet-proof strategy
 -- | of storing the component state in a dedicated mutable cell, but that
 -- | happens at the expense of being effectful.
 construct :: forall msg state
-     . ComponentDef Aff msg state    -- ^ The component definition
-    -> (DispatchError -> Effect Unit)       -- ^ View error handler
-    -> Effect React.ReactElement
-construct def onViewError = do
+     . ComponentDef Aff msg state       -- ^ The component definition
+    -> Effect (DispatchMsgFn Unit -> ReactElement)
+construct def = do
     stateStorage <- liftEffect dedicatedStorage
     pure $ withFreshComponent $ \cmpt ->
-        bindComponent cmpt def stateStorage onViewError
+        bindComponent cmpt def stateStorage
 
 -- | Monad transformation applied to `ComponentDef`
 nat :: forall m n msg state
@@ -172,9 +207,9 @@ nat map def =
 wrapWithLocalState :: forall msg state args
      . ComponentName
     -> (args -> ComponentDef Aff msg state)
-    -> (DispatchError -> Effect Unit)
+    -> DispatchMsgFn Unit
     -> args
-    -> React.ReactElement
+    -> ReactElement
 wrapWithLocalState name mkDef =
     runFn2 withCachedComponent name $ \cmpt onViewError args ->
         bindComponent cmpt (mkDef args) localState onViewError
@@ -212,7 +247,7 @@ newtype ComponentName = ComponentName String
 -- Props for the React component that is used as base for this framework. The
 -- component itself is defined in `./ComponentClass.js`
 type BaseComponentProps = {
-    render :: ReactComponentInstance -> Effect React.ReactElement,
+    render :: ReactComponentInstance -> Effect ReactElement,
     componentDidMount :: ReactComponentInstance -> Effect Unit
 }
 
@@ -225,7 +260,7 @@ type BaseComponent = ReactComponent BaseComponentProps
 -- possible to make this type passable to JS by using `Foreign` and maybe even
 -- `unsafeCoerce` in places, but I have decided it wasn't worth it, because this
 -- is just one place at the core of the framework.
-foreign import instantiateBaseComponent :: Fn2 BaseComponent BaseComponentProps React.ReactElement
+foreign import instantiateBaseComponent :: Fn2 BaseComponent BaseComponentProps ReactElement
 
 -- | On first call with a given name, this function returns a fresh React class.
 -- | On subsequent calls with the same name, it returns the same class. It has
