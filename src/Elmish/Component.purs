@@ -142,7 +142,7 @@ bindComponent cmpt def stateStrategy onViewError =
                     msg <- cmd
                     liftEffect $ dispatchMsg component $ Right msg
 
--- | Given a ComponentDef, binds that def to a freshly created React class,
+-- | Given a `ComponentDef`, binds that def to a freshly created React class,
 -- | instantiates that class, and returns a rendering function. Note that the
 -- | return type of this function is almost the same as that of
 -- | `ComponentDef::view` - except for state. This is not a coincidence: it is
