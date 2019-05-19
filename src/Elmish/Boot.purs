@@ -10,7 +10,7 @@ import Data.Function.Uncurried (runFn2)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
-import Effect.Class.Console (log)
+import Effect.Class.Console as Console
 import Elmish.Component (ComponentDef, construct)
 import Elmish.Dispatch (DispatchError, dispatchMsgFn)
 import Elmish.React as React
@@ -33,11 +33,11 @@ boot :: forall msg state.
     }
     -> Effect Unit
 boot { domElementId, def } =
-    boot' { domElementId, def, onViewError: log } >>= case _ of
+    boot' { domElementId, def, onViewError: Console.error } >>= case _ of
         BootOk ->
             pure unit
         ElementNotFound e ->
-            log $ "Element #" <> e.domElementId <> " not found"
+            Console.error $ "Element #" <> e.domElementId <> " not found"
 
 -- | Mounts the given UI component to a DOM element with given ID
 boot' :: forall msg state.
