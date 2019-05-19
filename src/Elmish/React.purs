@@ -24,7 +24,7 @@ import Elmish.Foreign (class CanPassToJavaScript)
 foreign import data ReactElement :: Type
 
 -- | This type represents constructor of a React component with a particular
--- | behavior. The type prameter is the record of props (in React lingo) that
+-- | behavior. The type parameter is the record of props (in React lingo) that
 -- | this component expects. Such constructors can be "rendered" into
 -- | `ReactElement` via `createElement`.
 foreign import data ReactComponent :: Type -> Type
