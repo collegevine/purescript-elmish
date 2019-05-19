@@ -10,7 +10,6 @@
     "type": "git",
     "url": "https://github.com/collegevine/purescript-elmish.git"
   },
-
   "ignore": [
     "**/.*",
     "node_modules",
@@ -29,7 +28,7 @@
     "purescript-record": "^2.0.0",
     "purescript-tuples": "^5.1.0",
     "purescript-typelevel-prelude": "^4.0.0",
-    "purescript-web-html": "^2.0.0"
+    "purescript-web-html": "^2.1.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"
