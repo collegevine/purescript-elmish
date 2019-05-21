@@ -10,6 +10,7 @@ jobs:
     parallelism: 1
 
     steps:
+    - install-libsysconfcpus
     - checkout: { path: "~/elmish" }
 
     - restore_cache:
