@@ -1,0 +1,12 @@
+root = true
+
+[*]
+end_of_line = lf
+indent_style = space
+insert_final_newline = true
+
+[*.{js,json,yml,yaml}]
+indent_size = 2
+
+[*.purs]
+indent_size = 4
