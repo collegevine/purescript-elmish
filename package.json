@@ -1,12 +1,12 @@
 {
+  "scripts": {
+    "install": "bower install",
+    "build": "pulp build"
+  },
   "devDependencies": {
+    "bower": "^1.8.8",
     "pulp": "12.4.2",
     "purescript": "0.12.5",
-    "purescript-psa": "0.7.3",
-    "yarn": "1.9.4"
-  },
-  "engines": {
-    "node": "10.15.3",
-    "yarn": "1.9.4"
+    "purescript-psa": "0.7.3"
   }
 }
