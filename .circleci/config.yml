@@ -11,4 +11,18 @@ jobs:
 
     steps:
     - checkout: { path: "~/elmish" }
+
+    - restore_cache:
+        keys:
+          - elmish-{{ .Branch }}-{{ checksum "package-lock.json" }}-{{ checksum "bower.json" }}
+          - elmish-{{ .Branch }}-
+
     - run: npm install && npm run build
+
+    - save_cache:
+        key: elmish-{{ .Branch }}-{{ checksum "package-lock.json" }}-{{ checksum "bower.json" }}
+        paths:
+          - bower_components
+          - node_modules
+          - output
+          - ~/.cache
