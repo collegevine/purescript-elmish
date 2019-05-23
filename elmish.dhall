@@ -8,7 +8,7 @@ For example:
           https://raw.githubusercontent.com/purescript/package-sets/psc-0.12.5-20190508/src/packages.dhall sha256:8ef3a6d6d123e05933997426da68ef07289e1cbbdd2a844b5d10c9159deef65a
 
     let elmish =
-          https://raw.githubusercontent.com/collegevine/purescript-elmish/master/elmish.dahl
+          https://raw.githubusercontent.com/collegevine/purescript-elmish/master/elmish.dhall
 
     let additions = {
       elmish = elmish "v0.0.4"
