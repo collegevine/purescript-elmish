@@ -22,14 +22,14 @@
     "purescript-argonaut-core": "^5.0.0",
     "purescript-debug": "^4.0.0",
     "purescript-either": "^4.1.1",
-    "purescript-foreign-object": "^2.0.1",
+    "purescript-foreign-object": "^2.0.2",
     "purescript-functions": "^4.0.0",
-    "purescript-maybe": "^4.0.0",
-    "purescript-prelude": "^4.1.0",
-    "purescript-record": "^2.0.0",
+    "purescript-maybe": "^4.0.1",
+    "purescript-prelude": "^4.1.1",
+    "purescript-record": "^2.0.1",
     "purescript-tuples": "^5.1.0",
-    "purescript-typelevel-prelude": "^4.0.0",
-    "purescript-web-html": "^2.0.0"
+    "purescript-typelevel-prelude": "^5.0.0",
+    "purescript-web-html": "^2.2.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"

@@ -30,7 +30,7 @@ import Foreign (Foreign) as ForeignReexport
 import Foreign (Foreign, isArray, isNull, unsafeFromForeign, unsafeToForeign)
 import Foreign.Object as Obj
 import Type.Proxy (Proxy(..))
-import Type.Row (class RowToList, Cons, Nil, RLProxy(RLProxy), kind RowList)
+import Type.RowList (class RowToList, Cons, Nil, RLProxy(RLProxy), kind RowList)
 
 -- | Type of the `arguments` object in a JS function (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments).
 foreign import data Arguments :: Type
