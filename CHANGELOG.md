@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Upgraded to PureScript 0.13.0 (see [release noted](https://github.com/purescript/purescript/releases/tag/v0.13.0))
+- Upgraded to PureScript 0.13.0 (see [release notes](https://github.com/purescript/purescript/releases/tag/v0.13.0))
 
 ## 0.0.5
 
