@@ -20,6 +20,7 @@
   "dependencies": {
     "purescript-aff": "^5.1.1",
     "purescript-argonaut-core": "^5.0.0",
+    "purescript-console": "^4.2.0",
     "purescript-debug": "^4.0.0",
     "purescript-either": "^4.1.1",
     "purescript-foreign-object": "^2.0.2",

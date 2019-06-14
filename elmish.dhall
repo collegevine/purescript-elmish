@@ -25,6 +25,7 @@ in
       mkPackage
         [ "aff"
         , "argonaut-core"
+        , "console"
         , "debug"
         , "either"
         , "foreign-object"
