@@ -5,4 +5,6 @@
 
 ______
 
+For some examples, see https://github.com/collegevine/purescript-elmish-examples
+
 More documentation is forthcoming
