@@ -5,8 +5,9 @@
   },
   "devDependencies": {
     "bower": "^1.8.8",
+    "lodash": "^4.17.13",
     "pulp": "^13.0.0",
-    "purescript": "^0.13.0",
+    "purescript": "^0.13.2",
     "purescript-psa": "0.7.3"
   }
 }
