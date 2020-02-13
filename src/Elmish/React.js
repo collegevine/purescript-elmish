@@ -36,5 +36,21 @@ exports.createElement_ = function(component, props, children) {
   //
   //  return React.createElement(component, props, ...children)
   //
-  return React.createElement.apply(null, [component, props].concat(children))
+  return React.createElement.apply(
+    null,
+    [component, flattenDataProp(component, props)].concat(children)
+  )
+}
+
+function flattenDataProp(component, props) {
+  if (typeof component !== "string" || props._data == null) {
+    return props
+  }
+
+  var data = { _data: undefined }
+  for (var key in props._data) {
+    var value = props._data[key]
+    data["data-" + key] = value
+  }
+  return Object.assign({}, props, data)
 }
