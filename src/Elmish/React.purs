@@ -38,9 +38,26 @@ foreign import data ReactComponentInstance :: Type
 
 foreign import createElement_ :: forall props. Fn3 (ReactComponent props) props (Array ReactElement) ReactElement
 
--- | The PureScript import of the React's `createElement` function. Takes a
+-- | The PureScript import of the React’s `createElement` function. Takes a
 -- | component constructor, a record of props, some children, and returns a
 -- | React DOM element.
+-- |
+-- | To represent HTML `data-` attributes, `createElement` supports the
+-- | `_data :: Object` prop.
+-- |
+-- | **Example**
+-- |
+-- | ```purescript
+-- | import Elmish.HTML as H
+-- | import Foreign.Object as FO
+-- |
+-- | H.div
+-- |   { _data: FO.fromHomogenous { toggle: "buttons } }
+-- |   [...]
+-- | ```
+-- |
+-- | represents the `<div data-toggle="buttons">` DOM element.
+-- |
 createElement :: forall props content
      . ValidReactProps props
     => ReactChildren content
