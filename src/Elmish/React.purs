@@ -38,9 +38,26 @@ foreign import data ReactComponentInstance :: Type
 
 foreign import createElement_ :: forall props. Fn3 (ReactComponent props) props (Array ReactElement) ReactElement
 
--- | The PureScript import of the React's `createElement` function. Takes a
+-- | The PureScript import of the React’s `createElement` function. Takes a
 -- | component constructor, a record of props, some children, and returns a
 -- | React DOM element.
+-- |
+-- | To represent HTML `data-` attributes, `createElement` supports the
+-- | `_data :: Object` prop.
+-- |
+-- | **Example**
+-- |
+-- | ```purescript
+-- | import Elmish.HTML as H
+-- | import Foreign.Object as FO
+-- |
+-- | H.div
+-- |   { _data: FO.fromHomogenous { toggle: "buttons } }
+-- |   [...]
+-- | ```
+-- |
+-- | represents the `<div data-toggle="buttons">` DOM element.
+-- |
 createElement :: forall props content
      . ValidReactProps props
     => ReactChildren content
@@ -62,12 +79,12 @@ createElement' component props = createElement component props ([] :: Array Reac
 -- | Asserts that the given type is a valid React props structure. Currently
 -- | there are three rules for what is considered "valid":
 -- |
--- |     (1) The type must be a record.
--- |     (2) The types of all props must be safe to pass to JavaScript,
--- |         which is asserted via the `CanPassToJavaScript` class.
--- |     (3) There cannot be a prop named 'ref'. Currently we do not support
--- |         React refs, and when we do, the type of that prop will have to
--- |         be restricted to something special and effectful.
+-- | 1. The type must be a record.
+-- | 2. The types of all props must be safe to pass to JavaScript,
+-- |    which is asserted via the `CanPassToJavaScript` class.
+-- | 3. There cannot be a prop named 'ref'. Currently we do not support React
+-- |    refs, and when we do, the type of that prop will have to be restricted
+-- |    to something special and effectful.
 class ValidReactProps a
 instance validProps ::
     ( RowToList r rl
