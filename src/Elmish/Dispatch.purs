@@ -11,6 +11,7 @@ module Elmish.Dispatch
     , handleMaybe
     , class MkEventHandler
     , mkEventHandler
+    , module Contravariant
     ) where
 
 import Prelude
@@ -18,6 +19,7 @@ import Prelude
 import Data.Bifunctor (rmap)
 import Data.Either (Either(..), either)
 import Data.Functor.Contravariant (class Contravariant)
+import Data.Functor.Contravariant ((>$<), (>#<)) as Contravariant
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Elmish.JsCallback (class MkJsCallback, JsCallback, mkJsCallback)

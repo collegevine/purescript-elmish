@@ -9,11 +9,13 @@ module Elmish.Component
     , construct
     , wrapWithLocalState
     , ComponentName(..)
+    , module Bifunctor
     ) where
 
 import Prelude
 
 import Data.Bifunctor (class Bifunctor)
+import Data.Bifunctor (bimap) as Bifunctor
 import Data.Either (Either(..))
 import Data.Function.Uncurried (Fn2, runFn2)
 import Debug.Trace as Trace
