@@ -51,7 +51,7 @@ import Elmish.Trace (traceTime)
 -- | used:
 -- |
 -- |     update :: State -> Message -> Transition Aff Message State
--- |     update state (ChildMsg m) = do
+-- |     update state (ChildMsg m) =
 -- |         bimap ChildMsg (state { child = _ }) $ Child.update state.child m
 -- |
 data Transition m msg state = Transition state (Array (m msg))
