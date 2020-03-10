@@ -40,6 +40,10 @@ instance trApply :: Apply (Transition m msg) where
     apply (Transition f cmds1) (Transition x cmds2) = Transition (f x) (cmds1 <> cmds2)
 instance trApplicative :: Applicative (Transition m msg) where
     pure a = Transition a []
+instance trBind :: Bind (Transition m msg) where
+    bind (Transition s cmds) f =
+        let (Transition s' cmds') = f s
+        in Transition s' (cmds <> cmds')
 
 -- | Definition of a component according to The Elm Architecture. Consists of
 -- | three functions - init, view, update, - that together describe the
