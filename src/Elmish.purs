@@ -8,7 +8,7 @@ module Elmish
     ) where
 
 import Elmish.Boot (BootResult, boot, boot')
-import Elmish.Component (ComponentDef, Transition(..), bimap, construct, nat, pureUpdate, withTrace, (<$$>))
+import Elmish.Component (ComponentDef, Transition(..), bimap, construct, fork, lmap, nat, pureUpdate, rmap, withTrace, (<$$>))
 import Elmish.Dispatch (DispatchMsg, DispatchMsgFn(..), DispatchError, handle, handleMaybe, (>$<), (>#<))
 import Elmish.JsCallback (JsCallback, JsCallback0, jsCallback0, mkJsCallback)
 import Elmish.React (ReactComponent, ReactElement, createElement, createElement')

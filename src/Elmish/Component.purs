@@ -2,6 +2,7 @@ module Elmish.Component
     ( Transition(..)
     , ComponentDef
     , ComponentReturnCallback
+    , fork
     , mapCmds, (<$$>)
     , pureUpdate
     , withTrace
@@ -15,7 +16,7 @@ module Elmish.Component
 import Prelude
 
 import Data.Bifunctor (class Bifunctor)
-import Data.Bifunctor (bimap) as Bifunctor
+import Data.Bifunctor (bimap, lmap, rmap) as Bifunctor
 import Data.Either (Either(..))
 import Data.Function.Uncurried (Fn2, runFn2)
 import Debug.Trace as Trace
@@ -30,6 +31,29 @@ import Elmish.Trace (traceTime)
 -- | A UI component state transition: wraps the new state value together with a
 -- | (possibly empty) list of effects that the transition has caused, with each
 -- | effect ultimately producing a new message.
+-- |
+-- | Instances of this type may be created either by using the constructor
+-- | directly:
+-- |
+-- |     update :: State -> Message -> Transition Aff Message State
+-- |     update state m = Transition state [someEffect]
+-- |
+-- | or in monadic style (see comments on `fork` for more on this):
+-- |
+-- |     update :: State -> Message -> Transition Aff Message State
+-- |     update state m = do
+-- |         s1 <- lmap Child1Msg $ Child1.update state.child1 Child1.SomeMessage
+-- |         s2 <- lmap Child2Msg $ Child2.modifyFoo state.child2
+-- |         fork someEffect
+-- |         pure state { child1 = s1, child2 = s2 }
+-- |
+-- | or, for simple sub-component delegation, the `BiFunctor` instance may be
+-- | used:
+-- |
+-- |     update :: State -> Message -> Transition Aff Message State
+-- |     update state (ChildMsg m) = do
+-- |         bimap ChildMsg (state { child = _ }) $ Child.update state.child m
+-- |
 data Transition m msg state = Transition state (Array (m msg))
 
 instance trBifunctor :: Functor m => Bifunctor (Transition m) where
@@ -44,6 +68,53 @@ instance trBind :: Bind (Transition m msg) where
     bind (Transition s cmds) f =
         let (Transition s' cmds') = f s
         in Transition s' (cmds <> cmds')
+
+-- | Creates a `Transition` that contains the given command (i.e. a
+-- | message-producing effect). This is intended to be used for "accumulating"
+-- | effects while constructing a transition in imperative-ish style. When used
+-- | as an action inside a `do`, this function will have the effect of "adding
+-- | the command to the list" to be executed. The name `fork` reflects the fact
+-- | that the given effect will be executed asynchronously, after the `update`
+-- | function returns.
+-- |
+-- | In more precise terms, the following:
+-- |
+-- |     trs :: Transition m Message State
+-- |     trs = do
+-- |         fork f
+-- |         fork g
+-- |         pure s
+-- |
+-- | Is equivalent to this:
+-- |
+-- |     trs :: Transition m Message State
+-- |     trs = Transition s [f, g]
+-- |
+-- | At first glance it may seem that it's shorter to just call the `Transition`
+-- | constructor, but monadic style comes in handy for composing the update out
+-- | of smaller pieces. Here's a more full example:
+-- |
+-- |     data Message = Nop | ButtonClicked | OnNewItem String
+-- |
+-- |     update :: State -> Message -> Transition Aff Message State
+-- |     update state Nop =
+-- |         pure state
+-- |     update state ButtonClick = do
+-- |         fork $ insertItem "new list"
+-- |         incButtonClickCount state
+-- |
+-- |     insertItem :: Aff Message
+-- |     insertItem name = do
+-- |         delay $ Milliseconds 1000
+-- |         pure $ OnNewItem name
+-- |
+-- |     incButtonClickCount :: Transition Aff Message State
+-- |     incButtonClickCount state = do
+-- |         fork $ trackingEvent "Button click" *> pure Nop
+-- |         pure $ state { buttonsClicked = state.buttonsClicked + 1 }
+-- |
+fork :: forall m message. m message -> Transition m message Unit
+fork cmd = Transition unit [cmd]
 
 -- | Definition of a component according to The Elm Architecture. Consists of
 -- | three functions - init, view, update, - that together describe the
