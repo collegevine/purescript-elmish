@@ -8,22 +8,22 @@ module Elmish.Component
     , withTrace
     , nat
     , construct
-    , wrapWithLocalState
+    , wrapWithLocalState, wrapWithLocalState'
     , ComponentName(..)
     , module Bifunctor
     ) where
 
 import Prelude
 
-import Data.Bifunctor (class Bifunctor)
 import Data.Bifunctor (bimap, lmap, rmap) as Bifunctor
+import Data.Bifunctor (class Bifunctor)
 import Data.Either (Either(..))
 import Data.Function.Uncurried (Fn2, runFn2)
 import Debug.Trace as Trace
 import Effect (Effect, foreachE)
 import Effect.Aff (Aff, launchAff_)
 import Effect.Class (liftEffect)
-import Elmish.Dispatch (DispatchError, DispatchMsg, DispatchMsgFn(..), issueError)
+import Elmish.Dispatch (DispatchError, DispatchMsg, DispatchMsgFn(..), dispatchMsgFn, issueError)
 import Elmish.React (ReactComponent, ReactComponentInstance, ReactElement)
 import Elmish.State (StateStrategy, dedicatedStorage, localState)
 import Elmish.Trace (traceTime)
@@ -190,7 +190,7 @@ bindComponent :: forall msg state
      . BaseComponent                 -- ^ A JS class inheriting from React.Component to serve as base
     -> ComponentDef Aff msg state    -- ^ The component definition
     -> StateStrategy state           -- ^ Strategy of storing state
-    -> DispatchMsgFn Unit            -- ^ For reporting view errors
+    -> DispatchMsgFn Void            -- ^ For reporting view errors
     -> ReactElement
 bindComponent cmpt def stateStrategy onViewError =
     runFn2 instantiateBaseComponent cmpt { render, componentDidMount: runCmds initialCmds }
@@ -231,7 +231,7 @@ bindComponent cmpt def stateStrategy onViewError =
 -- | happens at the expense of being effectful.
 construct :: forall msg state
      . ComponentDef Aff msg state       -- ^ The component definition
-    -> Effect (DispatchMsgFn Unit -> ReactElement)
+    -> Effect (DispatchMsgFn Void -> ReactElement)
 construct def = do
     stateStorage <- liftEffect dedicatedStorage
     pure $ withFreshComponent $ \cmpt ->
@@ -274,20 +274,29 @@ nat map def =
 -- | proven to be fragile in some specific circumstances (e.g. multiple events
 -- | occurring within the same JS synchronous frame), so it is not recommended
 -- | to use this mechanism for complex components.
--- |
--- | Note 3: this function has to be called exactly once, at top-level. It
--- | cannot be called in the parent's `view` function on every render. Every
--- | time it is called it creates a new React class, so if it was called on
--- | every render, the resulting JSX DOM will contain a new component every
--- | time, which will make React remount that component and destroy its local
--- | state. See explanation on `withCachedComponent` for more.
 wrapWithLocalState :: forall msg state args
      . ComponentName
     -> (args -> ComponentDef Aff msg state)
-    -> DispatchMsgFn Unit
     -> args
     -> ReactElement
 wrapWithLocalState name mkDef =
+    wrapWithLocalState' name mkDef ignoreErrors
+    where
+      ignoreErrors = dispatchMsgFn (const $ pure unit) (const $ pure unit)
+
+-- | A more elaborate version of `wrapWithLocalState` that takes a
+-- | `DispatchMsgFn Void` in order to report view-originated errors. In practice
+-- | this error-reporting turned out to be almost not a concern, and is largely
+-- | a vestige of the time we were implementing views as JSX-sidecar files. So
+-- | the default version no longer has this extra parameter so as to reduce the
+-- | noise.
+wrapWithLocalState' :: forall msg state args
+     . ComponentName
+    -> (args -> ComponentDef Aff msg state)
+    -> DispatchMsgFn Void
+    -> args
+    -> ReactElement
+wrapWithLocalState' name mkDef =
     runFn2 withCachedComponent name $ \cmpt onViewError args ->
         bindComponent cmpt (mkDef args) localState onViewError
 

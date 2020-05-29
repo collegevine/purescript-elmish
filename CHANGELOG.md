@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.5
+
+### Changed
+
+- **Breaking**: `wrapWithLocalState` no longer takes an extra
+  `DispatchMsgFn Unit` parameter (used only for error reporting)
+- **Breaking**: All places that previously took a `DispatchMsgFn Unit` sink for
+  the purpose of reporting errors only, now take a `DispatchMsgFn Void` instead
+  to better reflect the fact that they're not going to issue messages through
+  that sink
+- Upgraded to PureScript 0.13.8
+
+### Added
+
+- `wrapWithLocalState'` - a more elaborate version of `wrapWithLocalState` that
+  takes the extra `DispatchMsgFn Void` parameter
+
 ## 0.1.4
 
 ### Added
