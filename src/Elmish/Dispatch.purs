@@ -18,11 +18,11 @@ import Prelude
 
 import Data.Bifunctor (rmap)
 import Data.Either (Either(..), either)
-import Data.Functor.Contravariant (class Contravariant)
 import Data.Functor.Contravariant ((>$<), (>#<)) as Contravariant
+import Data.Functor.Contravariant (class Contravariant)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
-import Elmish.JsCallback (class MkJsCallback, JsCallback, mkJsCallback)
+import Elmish.JsCallback (class MkJsCallback, JsCallback, jsCallback')
 
 -- TODO: legacy placeholder. Remove.
 type DispatchMsg = Effect Unit
@@ -106,7 +106,7 @@ handle :: forall msg fn effFn
     -> fn
     -> JsCallback effFn
 handle (DispatchMsgFn dispatch) fn =
-    mkJsCallback (mkEventHandler fn onMessage) onError
+    jsCallback' (mkEventHandler fn onMessage) onError
     where
         onMessage = dispatch <<< Right
         onError = dispatch <<< Left <<< show

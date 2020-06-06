@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `wrapWithLocalState` will now report errors to the console instead of
   swallowing them. This could be used by catch-all error reporters such as
   Rollbar or Airbrake.
+- **Breaking**: `mkJsCallback` remaned to `jsCallback` and lost its `onError`
+  parameter. It will now report errors to the console, same as
+  `wrapWithLocalState`. The previous version with an explicit `onError`
+  parameter is now available as `jsCallback'`
 - React API is now FFIed via `EffectFnX` instead of `FnX`.
 
 ## 0.1.5
