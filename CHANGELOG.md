@@ -15,8 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - **Breaking**: The contents of `Elmish.Boot` - `BootResult`, `boot`, and
-  `boot'`. Replaced and subsumed with server-side rendering support (see
-  "Added").
+  `boot'`. Replaced and subsumed by server-side rendering support (see "Added").
 
 ## Changed
 
