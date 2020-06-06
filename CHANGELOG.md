@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.6
+
+### Added
+
+- Support for SSR (server-side rendering) via `Elmish.Boot.boot`. This breaks
+  pre-existing `Elmish.Boot` users (see "Removed").
+
+### Removed
+
+- **Breaking**: The contents of `Elmish.Boot` - `BootResult`, `boot`, and
+  `boot'`. Replaced and subsumed with server-side rendering support (see
+  "Added").
+
+## Changed
+
+- **Breaking**: `Elmish.React.reactMount` renamed to `render` to match React's
+  naming.
+- `wrapWithLocalState` will now report errors to the console instead of
+  swallowing them. This could be used by catch-all error reporters such as
+  Rollbar or Airbrake.
+- React API is now FFIed via `EffectFnX` instead of `FnX`.
+
 ## 0.1.5
 
 ### Changed

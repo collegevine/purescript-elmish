@@ -9,10 +9,9 @@ import Prelude
 import Effect (Effect)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
-import Data.Function.Uncurried (runFn3)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Nullable (toMaybe)
-import Elmish.React (ReactComponentInstance, getState, setState)
+import Elmish.React as React
 
 -- This represents a strategy of storing UI component state.
 -- The strategy is a function that takes initial state and returns a monadic
@@ -30,11 +29,11 @@ type StateStrategy state =
     { initialState :: state }
     -> {
         getState ::
-            ReactComponentInstance -- ^ component instance for which to get the state
+            React.ReactComponentInstance -- ^ component instance for which to get the state
             -> Effect state,
 
         setState ::
-            ReactComponentInstance -- ^ component instance for which to set the state
+            React.ReactComponentInstance -- ^ component instance for which to set the state
             -> state               -- ^ state to set
             -> Effect Unit         -- ^ callback to invoke when the operation is complete
             -> Effect Unit
@@ -52,7 +51,7 @@ dedicatedStorage = mkStrategy <$> Ref.new Nothing
 
         setState: \c s cb -> do
             Ref.write (Just s) stateVar
-            runFn3 setState c s (pure unit)
+            React.setState c s (pure unit)
             cb
     }
 
@@ -62,9 +61,8 @@ localState :: forall state. StateStrategy state
 localState {initialState} = {
 
     getState: \component -> do
-        mState <- toMaybe <$> getState component
+        mState <- toMaybe <$> React.getState component
         pure $ fromMaybe initialState mState,
 
-    setState:
-        runFn3 setState
+    setState: React.setState
 }

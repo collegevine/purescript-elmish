@@ -7,21 +7,23 @@ module Elmish.React
     , createElement
     , createElement'
     , getState
+    , hydrate
     , setState
-    , reactMount
-    , reactUnmount
+    , render
+    , renderToString
     ) where
 
 import Prelude
 
-import Data.Function.Uncurried (Fn2, Fn3, runFn3)
+import Data.Function.Uncurried (Fn3, runFn3)
 import Data.Nullable (Nullable)
 import Effect (Effect)
+import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, runEffectFn1, runEffectFn2, runEffectFn3)
+import Elmish.Foreign (class CanPassToJavaScript)
 import Prim.RowList (class RowToList, kind RowList, Cons, Nil)
 import Prim.TypeError (Text, class Fail)
 import Unsafe.Coerce (unsafeCoerce)
-import Web.DOM (Element)
-import Elmish.Foreign (class CanPassToJavaScript)
+import Web.DOM as HTML
 
 -- | Instantiated subtree of React DOM. JSX syntax produces values of this type.
 foreign import data ReactElement :: Type
@@ -35,8 +37,6 @@ foreign import data ReactComponent :: Type -> Type
 -- | A specific instance of a React component - i.e. an object that has `state`
 -- | and `props` properties on it.
 foreign import data ReactComponentInstance :: Type
-
-foreign import createElement_ :: forall props. Fn3 (ReactComponent props) props (Array ReactElement) ReactElement
 
 -- | The PureScript import of the React’s `createElement` function. Takes a
 -- | component constructor, a record of props, some children, and returns a
@@ -66,6 +66,7 @@ createElement :: forall props content
     -> content                      -- Children
     -> ReactElement
 createElement component props content = runFn3 createElement_ component props $ asReactChildren content
+foreign import createElement_ :: forall props. Fn3 (ReactComponent props) props (Array ReactElement) ReactElement
 
 -- | Variant of `createElement` for creating an element without children.
 createElement' :: forall props
@@ -122,12 +123,23 @@ instance reactChildrenString :: ReactChildren String where
 instance reactChildrenSingle :: ReactChildren ReactElement where
     asReactChildren e = [ e ]
 
+getState :: forall state. ReactComponentInstance -> Effect (Nullable state)
+getState = runEffectFn1 getState_
+foreign import getState_ :: forall state. EffectFn1 ReactComponentInstance (Nullable state)
 
-foreign import getState :: forall state. ReactComponentInstance -> Effect (Nullable state)
-foreign import setState :: forall state. Fn3 ReactComponentInstance state (Effect Unit) (Effect Unit)
+setState :: forall state. ReactComponentInstance -> state -> (Effect Unit) -> Effect Unit
+setState = runEffectFn3 setState_
+foreign import setState_ :: forall state. EffectFn3 ReactComponentInstance state (Effect Unit) Unit
 
-foreign import reactMount :: Fn2 Element ReactElement (Effect Unit)
-foreign import reactUnmount :: Element -> Effect Unit
+render :: ReactElement -> HTML.Element -> Effect Unit
+render = runEffectFn2 render_
+foreign import render_ :: EffectFn2 ReactElement HTML.Element Unit
+
+hydrate :: ReactElement -> HTML.Element -> Effect Unit
+hydrate = runEffectFn2 hydrate_
+foreign import hydrate_ :: EffectFn2 ReactElement HTML.Element Unit
+
+foreign import renderToString :: ReactElement -> String
 
 -- This instance allows including `ReactElement` in view arguments.
 instance tojsReactElement :: CanPassToJavaScript ReactElement

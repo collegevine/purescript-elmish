@@ -23,6 +23,7 @@ import Debug.Trace as Trace
 import Effect (Effect, foreachE)
 import Effect.Aff (Aff, launchAff_)
 import Effect.Class (liftEffect)
+import Effect.Class.Console as Console
 import Elmish.Dispatch (DispatchError, DispatchMsg, DispatchMsgFn(..), dispatchMsgFn, issueError)
 import Elmish.React (ReactComponent, ReactComponentInstance, ReactElement)
 import Elmish.State (StateStrategy, dedicatedStorage, localState)
@@ -280,9 +281,9 @@ wrapWithLocalState :: forall msg state args
     -> args
     -> ReactElement
 wrapWithLocalState name mkDef =
-    wrapWithLocalState' name mkDef ignoreErrors
+    wrapWithLocalState' name mkDef errorToConsole
     where
-      ignoreErrors = dispatchMsgFn (const $ pure unit) (const $ pure unit)
+      errorToConsole = dispatchMsgFn Console.error (const $ pure unit)
 
 -- | A more elaborate version of `wrapWithLocalState` that takes a
 -- | `DispatchMsgFn Void` in order to report view-originated errors. In practice
