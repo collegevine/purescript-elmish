@@ -10,6 +10,6 @@ module Elmish
 import Elmish.Boot (BootRecord, boot)
 import Elmish.Component (ComponentDef, Transition(..), bimap, construct, fork, lmap, nat, pureUpdate, rmap, withTrace, (<$$>))
 import Elmish.Dispatch (DispatchMsg, DispatchMsgFn(..), DispatchError, handle, handleMaybe, (>$<), (>#<))
-import Elmish.JsCallback (JsCallback, JsCallback0, jsCallback0, mkJsCallback)
+import Elmish.JsCallback (JsCallback, JsCallback0, jsCallback)
 import Elmish.React (ReactComponent, ReactElement, createElement, createElement')
 import Elmish.Ref (Ref, ref, deref)
