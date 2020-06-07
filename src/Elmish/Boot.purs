@@ -19,7 +19,7 @@
 -- |
 -- | The idea is that the PureScript code would export such `BootRecord` for
 -- | consumption by bootstrap JavaScript code in the page and/or server-side
--- | NodeJS code (which could be written in PureScript or not). For "plan React"
+-- | NodeJS code (which could be written in PureScript or not). For "plain React"
 -- | scenario, the JavaScript code in the page would just call `mount`. For
 -- | "server-side rendering", the server would first call `renderToString` and
 -- | serve the HTML to the client, and then the client-side JavaScript code
