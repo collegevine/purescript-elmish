@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking**: The contents of `Elmish.Boot` - `BootResult`, `boot`, and
   `boot'`. Replaced and subsumed by server-side rendering support (see "Added").
 
-## Changed
+### Changed
 
 - **Breaking**: `Elmish.React.reactMount` renamed to `render` to match React's
   naming.
