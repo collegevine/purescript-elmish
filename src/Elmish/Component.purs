@@ -1,8 +1,10 @@
 module Elmish.Component
     ( Transition(..)
+    , Command
     , ComponentDef
     , ComponentReturnCallback
-    , fork
+    , transition
+    , fork, forks, forkVoid, forkMaybe
     , mapCmds, (<$$>)
     , pureUpdate
     , withTrace
@@ -19,10 +21,11 @@ import Data.Bifunctor (bimap, lmap, rmap) as Bifunctor
 import Data.Bifunctor (class Bifunctor)
 import Data.Either (Either(..))
 import Data.Function.Uncurried (Fn2, runFn2)
+import Data.Maybe (Maybe, maybe)
 import Debug.Trace as Trace
 import Effect (Effect, foreachE)
 import Effect.Aff (Aff, launchAff_)
-import Effect.Class (liftEffect)
+import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Class.Console as Console
 import Elmish.Dispatch (DispatchError, DispatchMsg, DispatchMsgFn(..), dispatchMsgFn, issueError)
 import Elmish.React (ReactComponent, ReactComponentInstance, ReactElement)
@@ -30,21 +33,20 @@ import Elmish.State (StateStrategy, dedicatedStorage, localState)
 import Elmish.Trace (traceTime)
 
 -- | A UI component state transition: wraps the new state value together with a
--- | (possibly empty) list of effects that the transition has caused, with each
--- | effect ultimately producing a new message.
+-- | (possibly empty) list of effects that the transition has caused (called
+-- | "commands"), with each command possibly producing some new messages.
 -- |
--- | Instances of this type may be created either by using the constructor
--- | directly:
+-- | Instances of this type may be created either by using the smart constructor:
 -- |
 -- |     update :: State -> Message -> Transition Aff Message State
--- |     update state m = Transition state [someEffect]
+-- |     update state m = transition state [someCommand]
 -- |
 -- | or in monadic style (see comments on `fork` for more on this):
 -- |
 -- |     update :: State -> Message -> Transition Aff Message State
 -- |     update state m = do
--- |         s1 <- lmap Child1Msg $ Child1.update state.child1 Child1.SomeMessage
--- |         s2 <- lmap Child2Msg $ Child2.modifyFoo state.child2
+-- |         s1 <- Child1.update state.child1 Child1.SomeMessage # lmap Child1Msg
+-- |         s2 <- Child2.modifyFoo state.child2 # lmap Child2Msg
 -- |         fork someEffect
 -- |         pure state { child1 = s1, child2 = s2 }
 -- |
@@ -53,12 +55,18 @@ import Elmish.Trace (traceTime)
 -- |
 -- |     update :: State -> Message -> Transition Aff Message State
 -- |     update state (ChildMsg m) =
--- |         bimap ChildMsg (state { child = _ }) $ Child.update state.child m
+-- |         Child.update state.child m
+-- |         # bimap ChildMsg (state { child = _ })
 -- |
-data Transition m msg state = Transition state (Array (m msg))
+data Transition m msg state = Transition state (Array (Command m msg))
+
+-- | An effect that is launched as a result of a component state transition.
+-- | It's a function that takes a callback that allows it to produce (aka
+-- | "dispatch") messages.
+type Command m msg = (msg -> Effect Unit) -> m Unit
 
 instance trBifunctor :: Functor m => Bifunctor (Transition m) where
-    bimap f g (Transition s cmds) = Transition (g s) (f <$$> cmds)
+    bimap f g (Transition s cmds) = Transition (g s) (cmds <#> \cmd sink -> cmd $ sink <<< f)
 instance trFunctor :: Functor (Transition m msg) where
     map f (Transition x cmds) = Transition (f x) cmds
 instance trApply :: Apply (Transition m msg) where
@@ -69,6 +77,15 @@ instance trBind :: Bind (Transition m msg) where
     bind (Transition s cmds) f =
         let (Transition s' cmds') = f s
         in Transition s' (cmds <> cmds')
+
+-- | Smart constructor for the `Transition` type. See comments there. This
+-- | function takes the new (i.e. update) state and an array of commands - i.e.
+-- | effects producing messages, - and constructs a `Transition` out of them
+transition :: forall m state msg. Bind m => MonadEffect m => state -> Array (m msg) -> Transition m msg state
+transition s cmds =
+    Transition s $ cmds <#> \cmd sink -> do
+        msg <- cmd
+        liftEffect $ sink msg
 
 -- | Creates a `Transition` that contains the given command (i.e. a
 -- | message-producing effect). This is intended to be used for "accumulating"
@@ -114,8 +131,41 @@ instance trBind :: Bind (Transition m msg) where
 -- |         fork $ trackingEvent "Button click" *> pure Nop
 -- |         pure $ state { buttonsClicked = state.buttonsClicked + 1 }
 -- |
-fork :: forall m message. m message -> Transition m message Unit
-fork cmd = Transition unit [cmd]
+fork :: forall m message. MonadEffect m => m message -> Transition m message Unit
+fork cmd = transition unit [cmd]
+
+-- | Similar to `fork` (see comments there for detailed explanation), but the
+-- | parameter is a function that takes a message-dispatching callback. This
+-- | structure allows the command to produce zero or multiple messages, unlike
+-- | `fork`, whose callback has to produce exactly one.
+-- |
+-- | Example:
+-- |
+-- |     update :: State -> Message -> Transition Aff Message State
+-- |     update state msg = do
+-- |         forks countTo10
+-- |         pure state
+-- |
+-- |     countTo10 :: Command Aff Message
+-- |     countTo10 msgSink =
+-- |         for_ (1..10) \n ->
+-- |             delay $ Milliseconds 1000.0
+-- |             msgSink $ Count n
+-- |
+forks :: forall m message. Command m message -> Transition m message Unit
+forks cmd = Transition unit [cmd]
+
+-- | Similar to `fork` (see comments there for detailed explanation), but the
+-- | effect doesn't produce any messages, it's a fire-and-forget sort of effect.
+forkVoid :: forall m message. m Unit -> Transition m message Unit
+forkVoid cmd = forks $ const cmd
+
+-- | Similar to `fork` (see comments there for detailed explanation), but the
+-- | effect may or may not produce a message, as modeled by returning `Maybe`.
+forkMaybe :: forall m message. MonadEffect m => m (Maybe message) -> Transition m message Unit
+forkMaybe cmd = forks \sink -> do
+    msg <- cmd
+    liftEffect $ maybe (pure unit) sink msg
 
 -- | Definition of a component according to The Elm Architecture. Consists of
 -- | three functions - init, view, update, - that together describe the
@@ -212,13 +262,12 @@ bindComponent cmpt def stateStrategy onViewError =
             let Transition newState cmds = def.update oldState msg
             setState component newState $ runCmds cmds component
 
-        runCmds :: Array (Aff msg) -> ReactComponentInstance -> Effect Unit
+        runCmds :: Array (Command Aff msg) -> ReactComponentInstance -> Effect Unit
         runCmds cmds component = foreachE cmds runCmd
             where
-                runCmd :: Aff msg -> Effect Unit
-                runCmd cmd = launchAff_ $ do
-                    msg <- cmd
-                    liftEffect $ dispatchMsg component $ Right msg
+                runCmd :: Command Aff msg -> Effect Unit
+                runCmd cmd = launchAff_ $
+                    cmd $ \msg -> liftEffect $ dispatchMsg component (Right msg)
 
 -- | Given a ComponentDef, binds that def to a freshly created React class,
 -- | instantiates that class, and returns a rendering function. Note that the
@@ -250,8 +299,8 @@ nat map def =
         update: \s m -> mapTransition $ def.update s m
     }
     where
-        mapTransition (Transition state cmds) = Transition state (map <$> cmds)
-
+        mapTransition (Transition state cmds) = Transition state (mapCmd <$> cmds)
+        mapCmd cmd sink = map $ cmd sink
 
 -- | Creates a React component that can be bound to a varying ComponentDef,
 -- | returns a function that performs the binding.
