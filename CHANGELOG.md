@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Transition` no longer pretends to be pure (i.e. contains mention of
   `Effect`), the testing support can no longer work in the pure `StateT`, and
   will have to be rewritten on top of `Effect`, with a mutable cell to
-  accumulate messages. However, since we're not actully using testing support
+  accumulate messages. However, since we're not actually using testing support
   (yet?), I have decided to deprioritize this.
 
 ## 0.1.6

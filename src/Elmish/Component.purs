@@ -80,7 +80,7 @@ instance trBind :: Bind (Transition m msg) where
 
 -- | Smart constructor for the `Transition` type. See comments there. This
 -- | function takes the new (i.e. update) state and an array of commands - i.e.
--- | effects producing messages, - and constructs a `Transition` out of them
+-- | effects producing messages - and constructs a `Transition` out of them
 transition :: forall m state msg. Bind m => MonadEffect m => state -> Array (m msg) -> Transition m msg state
 transition s cmds =
     Transition s $ cmds <#> \cmd sink -> do
