@@ -25,6 +25,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `forkVoid` - like `fork`, but the effect does not produce any messages.
 - `forkMaybe` - like `fork`, but the effect may or may not produce a message.
 
+### Removed
+
+- **Breaking**: removed the `Elmish.Test` module. Now that the type of
+  `Transition` no longer pretends to be pure (i.e. contains mention of
+  `Effect`), the testing support can no longer work in the pure `StateT`, and
+  will have to be rewritten on top of `Effect`, with a mutable cell to
+  accumulate messages. However, since we're not actully using testing support
+  (yet?), I have decided to deprioritize this.
+
 ## 0.1.6
 
 ### Added
