@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.2.0
+
+### Changed
+
+- **Breaking**: The signature of `Transition` now allows effects to produce
+  zero, one, or multiple messages, instead of exactly one as before. This is
+  achieved by making each effect take a message-dispatching callback rather than
+  monadically returning a message as before.
+- **Breaking**: `fork` now requires `MonadEffect`.
+
+### Added
+
+- Convenience smart constructor `transition`, which has the same signature as
+  the `Transition` data constructor used to have before this change.
+- `forks` - like `fork` (see v0.1.4), but allows the effect to produce zero,
+  one, or multiple messages by way of taking a callback rather than returning a
+  message.
+- `forkVoid` - like `fork`, but the effect does not produce any messages.
+- `forkMaybe` - like `fork`, but the effect may or may not produce a message.
+
+### Removed
+
+- **Breaking**: removed the `Elmish.Test` module. Now that the type of
+  `Transition` no longer pretends to be pure (i.e. contains mention of
+  `Effect`), the testing support can no longer work in the pure `StateT`, and
+  will have to be rewritten on top of `Effect`, with a mutable cell to
+  accumulate messages. However, since we're not actually using testing support
+  (yet?), I have decided to deprioritize this.
+
 ## 0.1.6
 
 ### Added
