@@ -68,6 +68,7 @@
 module Elmish.Boot
     ( BootRecord
     , boot
+    , defaultMain
     ) where
 
 import Prelude
@@ -84,6 +85,7 @@ import Web.HTML (window) as DOM
 import Web.HTML.HTMLDocument (toNonElementParentNode) as DOM
 import Web.HTML.Window (document) as DOM
 
+-- | Boot record for a UI component. See comments for this module.
 type BootRecord props =
   { mount :: String -> props -> Effect Unit
   -- ^ Mount the component to a DOM element with given string ID
@@ -98,6 +100,8 @@ type BootRecord props =
   -- https://reactjs.org/docs/react-dom.html#hydrate
   }
 
+
+-- | Creates a boot record for the given component. See comments for this module.
 boot :: forall msg state props. (props -> Comp.ComponentDef Aff msg state) -> BootRecord props
 boot mkDef =
   { mount: mountVia React.render
@@ -123,3 +127,26 @@ boot mkDef =
 
     onError :: forall a. DispatchMsgFn a
     onError = dispatchMsgFn Console.error (const $ pure unit)
+
+
+-- | This function supports the simplest (almost toy?) use case where there is
+-- | no server, no server-side rendering, all that exists is an HTML page that
+-- | loads the JS bundle (compiled from PureScript), and expects the bundle to
+-- | breath life into the page. For this case, declare your bundle entry point
+-- | (i.e. your `main` function) as a call to `defaultMain`, passing it DOM
+-- | element ID to bind to and the UI component to bind to it.
+-- |
+-- | Example:
+-- |
+-- |     module Main
+-- |     import MyComponent(def)
+-- |     import Elmish.Boot as Boot
+-- |
+-- |     main :: Effect Unit
+-- |     main = Boot.defaultMain { elementId: "app", def: def }
+-- |
+defaultMain :: forall msg state. { elementId :: String, def :: Comp.ComponentDef Aff msg state } -> Effect Unit
+defaultMain { elementId, def } =
+    bootRec.mount elementId unit
+    where
+        bootRec = boot \_ -> def
