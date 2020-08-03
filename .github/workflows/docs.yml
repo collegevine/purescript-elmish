@@ -1,0 +1,30 @@
+name: documentation
+
+on:
+  push:
+    branches: [ docs ]
+    paths: [ ".github/workflows/docs.yml", "docs/**" ]
+
+jobs:
+  build-and-deploy-docs:
+
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1.100.0
+      with:
+        ruby-version: 2.6
+        bundler-cache: true
+        working-directory: docs
+    - name: Jekyll build
+      run: bundler exec jekyll build
+    - name: Deploy to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@v4.2.5
+      with:
+        branch: docs-built
+        folder: docs/_site
