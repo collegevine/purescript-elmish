@@ -7,7 +7,7 @@ exports.setState_ = (component, state, callback) => component.setState({ s: stat
 
 exports.render_ = ReactDOM.render
 exports.hydrate_ = ReactDOM.hydrate
-exports.renderToString = ReactDOMServer ? ReactDOMServer.renderToString : (_ => "")
+exports.renderToString = (ReactDOMServer && ReactDOMServer.renderToString) || (_ => "")
 
 exports.createElement_ = function(component, props, children) {
   // The type of `children` is `Array ReactElement`. If we pass that in as
