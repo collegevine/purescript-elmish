@@ -24,7 +24,7 @@ import Data.Function.Uncurried (Fn2, runFn2)
 import Data.Maybe (Maybe, maybe)
 import Debug.Trace as Trace
 import Effect (Effect, foreachE)
-import Effect.Aff (Aff, launchAff_)
+import Effect.Aff (Aff, Milliseconds(..), delay, launchAff_)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Class.Console as Console
 import Elmish.Dispatch (DispatchError, DispatchMsg, DispatchMsgFn(..), dispatchMsgFn, issueError)
@@ -266,7 +266,8 @@ bindComponent cmpt def stateStrategy onViewError =
         runCmds cmds component = foreachE cmds runCmd
             where
                 runCmd :: Command Aff msg -> Effect Unit
-                runCmd cmd = launchAff_ $
+                runCmd cmd = launchAff_ do
+                    delay $ Milliseconds 0.0 -- Make sure this call is actually async
                     cmd $ \msg -> liftEffect $ dispatchMsg component (Right msg)
 
 -- | Given a ComponentDef, binds that def to a freshly created React class,
