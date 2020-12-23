@@ -15,17 +15,17 @@ jobs:
 
     - restore_cache:
         keys:
-          - elmish-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}-{{ checksum "bower.json" }}
-          - elmish-v2-{{ .Branch }}-
+          - elmish-v3-{{ .Branch }}-{{ checksum "package-lock.json" }}-{{ checksum "bower.json" }}
+          - elmish-v3-{{ .Branch }}-
 
     - run: npm install && sysconfcpus -n 2 npm run build
 
     - save_cache:
-        key: elmish-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}-{{ checksum "bower.json" }}
+        key: elmish-v3-{{ .Branch }}-{{ checksum "package-lock.json" }}-{{ checksum "bower.json" }}
         paths:
-          - bower_components
           - node_modules
           - output
+          - .spago
           - ~/.cache
 
 commands:

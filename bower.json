@@ -1,37 +1,31 @@
 {
-  "name": "purescript-elmish",
-  "description": "A PureScript implementation of The Elm Architecture (TEA)",
-  "authors": [
-    "Fyodor Soikin <fyodor@collegevine.com>",
-    "CollegeVine"
-  ],
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/collegevine/purescript-elmish.git"
-  },
-  "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "output"
-  ],
-  "dependencies": {
-    "purescript-aff": "^5.1.2",
-    "purescript-argonaut-core": "^5.0.1",
-    "purescript-console": "^4.2.0",
-    "purescript-debug": "^4.0.0",
-    "purescript-either": "^4.1.1",
-    "purescript-foreign-object": "^2.0.3",
-    "purescript-functions": "^4.0.0",
-    "purescript-maybe": "^4.0.1",
-    "purescript-prelude": "^4.1.1",
-    "purescript-record": "^2.0.1",
-    "purescript-tuples": "^5.1.0",
-    "purescript-typelevel-prelude": "^5.0.0",
-    "purescript-web-html": "^2.3.0"
-  },
-  "devDependencies": {
-    "purescript-psci-support": "^4.0.0"
-  }
+    "name": "purescript-elmish",
+    "license": [
+        "MIT"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/collegevine/purescript-elmish.git"
+    },
+    "ignore": [
+        "**/.*",
+        "node_modules",
+        "bower_components",
+        "output"
+    ],
+    "dependencies": {
+        "purescript-aff": "^v5.1.2",
+        "purescript-argonaut-core": "^v5.1.0",
+        "purescript-console": "^v4.4.0",
+        "purescript-debug": "^v4.0.1",
+        "purescript-either": "^v4.1.1",
+        "purescript-foreign-object": "^v2.0.3",
+        "purescript-functions": "^v4.0.0",
+        "purescript-maybe": "^v4.0.1",
+        "purescript-prelude": "^v4.1.1",
+        "purescript-record": "^v2.0.2",
+        "purescript-tuples": "^v5.1.0",
+        "purescript-typelevel-prelude": "^v5.0.2",
+        "purescript-web-html": "^v2.3.0"
+    }
 }
