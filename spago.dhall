@@ -1,9 +1,4 @@
 { name = "elmish"
-, description = "A PureScript implementation of The Elm Architecture (TEA)"
-, authors =
-    [ "Fyodor Soikin <fyodor@collegevine.com>"
-    , "CollegeVine"
-    ]
 , dependencies =
     [ "aff"
     , "argonaut-core"
