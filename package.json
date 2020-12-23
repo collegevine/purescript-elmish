@@ -1,4 +1,23 @@
 {
+  "name": "purescript-elmish",
+  "license": "MIT",
+  "description": "A PureScript implementation of The Elm Architecture (TEA)",
+  "author": {
+    "name": "Fyodor Soikin",
+    "email": "fyodor@collegevine.com",
+    "url": "https://github.com/fsoikin"
+  },
+  "contributors": [
+    {
+      "name": "Daniel Gasienica",
+      "email": "daniel.gasienica@collegevine.com",
+      "url": "https://github.com/gasi"
+    },
+    {
+      "name": "Abby Sassel",
+      "url": "https://github.com/sassela"
+    }
+  ],
   "scripts": {
     "install": "spago install",
     "build": "spago build"
