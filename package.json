@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "install": "bower install",
-    "build": "pulp build"
+    "install": "spago install",
+    "build": "spago build"
   },
   "devDependencies": {
     "acorn": "^6.4.1",
@@ -11,6 +11,7 @@
     "pulp": "^14.0.0",
     "purescript": "^0.13.8",
     "purescript-psa": "0.7.3",
+    "spago": "^0.18.1",
     "tree-kill": "^1.2.2"
   }
 }
