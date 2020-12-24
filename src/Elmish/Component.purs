@@ -5,8 +5,6 @@ module Elmish.Component
     , ComponentReturnCallback
     , transition
     , fork, forks, forkVoid, forkMaybe
-    , mapCmds, (<$$>)
-    , pureUpdate
     , withTrace
     , nat
     , construct
@@ -61,7 +59,7 @@ import Elmish.Trace (traceTime)
 data Transition m msg state = Transition state (Array (Command m msg))
 
 -- | An effect that is launched as a result of a component state transition.
--- | It's a function that takes a callback that allows it to produce (aka
+-- | It's a function that takes a callback, which allows it to produce (aka
 -- | "dispatch") messages.
 type Command m msg = (msg -> Effect Unit) -> m Unit
 
@@ -79,7 +77,7 @@ instance trBind :: Bind (Transition m msg) where
         in Transition s' (cmds <> cmds')
 
 -- | Smart constructor for the `Transition` type. See comments there. This
--- | function takes the new (i.e. update) state and an array of commands - i.e.
+-- | function takes the new (i.e. updated) state and an array of commands - i.e.
 -- | effects producing messages - and constructs a `Transition` out of them
 transition :: forall m state msg. Bind m => MonadEffect m => state -> Array (m msg) -> Transition m msg state
 transition s cmds =
@@ -90,10 +88,10 @@ transition s cmds =
 -- | Creates a `Transition` that contains the given command (i.e. a
 -- | message-producing effect). This is intended to be used for "accumulating"
 -- | effects while constructing a transition in imperative-ish style. When used
--- | as an action inside a `do`, this function will have the effect of "adding
--- | the command to the list" to be executed. The name `fork` reflects the fact
--- | that the given effect will be executed asynchronously, after the `update`
--- | function returns.
+-- | as an action inside a `do` block, this function will have the effect of
+-- | "adding the command to the list" to be executed. The name `fork` reflects
+-- | the fact that the given effect will be executed asynchronously, after the
+-- | `update` function returns.
 -- |
 -- | In more precise terms, the following:
 -- |
@@ -106,29 +104,29 @@ transition s cmds =
 -- | Is equivalent to this:
 -- |
 -- |     trs :: Transition m Message State
--- |     trs = Transition s [f, g]
+-- |     trs = transition s [f, g]
 -- |
--- | At first glance it may seem that it's shorter to just call the `Transition`
--- | constructor, but monadic style comes in handy for composing the update out
--- | of smaller pieces. Here's a more full example:
+-- | At first glance it may seem that it's shorter to just call the `transition`
+-- | smart constructor, but monadic style comes in handy for composing the
+-- | update out of smaller pieces. Here's a more full example:
 -- |
--- |     data Message = Nop | ButtonClicked | OnNewItem String
+-- |     data Message = ButtonClicked | OnNewItem String
 -- |
 -- |     update :: State -> Message -> Transition Aff Message State
--- |     update state Nop =
--- |         pure state
 -- |     update state ButtonClick = do
 -- |         fork $ insertItem "new list"
 -- |         incButtonClickCount state
+-- |     update state (OnNewItem str) =
+-- |         ...
 -- |
 -- |     insertItem :: Aff Message
 -- |     insertItem name = do
--- |         delay $ Milliseconds 1000
+-- |         delay $ Milliseconds 1000.0
 -- |         pure $ OnNewItem name
 -- |
 -- |     incButtonClickCount :: Transition Aff Message State
 -- |     incButtonClickCount state = do
--- |         fork $ trackingEvent "Button click" *> pure Nop
+-- |         forkVoid $ trackingEvent "Button click"
 -- |         pure $ state { buttonsClicked = state.buttonsClicked + 1 }
 -- |
 fork :: forall m message. MonadEffect m => m message -> Transition m message Unit
@@ -168,12 +166,13 @@ forkMaybe cmd = forks \sink -> do
     liftEffect $ maybe (pure unit) sink msg
 
 -- | Definition of a component according to The Elm Architecture. Consists of
--- | three functions - init, view, update, - that together describe the
+-- | three functions - `init`, `view`, `update`, - that together describe the
 -- | lifecycle of a component.
 -- |
 -- | Type parameters:
 -- |
--- |   * `m` - a monad in which the effects produced by `update` and `init` functions run.
+-- |   * `m` - a monad in which the effects produced by `update` and `init`
+-- |     functions run.
 -- |   * `msg` - component's message.
 -- |   * `state` - component's state.
 type ComponentDef m msg state = {
@@ -183,7 +182,7 @@ type ComponentDef m msg state = {
 }
 
 -- | A callback used to return multiple components of different types. See below
--- | for more a detailed explanation.
+-- | for a more detailed explanation.
 -- |
 -- | This callback is handy in situations where a function must return different
 -- | components (with different `state` and `message` types) depending on
@@ -203,25 +202,9 @@ type ComponentDef m msg state = {
 type ComponentReturnCallback m a =
     forall state msg. ComponentDef m msg state -> a
 
--- | A nested `map` - useful for mapping over commands in an array: first `map`
--- | maps over the array, second `map` maps over the monad `m`.
--- |
--- | Example:
--- |
--- |      let (Transition subS cmds) = SubComponent.update s.subComponent msg
--- |      in Transition (s { subComponent = subS }) (SubComponentMsg <$$> cmds)
-infix 8 mapCmds as <$$>
-mapCmds :: forall m msg innerMsg. Functor m => (msg -> innerMsg) -> Array (m msg) -> Array (m innerMsg)
-mapCmds mapMsg cmds = map mapMsg <$> cmds
-
--- | Creates a `Transition` without any commands.
--- | This function will be deprecated soon in favor of `pure`.
-pureUpdate :: forall m msg state. state -> Transition m msg state
-pureUpdate = pure
-
 -- | Wraps the given component, intercepts its update cycle, and traces (i.e.
 -- | prints to dev console) every command and every state value (as JSON
--- | objects).
+-- | objects), plus timing of renders and state transitions.
 withTrace :: forall m msg state
      . Trace.DebugWarning
     => ComponentDef m msg state
@@ -270,7 +253,7 @@ bindComponent cmpt def stateStrategy onViewError =
                     delay $ Milliseconds 0.0 -- Make sure this call is actually async
                     cmd $ \msg -> liftEffect $ dispatchMsg component (Right msg)
 
--- | Given a ComponentDef, binds that def to a freshly created React class,
+-- | Given a `ComponentDef`, binds that def to a freshly created React class,
 -- | instantiates that class, and returns a rendering function. Note that the
 -- | return type of this function is almost the same as that of
 -- | `ComponentDef::view` - except for state. This is not a coincidence: it is
@@ -289,10 +272,7 @@ construct def = do
         bindComponent cmpt def stateStorage
 
 -- | Monad transformation applied to `ComponentDef`
-nat :: forall m n msg state
-     . (forall a. m a -> n a)
-    -> ComponentDef m msg state
-    -> ComponentDef n msg state
+nat :: forall m n msg state. (m ~> n) -> ComponentDef m msg state -> ComponentDef n msg state
 nat map def =
     {
         view: def.view,
@@ -303,10 +283,10 @@ nat map def =
         mapTransition (Transition state cmds) = Transition state (mapCmd <$> cmds)
         mapCmd cmd sink = map $ cmd sink
 
--- | Creates a React component that can be bound to a varying ComponentDef,
+-- | Creates a React component that can be bound to a varying `ComponentDef`,
 -- | returns a function that performs the binding.
 -- |
--- | Note 1: this function accepts an `Aff`-based ComponentDef, it cannot take
+-- | Note 1: this function accepts an `Aff`-based `ComponentDef`, it cannot take
 -- | polymorphic or custom monad. The superficial reason for this is that this
 -- | function is intended to be used at top-level (see explanation below), where
 -- | context for a custom monad is not available. A deeper reason is that this
@@ -324,7 +304,7 @@ nat map def =
 -- | `this.state`. While this is appropriate for most cases, it actually has
 -- | proven to be fragile in some specific circumstances (e.g. multiple events
 -- | occurring within the same JS synchronous frame), so it is not recommended
--- | to use this mechanism for complex components.
+-- | to use this mechanism for complex components or the top-level program.
 wrapWithLocalState :: forall msg state args
      . ComponentName
     -> (args -> ComponentDef Aff msg state)
@@ -364,10 +344,10 @@ wrapWithLocalState' name mkDef =
 -- | instance. This means that, on one hand, we cannot use the same React class
 -- | for every instantiation, because this may create conflicts, where one
 -- | Elmish component replaces another in the DOM, but they look like the same
--- | component to React, which makes it reuse state, which leads to chaos. On
--- | the other hand, we cannot create a fresh class on every render, because
--- | then React will see it as a new component every time, and will reset its
--- | state every time.
+-- | component to React, which makes it reuse state, which leads to breaking
+-- | type safety. On the other hand, we cannot create a fresh class on every
+-- | render, because then React will see it as a new component every time, and
+-- | will reset its state every time.
 -- |
 -- | This means that we need some way of figuring out whether it needs to be
 -- | logically "same" component or "different", but there is no way to get that

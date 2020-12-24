@@ -76,12 +76,23 @@ type DispatchError = String
 -- | `DispatchMsgFn`, unless the parameters passed from JS cannot be decoded, in
 -- | which case an error is reported via `DispatchMsgFn`.
 -- |
--- | Example of intended usage:
+-- | Example of intended usage with `elmish-html`:
+-- |
+-- |      -- PureScript
+-- |      data Message = A | B Int
+-- |
+-- |      view state dispatch =
+-- |        div {}
+-- |        [ button { onClick: handle dispatch A } "Click A"
+-- |        , button { onClick: handle dispatch $ B 42 } "Click B"
+-- |        ]
+-- |
+-- | Example with FFIed component used as the view:
 -- |
 -- |      -- PureScript
 -- |      data Message = A | B Int | C String Boolean
 -- |
--- |      view state dispatch = createElement' viewCtor_
+-- |      view state dispatch = createElement' ffiComponent_
 -- |          { foo: "bar"
 -- |          , onA: handle dispatch A
 -- |          , onB: handle dispatch B
@@ -90,7 +101,7 @@ type DispatchError = String
 -- |          }
 -- |
 -- |      // JSX:
--- |      export const viewCtor_ = args =>
+-- |      export const ffiComponent_ = args =>
 -- |          <div>
 -- |              Foo is {args.bar}<br />
 -- |              <button onClick={args.onA}>A</button>
