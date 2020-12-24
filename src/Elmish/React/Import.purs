@@ -5,8 +5,8 @@
 -- |    * A partial record of required props.
 -- |    * A partial record of optional props.
 -- |    * Actual FFI-import of the component constructor. This import is weakly
--- |      untyped and shouldn't be exported from the module. Consider it
--- |      internal implementation detail.
+-- |      typed and shouldn't be exported from the module. Consider it internal
+-- |      implementation detail.
 -- |    * Strongly-typed, PureScript-friendly function that constructs the
 -- |      component. The body of such function usually consists of just a call
 -- |      to `createElement` (or `createElement'` for childless components), its
