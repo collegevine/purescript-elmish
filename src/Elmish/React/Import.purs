@@ -2,8 +2,8 @@
 -- | Elmish parlance. A typical import of a React component consists of four
 -- | parts:
 -- |
--- |    * A partial record of required props.
--- |    * A partial record of optional props.
+-- |    * A partial row of required props.
+-- |    * A partial row of optional props.
 -- |    * Actual FFI-import of the component constructor. This import is weakly
 -- |      typed and shouldn't be exported from the module. Consider it internal
 -- |      implementation detail.
