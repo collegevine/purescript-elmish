@@ -21,7 +21,7 @@ import Elmish.React as React
 -- |
 -- |    * `dedicatedStorage` stores state in a dedicated mutable cell. This
 -- |      strategy is used in `Elmish.Component.construct`.
--- |    * `localState` stores state locally on React component instance - i.e.
+-- |    * `localState` stores state locally on the React component instance - i.e.
 -- |      `this.setState`. This strategy is used in
 -- |      `Elmish.Component.wrapWithLocalState`.
 -- |

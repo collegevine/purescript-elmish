@@ -350,7 +350,7 @@ wrapWithLocalState' name mkDef =
 -- | will reset its state every time.
 -- |
 -- | This means that we need some way of figuring out whether it needs to be
--- | logically "same" component or "different", but there is no way to get that
+-- | logically the "same" component or "different", but there is no way to get that
 -- | "for free" (same way React gets it for free from referential equality) due
 -- | to PureScript's purity. Therefore, the only reliable way is to ask the
 -- | programmer, which is accomplished by requiring a `ComponentName`, which
