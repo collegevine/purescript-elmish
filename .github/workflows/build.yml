@@ -13,8 +13,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Setup Node
-      uses: actions/setup-node@v1
+    - uses: actions/cache@v2
+      with: 
+        path: |
+          .spago
+          output
+        key: build-atrifacts
+    - uses: actions/setup-node@v1
       with:
         node-version: 10.15
     - run: npm ci
