@@ -1,3 +1,58 @@
+-- | This module provides types to support FFI-importing React components into
+-- | Elmish parlance. A typical import of a React component consists of four
+-- | parts:
+-- |
+-- |    * A partial row of required props.
+-- |    * A partial row of optional props.
+-- |    * Actual FFI-import of the component constructor. This import is weakly
+-- |      typed and shouldn't be exported from the module. Consider it internal
+-- |      implementation detail.
+-- |    * Strongly-typed, PureScript-friendly function that constructs the
+-- |      component. The body of such function usually consists of just a call
+-- |      to `createElement` (or `createElement'` for childless components), its
+-- |      only purpose being the type signature. This function is what should be
+-- |      exported for use by consumers.
+-- |
+-- | Classes and type aliases provided in this module, when applied to the
+-- | constructor function, make it possible to pass only partial props to it,
+-- | while still ensuring their correct types and presence of non-optional ones.
+-- |
+-- | Example:
+-- |
+-- |     // JSX
+-- |     // `world` prop is required, `hello` and `highlight` are optional
+-- |     export const MyComponent = ({ hello, world, highlight }) =>
+-- |       <div>
+-- |         <span>{hello || "Hello"}, </span>
+-- |         <span style={{ color: highlight ? "red" : "" }}>{world}</span>
+-- |       </div>
+-- |
+-- |
+-- |     -- PureScript
+-- |     module MyComponent(Props, OptProps, myComponent) where
+-- |
+-- |     import Elmish.React (createElement)
+-- |     import Elmish.React.Import (ImportedReactComponentConstructor, ImportedReactComponent)
+-- |
+-- |     type Props r = ( world :: String | r )
+-- |     type OptProps r = ( hello :: String, highlight :: Boolean | r )
+-- |
+-- |     myComponent :: ImportedReactComponentConstructor Props OptProps
+-- |     myComponent = createElement myComponent_
+-- |
+-- |     foreign import myComponent_ :: ImportedReactComponent
+-- |
+-- |
+-- |     -- PureScript use site
+-- |     import MyComponent (myComponent)
+-- |     import Elmish.React.DOM (fragment)
+-- |
+-- |     view :: ...
+-- |     view = H.fragment
+-- |       [ myComponent { world: "world" }
+-- |       , myComponent { hello: "Goodbye", world: "cruel world!", highlight: true }
+-- |       ]
+-- |
 module Elmish.React.Import
     ( CommonProps
     , EmptyProps

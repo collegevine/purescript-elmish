@@ -1,3 +1,23 @@
+module Elmish.Boot
+    ( BootRecord
+    , boot
+    , defaultMain
+    ) where
+
+import Prelude
+
+import Data.Maybe (Maybe(..))
+import Effect (Effect)
+import Effect.Aff (Aff)
+import Effect.Class.Console as Console
+import Elmish.Component as Comp
+import Elmish.Dispatch (DispatchMsgFn, dispatchMsgFn)
+import Elmish.React as React
+import Web.DOM.NonElementParentNode (getElementById) as DOM
+import Web.HTML (window) as DOM
+import Web.HTML.HTMLDocument (toNonElementParentNode) as DOM
+import Web.HTML.Window (document) as DOM
+
 -- | Support for the most common case entry point - i.e. mounting an Elmish
 -- | component (i.e. `ComponentDef` structure) to an HTML DOM element with a
 -- | known ID, with support for server-side rendering.
@@ -5,24 +25,22 @@
 -- | The function `boot` returns what we call `BootRecord` - a record of three
 -- | functions:
 -- |
--- |     * `mount` -
--- |        takes HTML element ID and props¹, creates an instance of
--- |        the component, and mounts it to the HTML element in question
--- |     * `hydrate` -
--- |        same as `mount`, but expects the HTML element to already
--- |        contain pre-rendered HTML inside. See React docs for more
--- |        on server-side rendering: https://reactjs.org/docs/react-dom.html#hydrate
--- |     * `renderToString` -
--- |        meant to be called on the server (e.g. by running the code
--- |        under NodeJS) to perform the server-side render. Takes props¹
--- |        and returns a `String` containing the resulting HTML.
+-- |    * `mount` - takes HTML element ID and props¹, creates an instance of the
+-- |       component, and mounts it to the HTML element in question
+-- |    * `hydrate` - same as `mount`, but expects the HTML element to already
+-- |       contain pre-rendered HTML inside. See React docs for more on
+-- |       server-side rendering:
+-- |       https://reactjs.org/docs/react-dom.html#hydrate
+-- |    * `renderToString` - meant to be called on the server (e.g. by running
+-- |       the code under NodeJS) to perform the server-side render. Takes
+-- |       props¹ and returns a `String` containing the resulting HTML.
 -- |
 -- | The idea is that the PureScript code would export such `BootRecord` for
 -- | consumption by bootstrap JavaScript code in the page and/or server-side
--- | NodeJS code (which could be written in PureScript or not). For "plain React"
--- | scenario, the JavaScript code in the page would just call `mount`. For
--- | "server-side rendering", the server would first call `renderToString` and
--- | serve the HTML to the client, and then the client-side JavaScript code
+-- | NodeJS code (which could be written in PureScript or not). For "plain
+-- | React" scenario, the JavaScript code in the page would just call `mount`.
+-- | For "server-side rendering", the server would first call `renderToString`
+-- | and serve the HTML to the client, and then the client-side JavaScript code
 -- | would call `hydrate`.
 -- |
 -- | -------------------------------------------------------------------------
@@ -30,6 +48,7 @@
 -- |  example below). It is recommended that this parameter is a JavaScript
 -- |  record (hence the name "props"), because it would likely need to be
 -- |  supplied by some bootstrap JavaScript code.
+-- |
 -- | -------------------------------------------------------------------------
 -- |
 -- | Example:
@@ -65,27 +84,6 @@
 -- |        </script>
 -- |     </html>
 -- |
-module Elmish.Boot
-    ( BootRecord
-    , boot
-    , defaultMain
-    ) where
-
-import Prelude
-
-import Data.Maybe (Maybe(..))
-import Effect (Effect)
-import Effect.Aff (Aff)
-import Effect.Class.Console as Console
-import Elmish.Component as Comp
-import Elmish.Dispatch (DispatchMsgFn, dispatchMsgFn)
-import Elmish.React as React
-import Web.DOM.NonElementParentNode (getElementById) as DOM
-import Web.HTML (window) as DOM
-import Web.HTML.HTMLDocument (toNonElementParentNode) as DOM
-import Web.HTML.Window (document) as DOM
-
--- | Boot record for a UI component. See comments for this module.
 type BootRecord props =
   { mount :: String -> props -> Effect Unit
   -- ^ Mount the component to a DOM element with given string ID
@@ -101,7 +99,7 @@ type BootRecord props =
   }
 
 
--- | Creates a boot record for the given component. See comments for this module.
+-- | Creates a boot record for the given component. See comments for `BootRecord`.
 boot :: forall msg state props. (props -> Comp.ComponentDef Aff msg state) -> BootRecord props
 boot mkDef =
   { mount: mountVia React.render

@@ -13,18 +13,23 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Nullable (toMaybe)
 import Elmish.React as React
 
--- This represents a strategy of storing UI component state.
--- The strategy is a function that takes initial state and returns a monadic
--- equivalent of lens for manipulating the state.
---
--- Currently there are two strategies:
---    (1) `dedicatedStorage` stores state in a special-purpose mutable cell
---    (2) `localState` stores state locally on React component instance - i.e. `this.setState`
---
--- The former strategy is more reliable, since React is very lax with `this.state` and `this.setState`
--- (for example, updates are "eventual", with no time guarantees).
--- However, the former strategy is not pure (requires allocating the storage cell), and thus doesn't
--- work with inline embedding of components.
+-- | This type represents a strategy of storing UI component state. The strategy
+-- | is a function that takes initial state and returns a monadic equivalent of
+-- | lens for manipulating the state.
+-- |
+-- | Currently there are two strategies:
+-- |
+-- |    * `dedicatedStorage` stores state in a dedicated mutable cell. This
+-- |      strategy is used in `Elmish.Component.construct`.
+-- |    * `localState` stores state locally on the React component instance - i.e.
+-- |      `this.setState`. This strategy is used in
+-- |      `Elmish.Component.wrapWithLocalState`.
+-- |
+-- | The former strategy is more reliable, since React is very lax with
+-- | `this.state` and `this.setState` (for example, updates are "eventual", with
+-- | no time guarantees). However, the former strategy is not pure (requires
+-- | allocating the storage cell), and thus doesn't work with inline embedding
+-- | of components.
 type StateStrategy state =
     { initialState :: state }
     -> {
@@ -40,7 +45,8 @@ type StateStrategy state =
     }
 
 
--- Stores state in a dedicated mutable state. See comment on `StateStrategy` for explanation.
+-- | Stores state in a dedicated mutable state. See comment on `StateStrategy`
+-- | for explanation.
 dedicatedStorage :: forall state. Effect (StateStrategy state)
 dedicatedStorage = mkStrategy <$> Ref.new Nothing
     where
@@ -56,7 +62,8 @@ dedicatedStorage = mkStrategy <$> Ref.new Nothing
     }
 
 
--- Stores state on the React component instance - i.e. `this.setState`. See comment on `StateStrategy`.
+-- | Stores state on the React component instance - i.e. `this.setState`. See
+-- | comment on `StateStrategy`.
 localState :: forall state. StateStrategy state
 localState {initialState} = {
 

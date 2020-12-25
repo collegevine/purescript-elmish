@@ -1,3 +1,5 @@
+-- | This module is an echo of an era gone by, it is deprecated and will be
+-- | removed soon.
 module Elmish.Ref
     ( Ref, ref, deref
     ) where

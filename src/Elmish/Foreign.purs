@@ -71,8 +71,34 @@ class CanReceiveFromJavaScript a where
 -- | JavaScript code directly (without conversion) and understood by that code.
 -- | Specifically, this class is defined for primitives (strings, numbers,
 -- | booleans), arrays, and records. This assertion is used in a number of
--- | places that pass complex values to JS code to restrict the types that can
--- | be safely passed.
+-- | places that pass complex values to JS code to restrict the set of types
+-- | that can be safely passed.
+-- |
+-- | It is still possible to define instances of this class for other,
+-- | non-primitive types, but you have to know what you're doing and make sure
+-- | that JS representation is sane and stable. For example, a common trick is
+-- | to `newtype`-wrap known JS enumerations to provide type safety:
+-- |
+-- |     module HTMLButton
+-- |        ( ButtonType  -- NOTE: not exporting the constructor
+-- |        , typeButton, typeSubmit, typeReset
+-- |        , ButtonProps, button
+-- |        )
+-- |        where
+-- |
+-- |     newtype ButtonType = ButtonType String
+-- |     instance toJsButtonType :: CanPassToJavaScript ButtonType
+-- |     typeButton = ButtonType "button" :: ButtonType
+-- |     typeSubmit = ButtonType "submit" :: ButtonType
+-- |     typeReset = ButtonType "reset" :: ButtonType
+-- |
+-- |     type ButtonProps =
+-- |       { type :: ButtonType
+-- |       , ...
+-- |       }
+-- |
+-- |     foreign import button :: ButtonProps -> ReactElement
+-- |
 class CanPassToJavaScript a
 
 instance tojsJson :: CanPassToJavaScript Json

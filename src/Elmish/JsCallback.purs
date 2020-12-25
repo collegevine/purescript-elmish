@@ -59,7 +59,7 @@ jsCallback0 fn = jsCallback fn
 -- | Example:
 -- |
 -- |       -- PureScript:
--- |       createElement' theView_
+-- |       createElement' ffiComponent_
 -- |           { onSave: jsCallback $ Console.log "Save"
 -- |           , onCancel: jsCallback $ Console.log "Cancel"
 -- |           , onFoo: jsCallback \(bar::String) (baz::Int) ->
@@ -67,7 +67,7 @@ jsCallback0 fn = jsCallback fn
 -- |           }
 -- |
 -- |      // JSX:
--- |      export const TheView = props =>
+-- |      export const FfiComponent = props =>
 -- |        <div>
 -- |          <button onClick={props.onSave}>Save</button>
 -- |          <button onClick={props.onCancel}>Cancel</button>
