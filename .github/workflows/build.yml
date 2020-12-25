@@ -18,6 +18,7 @@ jobs:
         path: |
           .spago
           output
+          node_modules
         key: build-atrifacts
     - uses: actions/setup-node@v1
       with:
