@@ -23,6 +23,6 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: 10.15
-    - run: npm ci
+    - run: npm i
     - run: npm run build
 
