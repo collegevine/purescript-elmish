@@ -73,7 +73,7 @@ type CommonProps = ( key :: String )
 
 -- | And empty open row. To be used for components that don't have any optional
 -- | or any required props.
-type EmptyProps (r :: #Type) = ( | r )
+type EmptyProps (r :: Row Type) = ( | r )
 
 -- | Type of a function used to create a React JSX-imported component that is
 -- | generic in such a way as to allow any subset of optional properties
@@ -115,5 +115,5 @@ type ImportedReactComponent  = forall r. ReactComponent r
 
 
 -- Asserts that one type row is a (non-strict) subset of the other type row
-class IsSubsetOf (subset :: # Type) (superset :: # Type)
+class IsSubsetOf (subset :: Row Type) (superset :: Row Type)
 instance isSubsetOf :: Row.Union subset r superset => IsSubsetOf subset superset

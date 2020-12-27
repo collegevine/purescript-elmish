@@ -20,7 +20,7 @@ import Data.Nullable (Nullable)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, runEffectFn1, runEffectFn2, runEffectFn3)
 import Elmish.Foreign (class CanPassToJavaScript)
-import Prim.RowList (class RowToList, kind RowList, Cons, Nil)
+import Prim.RowList (class RowToList, RowList, Cons, Nil)
 import Prim.TypeError (Text, class Fail)
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM as HTML
@@ -86,7 +86,7 @@ createElement' component props = createElement component props ([] :: Array Reac
 -- | 3. There cannot be a prop named 'ref'. Currently we do not support React
 -- |    refs, and when we do, the type of that prop will have to be restricted
 -- |    to something special and effectful.
-class ValidReactProps a
+class ValidReactProps (a :: Type)
 instance validProps ::
     ( RowToList r rl
     , ValidReactPropsRL rl
@@ -99,9 +99,9 @@ else instance validPropsNonRecord ::
 
 -- | Internal implementation detail of the `ValidReactProps` class. This has to be a
 -- | separate class due to how rows work at type level.
-class ValidReactPropsRL (a :: RowList)
+class ValidReactPropsRL (a :: RowList Type)
 instance validPropsNil :: ValidReactPropsRL Nil
-instance validPropsConsRef :: Fail InvalidProps => ValidReactPropsRL (Cons "ref" t r)
+else instance validPropsConsRef :: Fail InvalidProps => ValidReactPropsRL (Cons "ref" t r)
 else instance validPropsCons :: ValidReactPropsRL (Cons n t r)
 
 -- | Custom error message for the `ValidReactProps` and `ValidReactPropsRL` classes

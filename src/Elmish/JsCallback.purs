@@ -24,7 +24,7 @@ import Elmish.Foreign (class CanPassToJavaScript, class CanReceiveFromJavaScript
 -- | case for such callbacks is to pass them to JSX code for receiving
 -- | DOM-generated events and turning them into UI messages. See `MkJsCallback`
 -- | for more info and examples.
-newtype JsCallback fn = JsCallback Foreign
+newtype JsCallback (fn :: Type) = JsCallback Foreign
 instance jsCbToJs :: MkJsCallback fn => CanPassToJavaScript (JsCallback fn)
 
 -- | A parameterless `JsCallback`
