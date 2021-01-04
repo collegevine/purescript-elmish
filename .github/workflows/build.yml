@@ -1,0 +1,28 @@
+name: build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/cache@v2
+      with: 
+        path: |
+          .spago
+          output
+          node_modules
+        key: build-atrifacts-v1-${{ hashFiles('package-lock.json', 'spago.dhall', 'packages.dhall') }}
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 10.15
+    - run: npm i
+    - run: npm run build
+
