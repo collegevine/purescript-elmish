@@ -75,6 +75,7 @@ instance trBind :: Bind (Transition m msg) where
     bind (Transition s cmds) f =
         let (Transition s' cmds') = f s
         in Transition s' (cmds <> cmds')
+instance trMonad :: Monad (Transition m msg)
 
 -- | Smart constructor for the `Transition` type. See comments there. This
 -- | function takes the new (i.e. updated) state and an array of commands - i.e.
