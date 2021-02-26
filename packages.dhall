@@ -1,16 +1,4 @@
 let upstream =
-      https://raw.githubusercontent.com/purescript/package-sets/prepare-0.14/src/packages.dhall sha256:2c0a5af7ed5158218e0068f2328101fd9f0461e17ea37298e5af6875a96f34ac
+      https://raw.githubusercontent.com/purescript/package-sets/prepare-0.14/src/packages.dhall sha256:65b7bbc0f4d1cfeab0216f69b773c0f319f79a2fc56cb57215c6f26bfc4b817d
 
-let overrides =
-      { newtype = upstream.newtype with dependencies = [ "prelude", "safe-coerce" ]
-      }
-
-let additions =
-      { safe-coerce =
-        { dependencies = [ "unsafe-coerce" ]
-        , repo = "https://github.com/purescript/purescript-safe-coerce.git"
-        , version = "master"
-        }
-      }
-
-in  upstream // overrides // additions
+in  upstream
