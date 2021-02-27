@@ -22,7 +22,7 @@ import Data.Int (fromNumber)
 import Data.JSDate (JSDate)
 import Data.Maybe (Maybe(..), isJust, maybe)
 import Data.Nullable (Nullable)
-import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
+import Data.Symbol (class IsSymbol, reflectSymbol)
 import Data.Traversable (all)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2)
@@ -30,7 +30,7 @@ import Foreign (Foreign) as ForeignReexport
 import Foreign (Foreign, isArray, isNull, unsafeFromForeign, unsafeToForeign)
 import Foreign.Object as Obj
 import Type.Proxy (Proxy(..))
-import Type.RowList (class RowToList, Cons, Nil, RLProxy(RLProxy), kind RowList)
+import Type.RowList (class RowToList, Cons, Nil, RLProxy(RLProxy), RowList)
 
 -- | Type of the `arguments` object in a JS function (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments).
 foreign import data Arguments :: Type
@@ -64,7 +64,7 @@ foreign import showForeign :: Foreign -> String
 -- | JavaScript to PureScript without any conversions. Specifically, this class
 -- | is defined for primitives (strings, numbers, booleans), arrays, and
 -- | records.
-class CanReceiveFromJavaScript a where
+class CanReceiveFromJavaScript (a :: Type) where
     isForeignOfCorrectType :: Proxy a -> Foreign -> Boolean
 
 -- | This class is used to assert that values of a type can be passed to
@@ -99,7 +99,7 @@ class CanReceiveFromJavaScript a where
 -- |
 -- |     foreign import button :: ButtonProps -> ReactElement
 -- |
-class CanPassToJavaScript a
+class CanPassToJavaScript (a :: Type)
 
 instance tojsJson :: CanPassToJavaScript Json
 
@@ -167,11 +167,11 @@ class CanReceiveFromJavaScriptRecord rowList where
 instance recfromjsNil :: CanReceiveFromJavaScriptRecord Nil where
     validateJsRecord _ _ = true
 
-instance recfromjsCons :: (IsSymbol name, CanReceiveFromJavaScript a, CanReceiveFromJavaScriptRecord rl') => CanReceiveFromJavaScriptRecord (Cons name a rl') where
+else instance recfromjsCons :: (IsSymbol name, CanReceiveFromJavaScript a, CanReceiveFromJavaScriptRecord rl') => CanReceiveFromJavaScriptRecord (Cons name a rl') where
     validateJsRecord _ fs = validHead && validTail
         where
             validTail = validateJsRecord (RLProxy :: RLProxy rl') fs
-            validHead = case Obj.lookup (reflectSymbol (SProxy :: SProxy name)) fs of
+            validHead = case Obj.lookup (reflectSymbol (Proxy :: Proxy name)) fs of
                 Nothing -> false
                 Just a -> isForeignOfCorrectType (Proxy :: Proxy a) a
 
@@ -179,9 +179,9 @@ instance recfromjsCons :: (IsSymbol name, CanReceiveFromJavaScript a, CanReceive
 -- | This class is implementation of `CanPassToJavaScript` for records. It
 -- | simply iterates over all fields, checking that every field is of a type
 -- | that also has an instance of `CanPassToJavaScript`.
-class CanPassToJavaScriptRecord (rowList :: RowList)
+class CanPassToJavaScriptRecord (rowList :: RowList Type)
 instance rectojsNil :: CanPassToJavaScriptRecord Nil
-instance rectojsCons :: (IsSymbol name, CanPassToJavaScript a, CanPassToJavaScriptRecord rl') => CanPassToJavaScriptRecord (Cons name a rl')
+else instance rectojsCons :: (IsSymbol name, CanPassToJavaScript a, CanPassToJavaScriptRecord rl') => CanPassToJavaScriptRecord (Cons name a rl')
 
 
 -- | Verifies if the given raw JS value is of the right type/shape to be
