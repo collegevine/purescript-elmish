@@ -17,6 +17,7 @@
         "purescript-aff": "^v6.0.0",
         "purescript-argonaut-core": "^v6.0.0",
         "purescript-console": "^v5.0.0",
+        "purescript-debug": "^v5.0.0",
         "purescript-either": "^v5.0.0",
         "purescript-foreign-object": "^v3.0.0",
         "purescript-functions": "^v5.0.0",
@@ -26,8 +27,5 @@
         "purescript-tuples": "^v6.0.0",
         "purescript-typelevel-prelude": "^v6.0.0",
         "purescript-web-html": "^v3.0.0"
-    },
-    "devDependencies": {
-        "purescript-debug": "^v5.0.0"
     }
 }
