@@ -11,7 +11,6 @@ import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Class.Console as Console
 import Elmish.Component as Comp
-import Elmish.Dispatch (Dispatch)
 import Elmish.React as React
 import Web.DOM.NonElementParentNode (getElementById) as DOM
 import Web.HTML (window) as DOM
@@ -107,7 +106,7 @@ boot mkDef =
   , hydrate: mountVia React.hydrate
   }
   where
-    renderToString props = React.renderToString $ def.view state0 onError
+    renderToString props = React.renderToString $ def.view state0 (const $ pure unit)
       where
         def = mkDef props
         Comp.Transition state0 _ = def.init
@@ -122,10 +121,6 @@ boot mkDef =
         Just e -> do
           render <- Comp.construct (mkDef props)
           f render e
-
-    onError :: forall a. Dispatch a
-    onError _ = pure unit
-
 
 -- | This function supports the simplest (almost toy?) use case where there is
 -- | no server, no server-side rendering, all that exists is an HTML page that
