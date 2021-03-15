@@ -28,6 +28,6 @@
         "purescript-web-html": "^v3.0.0"
     },
     "devDependencies": {
-        "purescript-debug": "^v5.0.0",
+        "purescript-debug": "^v5.0.0"
     }
 }

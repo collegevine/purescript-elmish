@@ -19,7 +19,7 @@ import Data.Bifunctor (bimap, lmap, rmap) as Bifunctor
 import Data.Bifunctor (class Bifunctor)
 import Data.Function.Uncurried (Fn2, runFn2)
 import Data.Maybe (Maybe, maybe)
-import Debug.Trace as Trace
+import Debug as Debug
 import Effect (Effect, foreachE)
 import Effect.Aff (Aff, Milliseconds(..), delay, launchAff_)
 import Effect.Class (class MonadEffect, liftEffect)
@@ -205,14 +205,14 @@ type ComponentReturnCallback m a =
 -- | prints to dev console) every command and every state value (as JSON
 -- | objects), plus timing of renders and state transitions.
 withTrace :: forall m msg state
-     . Trace.DebugWarning
+     . Debug.DebugWarning
     => ComponentDef m msg state
     -> ComponentDef m msg state
 withTrace def = def { update = tracingUpdate, view = tracingView }
     where
         tracingUpdate s m =
-            let (Transition s cmds) = traceTime "Update" \_ -> def.update s $ Trace.spy "Message" m
-            in Transition (Trace.spy "State" s) cmds
+            let (Transition s cmds) = traceTime "Update" \_ -> def.update s $ Debug.spy "Message" m
+            in Transition (Debug.spy "State" s) cmds
         tracingView s d =
             traceTime "Rendering" \_ -> def.view s d
 
