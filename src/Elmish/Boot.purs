@@ -11,7 +11,7 @@ import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Class.Console as Console
 import Elmish.Component as Comp
-import Elmish.Dispatch (DispatchMsgFn, dispatchMsgFn)
+import Elmish.Dispatch (Dispatch)
 import Elmish.React as React
 import Web.DOM.NonElementParentNode (getElementById) as DOM
 import Web.HTML (window) as DOM
@@ -121,10 +121,10 @@ boot mkDef =
           Console.error $ "Element #" <> domElementId <> " not found"
         Just e -> do
           render <- Comp.construct (mkDef props)
-          f (render onError) e
+          f render e
 
-    onError :: forall a. DispatchMsgFn a
-    onError = dispatchMsgFn Console.error (const $ pure unit)
+    onError :: forall a. Dispatch a
+    onError _ = pure unit
 
 
 -- | This function supports the simplest (almost toy?) use case where there is

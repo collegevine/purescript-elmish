@@ -1,3 +1,5 @@
+-- | This module is semi-deprecated and currently unused within Elmish. It will
+-- | probably be resurrected as an optional-validation library.
 module Elmish.JsCallback
     ( JsCallback
     , JsCallback0
