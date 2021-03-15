@@ -125,6 +125,10 @@ instance tojsInt :: CanPassToJavaScript Int
 instance fromjsInt :: CanReceiveFromJavaScript Int where
     isForeignOfCorrectType _ v = isNumber v && (isJust $ fromNumber $ unsafeFromForeign v)
 
+instance tojsEffect :: CanPassToJavaScript a => CanPassToJavaScript (Effect a)
+instance fromjsEffect :: CanReceiveFromJavaScript (Effect Unit) where
+    isForeignOfCorrectType _ = isFunction
+
 instance tojsEffectFn1 :: (CanReceiveFromJavaScript a, CanPassToJavaScript b) => CanPassToJavaScript (EffectFn1 a b)
 instance fromjsEffectFn1 :: CanPassToJavaScript a => CanReceiveFromJavaScript (EffectFn1 a Unit) where
     isForeignOfCorrectType _ = isFunction
