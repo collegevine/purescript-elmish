@@ -11,7 +11,6 @@ import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Class.Console as Console
 import Elmish.Component as Comp
-import Elmish.Dispatch (DispatchMsgFn, dispatchMsgFn)
 import Elmish.React as React
 import Web.DOM.NonElementParentNode (getElementById) as DOM
 import Web.HTML (window) as DOM
@@ -107,7 +106,7 @@ boot mkDef =
   , hydrate: mountVia React.hydrate
   }
   where
-    renderToString props = React.renderToString $ def.view state0 onError
+    renderToString props = React.renderToString $ def.view state0 (const $ pure unit)
       where
         def = mkDef props
         Comp.Transition state0 _ = def.init
@@ -121,11 +120,7 @@ boot mkDef =
           Console.error $ "Element #" <> domElementId <> " not found"
         Just e -> do
           render <- Comp.construct (mkDef props)
-          f (render onError) e
-
-    onError :: forall a. DispatchMsgFn a
-    onError = dispatchMsgFn Console.error (const $ pure unit)
-
+          f render e
 
 -- | This function supports the simplest (almost toy?) use case where there is
 -- | no server, no server-side rendering, all that exists is an HTML page that

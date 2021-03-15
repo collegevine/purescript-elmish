@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.5.0
+
+## Removed
+
+- **Breaking**: `DispatchMsgFn` (replaced with `Dispatch`) and friends -
+  `issueMsg`, `issueError`, `cmapMaybe`, `dispatchMsgFn`, `ignoreMsg`.
+- **Breaking**: Dispatch can no longer report errors due to failed decoding of
+  parameters passed from JavaScript. This feature turned out to be nearly
+  useless, yet it was creating quite a bit of extra complexity.
+
+## Changed
+
+- **Breaking**: `handle` and `handleMaybe` are no longer variadic. They only
+  work with single-argument event handler, which is the most common case. Since
+  `Dispatch` is now just a function, other cases can be easily covered via
+  `mkEffectFnX` (for which both `handle` and `handleMaybe` are no facades).
+
+## Added
+
+- **Breaking**: `Dispatch` (replaces `DispatchMsgFn`) - just an alias for `msg -> Effect Unit` now
+- `<|` alias for `handle`
+- `<?|` alias for `handleMaybe`
+- `CanPassToJavaScript` instances for `Effect Unit`, `EffectFn1 a Unit`, and
+  `EffectFn2 a b Unit`, so they can be used as event handlers.
+
 ## 0.4.0
 
 ### Changed
