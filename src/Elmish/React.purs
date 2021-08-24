@@ -52,7 +52,7 @@ foreign import data ReactComponentInstance :: Type
 -- | import Foreign.Object as FO
 -- |
 -- | H.div
--- |   { _data: FO.fromHomogenous { toggle: "buttons } }
+-- |   { _data: FO.fromHomogenous { toggle: "buttons" } }
 -- |   [...]
 -- | ```
 -- |
