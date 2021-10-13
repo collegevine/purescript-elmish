@@ -20,8 +20,8 @@ import Prelude
 import Data.Argonaut.Core (Json)
 import Data.Int (fromNumber)
 import Data.JSDate (JSDate)
-import Data.Maybe (Maybe(..), isJust, maybe)
-import Data.Nullable (Nullable)
+import Data.Maybe (Maybe(..), fromMaybe, isJust, maybe)
+import Data.Nullable (Nullable, null)
 import Data.Symbol (class IsSymbol, reflectSymbol)
 import Data.Traversable (all)
 import Effect (Effect)
@@ -30,7 +30,7 @@ import Foreign (Foreign) as ForeignReexport
 import Foreign (Foreign, isArray, isNull, unsafeFromForeign, unsafeToForeign)
 import Foreign.Object as Obj
 import Type.Proxy (Proxy(..))
-import Type.RowList (class RowToList, Cons, Nil, RLProxy(RLProxy), RowList)
+import Type.RowList (class RowToList, Cons, Nil, RowList)
 
 -- | Type of the `arguments` object in a JS function (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments).
 foreign import data Arguments :: Type
@@ -153,7 +153,7 @@ instance fromjsNullable :: CanReceiveFromJavaScript a => CanReceiveFromJavaScrip
 
 instance tojsRecord :: (RowToList r rl, CanPassToJavaScriptRecord rl) => CanPassToJavaScript (Record r)
 instance fromjsRecord :: (RowToList r rl, CanReceiveFromJavaScriptRecord rl) => CanReceiveFromJavaScript (Record r) where
-    isForeignOfCorrectType _ = maybe false (validateJsRecord (RLProxy :: RLProxy rl)) <<< readForeign
+    isForeignOfCorrectType _ = maybe false (validateJsRecord (Proxy :: _ rl)) <<< readForeign
 
 
 -- This instance allows passing functions of simple arguments to views.
@@ -168,8 +168,8 @@ instance tojsPureFunction :: CanPassToJavaScript a => CanPassToJavaScript (Forei
 -- | validates a given JS hash (aka "object") against a given type row that
 -- | represents a PureScript record, recursively calling
 -- | `isForeignOfCorrectType` for each field.
-class CanReceiveFromJavaScriptRecord rowList where
-    validateJsRecord :: RLProxy rowList -> Obj.Object Foreign -> Boolean
+class CanReceiveFromJavaScriptRecord (rowList :: RowList Type) where
+    validateJsRecord :: Proxy rowList -> Obj.Object Foreign -> Boolean
 
 instance recfromjsNil :: CanReceiveFromJavaScriptRecord Nil where
     validateJsRecord _ _ = true
@@ -177,10 +177,9 @@ instance recfromjsNil :: CanReceiveFromJavaScriptRecord Nil where
 else instance recfromjsCons :: (IsSymbol name, CanReceiveFromJavaScript a, CanReceiveFromJavaScriptRecord rl') => CanReceiveFromJavaScriptRecord (Cons name a rl') where
     validateJsRecord _ fs = validHead && validTail
         where
-            validTail = validateJsRecord (RLProxy :: RLProxy rl') fs
-            validHead = case Obj.lookup (reflectSymbol (Proxy :: Proxy name)) fs of
-                Nothing -> false
-                Just a -> isForeignOfCorrectType (Proxy :: Proxy a) a
+            validTail = validateJsRecord (Proxy :: _ rl') fs
+            validHead = isForeignOfCorrectType (Proxy :: _ a) head
+            head = fs # Obj.lookup (reflectSymbol (Proxy :: _ name)) # fromMaybe foreignNull
 
 
 -- | This class is implementation of `CanPassToJavaScript` for records. It
@@ -196,3 +195,5 @@ else instance rectojsCons :: (IsSymbol name, CanPassToJavaScript a, CanPassToJav
 readForeign :: ∀ a. CanReceiveFromJavaScript a => Foreign -> Maybe a
 readForeign v | isForeignOfCorrectType (Proxy :: Proxy a) v = Just $ unsafeFromForeign v
 readForeign _ = Nothing
+
+foreignNull = unsafeToForeign null :: Foreign
