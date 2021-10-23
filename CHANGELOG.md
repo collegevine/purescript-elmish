@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `readForeign'` - a new function that's like `readForeign`, but returns error
   information on failure.
 - `CanReceiveFromJavaScript` class modified to afford that.
+- Added tests. So far - only for `readForeign`.
 
 ## 0.5.2
 
