@@ -18,15 +18,13 @@ exports.isFunction = function(s) {
 }
 
 exports.showForeign = function(x) {
-  return x === null
-    ? "<null>"
-    : x === undefined
-    ? "<undefined>"
-    : x instanceof Date
-    ? x.toString()
-    : x instanceof Blob
-    ? "file[" + x.name + "]"
+  return (
+    x === null ? "<null>"
+    : x === undefined ? "<undefined>"
+    : x instanceof Date ? x.toString()
+    : (typeof Blob !== "undefined" && x instanceof Blob) ? "file[" + x.name + "]"
     : JSON.stringify(x)
+  )
 }
 
 exports.mkVarArgEff_ = function(k) {

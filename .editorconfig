@@ -10,4 +10,4 @@ trim_trailing_whitespace = true
 indent_size = 2
 
 [*.purs]
-indent_size = 4
+indent_size = 2
