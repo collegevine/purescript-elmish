@@ -165,7 +165,10 @@ instance tojsNullable :: CanPassToJavaScript a => CanPassToJavaScript (Nullable 
 instance fromjsNullable :: CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Nullable a) where
     validateForeignType _ v
       | isNull $ unsafeToForeign v = Valid
-      | otherwise = validateForeignType (Proxy :: _ a) $ unsafeToForeign v
+      | otherwise =
+          case validateForeignType (Proxy :: _ a) $ unsafeToForeign v of
+            Valid -> Valid
+            Invalid err -> Invalid err { expected = "Nullable " <> err.expected }
 
 instance tojsRecord :: (RowToList r rl, CanPassToJavaScriptRecord rl) => CanPassToJavaScript (Record r)
 instance fromjsRecord :: (RowToList r rl, CanReceiveFromJavaScriptRecord rl) => CanReceiveFromJavaScript (Record r) where

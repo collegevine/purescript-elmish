@@ -4,7 +4,7 @@ import Prelude
 
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
-import Data.Nullable (notNull, null)
+import Data.Nullable (Nullable, notNull, null)
 import Elmish.Foreign (class CanReceiveFromJavaScript, readForeign, readForeign')
 import Foreign (unsafeToForeign)
 import Test.Spec (Spec, describe, it)
@@ -38,6 +38,9 @@ spec = describe "Elmish.Foreign" do
         (read' "foo" :: _ _ Int) `shouldEqual` Left "Expected Int but got: \"foo\""
         (read' "foo" :: _ _ Boolean) `shouldEqual` Left "Expected Boolean but got: \"foo\""
         (read' "foo" :: _ _ (Array Int)) `shouldEqual` Left "Expected Array but got: \"foo\""
+
+      it "nullable" do
+        (read' "foo" :: _ _ (Nullable Int)) `shouldEqual` Left "Expected Nullable Int but got: \"foo\""
 
       it "nested within array" do
         (read' [f 42, f "foo"] :: _ _ (Array Int)) `shouldEqual` Left "[1]: expected Int but got: \"foo\""
