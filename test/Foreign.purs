@@ -27,6 +27,8 @@ spec = describe "Elmish.Foreign" do
     it "reads nullable values" do
       read null `shouldEqual` Just (null :: _ Int)
       read (notNull 42) `shouldEqual` Just (notNull 42)
+      (read { x: null :: _ Int } :: _ { x :: Nullable { y :: Int } })
+        `shouldEqual` Just { x: null }
 
     it "treats missing record fields as null" do
       read { x: "foo" } `shouldEqual` Just { x: "foo", y: null :: _ Int }
