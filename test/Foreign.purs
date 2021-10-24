@@ -59,7 +59,7 @@ spec = describe "Elmish.Foreign" do
           `shouldEqual` Left ".y.z: expected Int but got: \"foo\""
 
         (read' { x: 42, y: [] } :: _ _ { x :: Int, y :: { z :: Int } })
-          `shouldEqual` Left ".y.z: expected Int but got: <null>"
+          `shouldEqual` Left ".y.z: expected Int but got: <undefined>"
 
       it "multiple nesting levels" do
         let input = { a: [{ x: [{ y: f 42 }, { y: f 5 }, { y: f "foo" }]}] }

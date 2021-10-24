@@ -24,14 +24,15 @@ import Data.Either (Either(..), hush)
 import Data.FoldableWithIndex (findMapWithIndex)
 import Data.Int (fromNumber)
 import Data.JSDate (JSDate)
-import Data.Maybe (Maybe(..), fromMaybe, isJust)
-import Data.Nullable (Nullable, null)
+import Data.Maybe (Maybe(..), isJust)
+import Data.Nullable (Nullable)
 import Data.Symbol (class IsSymbol, reflectSymbol)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2)
 import Foreign (Foreign) as ForeignReexport
-import Foreign (Foreign, isArray, isNull, unsafeFromForeign, unsafeToForeign)
+import Foreign (Foreign, isArray, isNull, isUndefined, unsafeFromForeign)
 import Foreign.Object as Obj
+import Record.Unsafe (unsafeGet)
 import Type.Proxy (Proxy(..))
 import Type.RowList (class RowToList, Cons, Nil, RowList)
 
@@ -164,9 +165,9 @@ instance fromjsArray :: CanReceiveFromJavaScript a => CanReceiveFromJavaScript (
 instance tojsNullable :: CanPassToJavaScript a => CanPassToJavaScript (Nullable a)
 instance fromjsNullable :: CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Nullable a) where
     validateForeignType _ v
-      | isNull $ unsafeToForeign v = Valid
+      | isNull v || isUndefined v = Valid
       | otherwise =
-          case validateForeignType (Proxy :: _ a) $ unsafeToForeign v of
+          case validateForeignType (Proxy :: _ a) v of
             Valid -> Valid
             Invalid err -> Invalid err { expected = "Nullable " <> err.expected }
 
@@ -174,7 +175,7 @@ instance tojsRecord :: (RowToList r rl, CanPassToJavaScriptRecord rl) => CanPass
 instance fromjsRecord :: (RowToList r rl, CanReceiveFromJavaScriptRecord rl) => CanReceiveFromJavaScript (Record r) where
     validateForeignType _ v =
       case validateForeignType (Proxy :: _ (Obj.Object Foreign)) v of
-        Valid -> validateJsRecord (Proxy :: _ rl) $ unsafeFromForeign v
+        Valid -> validateJsRecord (Proxy :: _ rl) v
         invalid -> invalid
 
 -- This instance allows passing functions of simple arguments to views.
@@ -190,20 +191,20 @@ instance tojsPureFunction :: CanPassToJavaScript a => CanPassToJavaScript (Forei
 -- | represents a PureScript record, recursively calling
 -- | `validateForeignType` for each field.
 class CanReceiveFromJavaScriptRecord (rowList :: RowList Type) where
-    validateJsRecord :: Proxy rowList -> Obj.Object Foreign -> ValidationResult
+    validateJsRecord :: Proxy rowList -> Foreign -> ValidationResult
 
 instance recfromjsNil :: CanReceiveFromJavaScriptRecord Nil where
     validateJsRecord _ _ = Valid
 
 else instance recfromjsCons :: (IsSymbol name, CanReceiveFromJavaScript a, CanReceiveFromJavaScriptRecord rl') => CanReceiveFromJavaScriptRecord (Cons name a rl') where
-    validateJsRecord _ fs =
+    validateJsRecord _ v =
         case validHead of
           Invalid err -> Invalid err { path = "." <> fieldName <> err.path }
-          Valid -> validateJsRecord (Proxy :: _ rl') fs
+          Valid -> validateJsRecord (Proxy :: _ rl') v
         where
             validHead = validateForeignType (Proxy :: _ a) head
             fieldName = reflectSymbol (Proxy :: _ name)
-            head = fs # Obj.lookup fieldName # fromMaybe foreignNull
+            head = unsafeGet fieldName (unsafeFromForeign v :: {})
 
 
 -- | This class is implementation of `CanPassToJavaScript` for records. It
@@ -230,5 +231,3 @@ readForeign' v = case validateForeignType (Proxy :: _ a) v of
 -- | represented as `a`, and if so, coerces the value to `a`.
 readForeign :: ∀ a. CanReceiveFromJavaScript a => Foreign -> Maybe a
 readForeign = hush <<< readForeign'
-
-foreignNull = unsafeToForeign null :: Foreign
