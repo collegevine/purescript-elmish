@@ -14,7 +14,6 @@
   , "functions"
   , "integers"
   , "js-date"
-  , "lists"
   , "maybe"
   , "nullable"
   , "partial"

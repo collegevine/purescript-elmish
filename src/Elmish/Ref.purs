@@ -6,7 +6,6 @@ module Elmish.Ref
 
 import Prelude
 
-import Data.List (List(..))
 import Data.Maybe (Maybe(..), fromJust)
 import Data.Symbol (class IsSymbol, reflectSymbol)
 import Elmish.Foreign (class CanPassToJavaScript, class CanReceiveFromJavaScript, ValidationResult(..))
@@ -72,7 +71,7 @@ instance readjsRef :: IsSymbol name => CanReceiveFromJavaScript (Ref name a) whe
     validateForeignType _ v =
       case M.lookup sname map of
         Just _ -> Valid
-        Nothing -> Invalid { path: Nil, expected: "Ref", got: v }
+        Nothing -> Invalid { path: "", expected: "Ref", got: v }
       where
           sname = refName (Proxy :: _ name)
           map = unsafeCoerce v

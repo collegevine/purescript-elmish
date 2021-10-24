@@ -19,11 +19,11 @@ module Elmish.Foreign
 import Prelude
 
 import Data.Argonaut.Core (Json)
+import Data.Array (fold)
 import Data.Either (Either(..), hush)
 import Data.FoldableWithIndex (findMapWithIndex)
 import Data.Int (fromNumber)
 import Data.JSDate (JSDate)
-import Data.List as List
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Nullable (Nullable, null)
 import Data.Symbol (class IsSymbol, reflectSymbol)
@@ -63,7 +63,7 @@ foreign import isObject :: Foreign -> Boolean
 foreign import isFunction :: Foreign -> Boolean
 foreign import showForeign :: Foreign -> String
 
-data ValidationResult = Valid | Invalid { path :: List.List String, expected :: String, got :: Foreign }
+data ValidationResult = Valid | Invalid { path :: String, expected :: String, got :: Foreign }
 
 -- | This class is used to assert that values of a type can be passed from
 -- | JavaScript to PureScript without any conversions. Specifically, this class
@@ -110,7 +110,7 @@ instance tojsJson :: CanPassToJavaScript Json
 
 validatePrimitive :: String -> (Foreign -> Boolean) -> Foreign -> ValidationResult
 validatePrimitive expected isValidType x =
-  if isValidType x then Valid else Invalid { path: List.Nil, got: x, expected }
+  if isValidType x then Valid else Invalid { path: "", got: x, expected }
 
 instance tojsForeign :: CanPassToJavaScript Foreign
 instance fromjsForeign :: CanReceiveFromJavaScript Foreign where validateForeignType _ _ = Valid
@@ -152,10 +152,10 @@ instance fromjsEffectFn2 :: (CanPassToJavaScript a, CanPassToJavaScript b) => Ca
 instance tojsArray :: CanPassToJavaScript a => CanPassToJavaScript (Array a)
 instance fromjsArray :: CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Array a) where
     validateForeignType _ v
-      | not isArray v = Invalid { path: List.Nil, expected: "Array", got: v }
+      | not isArray v = Invalid { path: "", expected: "Array", got: v }
       | otherwise = case findMapWithIndex invalidElem (unsafeFromForeign v :: Array Foreign) of
           Nothing -> Valid
-          Just { idx, invalid } -> Invalid invalid { path = List.Cons ("[" <> show idx <> "]") invalid.path }
+          Just { idx, invalid } -> Invalid invalid { path = "[" <> show idx <> "]" <> invalid.path }
       where
         invalidElem idx x = case validateForeignType (Proxy :: _ a) x of
           Valid -> Nothing
@@ -198,7 +198,7 @@ instance recfromjsNil :: CanReceiveFromJavaScriptRecord Nil where
 else instance recfromjsCons :: (IsSymbol name, CanReceiveFromJavaScript a, CanReceiveFromJavaScriptRecord rl') => CanReceiveFromJavaScriptRecord (Cons name a rl') where
     validateJsRecord _ fs =
         case validHead of
-          Invalid err -> Invalid err { path = List.Cons ("." <> fieldName) err.path }
+          Invalid err -> Invalid err { path = "." <> fieldName <> err.path }
           Valid -> validateJsRecord (Proxy :: _ rl') fs
         where
             validHead = validateForeignType (Proxy :: _ a) head
@@ -218,9 +218,9 @@ else instance rectojsCons :: (IsSymbol name, CanPassToJavaScript a, CanPassToJav
 readForeign' :: ∀ a. CanReceiveFromJavaScript a => Foreign -> Either String a
 readForeign' v = case validateForeignType (Proxy :: _ a) v of
   Valid -> Right $ unsafeFromForeign v
-  Invalid i -> Left $ List.fold
-    [ List.fold i.path
-    , if List.null i.path then "Expected " else ": expected "
+  Invalid i -> Left $ fold
+    [ i.path
+    , if i.path == "" then "Expected " else ": expected "
     , i.expected
     , " but got: "
     , showForeign i.got
