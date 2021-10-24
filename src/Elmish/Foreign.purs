@@ -173,10 +173,9 @@ instance fromjsNullable :: CanReceiveFromJavaScript a => CanReceiveFromJavaScrip
 
 instance tojsRecord :: (RowToList r rl, CanPassToJavaScriptRecord rl) => CanPassToJavaScript (Record r)
 instance fromjsRecord :: (RowToList r rl, CanReceiveFromJavaScriptRecord rl) => CanReceiveFromJavaScript (Record r) where
-    validateForeignType _ v =
-      case validateForeignType (Proxy :: _ (Obj.Object Foreign)) v of
-        Valid -> validateJsRecord (Proxy :: _ rl) v
-        invalid -> invalid
+    validateForeignType _ v
+      | isObject v = validateJsRecord (Proxy :: _ rl) v
+      | otherwise = Invalid { path: "", expected: "Object", got: v }
 
 -- This instance allows passing functions of simple arguments to views.
 --
