@@ -5,18 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.5.3
+
+### Added
+
+- `readForeign'` - a new function that's like `readForeign`, but returns error
+  information on failure.
+- Added tests. So far - only for `readForeign`.
+
+### Changed
+
+- **Breaking**: `CanReceiveFromJavaScript` class modified to afford that.
+
 ## 0.5.2
+
+### Changed
 
 - Bug fix: `readForeign` for records no longer requires nullable fields to be
   present in the record.
 
 ## 0.5.1
 
+### Changed
+
 - Package maintenance
 
 ## 0.5.0
 
-## Removed
+### Removed
 
 - **Breaking**: `DispatchMsgFn` (replaced with `Dispatch`) and friends -
   `issueMsg`, `issueError`, `cmapMaybe`, `dispatchMsgFn`, `ignoreMsg`.
@@ -24,14 +40,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   parameters passed from JavaScript. This feature turned out to be nearly
   useless, yet it was creating quite a bit of extra complexity.
 
-## Changed
+### Changed
 
 - **Breaking**: `handle` and `handleMaybe` are no longer variadic. They only
   work with single-argument event handler, which is the most common case. Since
   `Dispatch` is now just a function, other cases can be easily covered via
   `mkEffectFnX` (for which both `handle` and `handleMaybe` are no facades).
 
-## Added
+### Added
 
 - **Breaking**: `Dispatch` (replaces `DispatchMsgFn`) - just an alias for `msg -> Effect Unit` now
 - `<|` alias for `handle`

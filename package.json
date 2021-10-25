@@ -24,7 +24,8 @@
   ],
   "scripts": {
     "install": "spago install",
-    "build": "spago build"
+    "build": "spago build --no-psa",
+    "test": "spago -x test.dhall test --no-psa"
   },
   "devDependencies": {
     "acorn": "^6.4.1",
@@ -32,7 +33,7 @@
     "elliptic": "^6.5.4",
     "lodash": "^4.17.21",
     "pulp": "^14.0.0",
-    "purescript": "^0.14.3",
+    "purescript": "^0.14.4",
     "purescript-psa": "0.7.3",
     "spago": "^0.20.3",
     "tree-kill": "^1.2.2"

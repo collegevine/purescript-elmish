@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/cache@v2
-      with: 
+      with:
         path: |
           .spago
           output
@@ -25,4 +25,5 @@ jobs:
         node-version: 10.15
     - run: npm i
     - run: npm run build
+    - run: npm run test
 

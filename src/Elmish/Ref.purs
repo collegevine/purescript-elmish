@@ -5,13 +5,14 @@ module Elmish.Ref
     ) where
 
 import Prelude
-import Data.Maybe (fromJust, isJust)
-import Foreign.Object as M
+
+import Data.Maybe (Maybe(..), fromJust)
 import Data.Symbol (class IsSymbol, reflectSymbol)
+import Elmish.Foreign (class CanPassToJavaScript, class CanReceiveFromJavaScript, ValidationResult(..))
+import Foreign.Object as M
 import Partial.Unsafe (unsafePartial)
 import Type.Proxy (Proxy(..))
 import Unsafe.Coerce (unsafeCoerce)
-import Elmish.Foreign (class CanPassToJavaScript, class CanReceiveFromJavaScript)
 
 -- | An opaque reference for tunneling through JSX code.
 -- |
@@ -52,7 +53,7 @@ newtype Ref (name :: Symbol) a = Ref (M.Object a)
 
 -- | Creates an instance of `Ref`. See comments on it above.
 ref :: ∀ name a. IsSymbol name => a -> Ref name a
-ref a = Ref $ M.singleton (refName (Proxy :: Proxy name)) a
+ref a = Ref $ M.singleton (refName (Proxy :: _ name)) a
 
 -- | Deconstructs an instance of `Ref`. See comments on it above.
 deref :: ∀ name a. IsSymbol name => Ref name a -> a
@@ -60,16 +61,19 @@ deref (Ref m) =
     -- This use of `fromJust` is justified, because the `Ref` constructor is not exported,
     -- and the only two places where values of this type are constructed (`ref` above and
     -- `CanReceiveFromJavaScript` below) guarantee that this key will be present.
-    unsafePartial $ fromJust $ M.lookup (refName (Proxy :: Proxy name)) m
+    unsafePartial $ fromJust $ M.lookup (refName (Proxy :: _ name)) m
 
 refName :: ∀ name. IsSymbol name => Proxy name -> String
 refName p = "ref:" <> reflectSymbol p
 
 -- See comments on `Ref` above.
 instance readjsRef :: IsSymbol name => CanReceiveFromJavaScript (Ref name a) where
-    isForeignOfCorrectType _ v = isJust $ M.lookup sname map
-        where
-            sname = refName (Proxy :: Proxy name)
-            map = unsafeCoerce v
+    validateForeignType _ v =
+      case M.lookup sname map of
+        Just _ -> Valid
+        Nothing -> Invalid { path: "", expected: "Ref", got: v }
+      where
+          sname = refName (Proxy :: _ name)
+          map = unsafeCoerce v
 
 instance writejsRef :: IsSymbol name => CanPassToJavaScript (Ref name a)

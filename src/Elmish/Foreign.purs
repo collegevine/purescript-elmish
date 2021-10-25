@@ -1,7 +1,8 @@
 module Elmish.Foreign
     ( module ForeignReexport
     , class CanPassToJavaScript
-    , class CanReceiveFromJavaScript, isForeignOfCorrectType, readForeign
+    , class CanReceiveFromJavaScript, validateForeignType, ValidationResult(..)
+    , readForeign, readForeign'
     , showForeign
 
     , Arguments
@@ -18,17 +19,20 @@ module Elmish.Foreign
 import Prelude
 
 import Data.Argonaut.Core (Json)
+import Data.Array (fold)
+import Data.Either (Either(..), hush)
+import Data.FoldableWithIndex (findMapWithIndex)
 import Data.Int (fromNumber)
 import Data.JSDate (JSDate)
-import Data.Maybe (Maybe(..), fromMaybe, isJust, maybe)
-import Data.Nullable (Nullable, null)
+import Data.Maybe (Maybe(..), isJust)
+import Data.Nullable (Nullable)
 import Data.Symbol (class IsSymbol, reflectSymbol)
-import Data.Traversable (all)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2)
 import Foreign (Foreign) as ForeignReexport
-import Foreign (Foreign, isArray, isNull, unsafeFromForeign, unsafeToForeign)
+import Foreign (Foreign, isArray, isNull, isUndefined, unsafeFromForeign)
 import Foreign.Object as Obj
+import Record.Unsafe (unsafeGet)
 import Type.Proxy (Proxy(..))
 import Type.RowList (class RowToList, Cons, Nil, RowList)
 
@@ -60,12 +64,14 @@ foreign import isObject :: Foreign -> Boolean
 foreign import isFunction :: Foreign -> Boolean
 foreign import showForeign :: Foreign -> String
 
+data ValidationResult = Valid | Invalid { path :: String, expected :: String, got :: Foreign }
+
 -- | This class is used to assert that values of a type can be passed from
 -- | JavaScript to PureScript without any conversions. Specifically, this class
 -- | is defined for primitives (strings, numbers, booleans), arrays, and
 -- | records.
 class CanReceiveFromJavaScript (a :: Type) where
-    isForeignOfCorrectType :: Proxy a -> Foreign -> Boolean
+    validateForeignType :: Proxy a -> Foreign -> ValidationResult
 
 -- | This class is used to assert that values of a type can be passed to
 -- | JavaScript code directly (without conversion) and understood by that code.
@@ -103,58 +109,73 @@ class CanPassToJavaScript (a :: Type)
 
 instance tojsJson :: CanPassToJavaScript Json
 
+validatePrimitive :: String -> (Foreign -> Boolean) -> Foreign -> ValidationResult
+validatePrimitive expected isValidType x =
+  if isValidType x then Valid else Invalid { path: "", got: x, expected }
+
 instance tojsForeign :: CanPassToJavaScript Foreign
-instance fromjsForeign :: CanReceiveFromJavaScript Foreign where isForeignOfCorrectType _ _ = true
+instance fromjsForeign :: CanReceiveFromJavaScript Foreign where validateForeignType _ _ = Valid
 
 instance tojsString :: CanPassToJavaScript String
-instance fromjsString :: CanReceiveFromJavaScript String where isForeignOfCorrectType _ = isString
+instance fromjsString :: CanReceiveFromJavaScript String where validateForeignType _ = validatePrimitive "String" isString
 
 instance tojsNumber :: CanPassToJavaScript Number
-instance fromjsNumber :: CanReceiveFromJavaScript Number where isForeignOfCorrectType _ = isNumber
+instance fromjsNumber :: CanReceiveFromJavaScript Number where validateForeignType _ = validatePrimitive "Number" isNumber
 
 instance tojsBoolean :: CanPassToJavaScript Boolean
-instance fromjsBoolean :: CanReceiveFromJavaScript Boolean where isForeignOfCorrectType _ = isBoolean
+instance fromjsBoolean :: CanReceiveFromJavaScript Boolean where validateForeignType _ = validatePrimitive "Boolean" isBoolean
 
 instance tojsDate :: CanPassToJavaScript JSDate
-instance fromjsDate :: CanReceiveFromJavaScript JSDate where isForeignOfCorrectType _ = isDate
+instance fromjsDate :: CanReceiveFromJavaScript JSDate where validateForeignType _ = validatePrimitive "Date" isDate
 
 instance tojsStrMap :: CanPassToJavaScript a => CanPassToJavaScript (Obj.Object a)
-instance fromjsStrMap :: CanReceiveFromJavaScript (Obj.Object Foreign) where isForeignOfCorrectType _ = isObject
+instance fromjsStrMap :: CanReceiveFromJavaScript (Obj.Object Foreign) where validateForeignType _ = validatePrimitive "Object" isObject
 
 instance tojsInt :: CanPassToJavaScript Int
 instance fromjsInt :: CanReceiveFromJavaScript Int where
-    isForeignOfCorrectType _ v = isNumber v && (isJust $ fromNumber $ unsafeFromForeign v)
+    validateForeignType _ = validatePrimitive "Int" $ isNumber && (isJust <<< fromNumber <<< unsafeFromForeign)
 
 instance tojsEffectUnit :: CanPassToJavaScript (Effect Unit)
 else instance tojsEffect :: CanPassToJavaScript a => CanPassToJavaScript (Effect a)
 instance fromjsEffect :: CanReceiveFromJavaScript (Effect Unit) where
-    isForeignOfCorrectType _ = isFunction
+    validateForeignType _ = validatePrimitive "Function" isFunction
 
 instance tojsEffectFn1Unit :: CanReceiveFromJavaScript a => CanPassToJavaScript (EffectFn1 a Unit)
 else instance tojsEffectFn1 :: (CanReceiveFromJavaScript a, CanPassToJavaScript b) => CanPassToJavaScript (EffectFn1 a b)
 instance fromjsEffectFn1 :: CanPassToJavaScript a => CanReceiveFromJavaScript (EffectFn1 a Unit) where
-    isForeignOfCorrectType _ = isFunction
+    validateForeignType _ = validatePrimitive "Function" isFunction
 
 instance tojsEffectFn2Unit :: CanReceiveFromJavaScript a => CanPassToJavaScript (EffectFn2 a b Unit)
 else instance tojsEffectFn2 :: (CanReceiveFromJavaScript a, CanReceiveFromJavaScript b, CanPassToJavaScript c) => CanPassToJavaScript (EffectFn2 a b c)
 instance fromjsEffectFn2 :: (CanPassToJavaScript a, CanPassToJavaScript b) => CanReceiveFromJavaScript (EffectFn2 a b Unit) where
-    isForeignOfCorrectType _ = isFunction
+    validateForeignType _ = validatePrimitive "Function" isFunction
 
 instance tojsArray :: CanPassToJavaScript a => CanPassToJavaScript (Array a)
 instance fromjsArray :: CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Array a) where
-    isForeignOfCorrectType _ v =
-        isArray v && all (isForeignOfCorrectType (Proxy :: Proxy a)) (unsafeFromForeign v :: Array Foreign)
+    validateForeignType _ v
+      | not isArray v = Invalid { path: "", expected: "Array", got: v }
+      | otherwise = case findMapWithIndex invalidElem (unsafeFromForeign v :: Array Foreign) of
+          Nothing -> Valid
+          Just { idx, invalid } -> Invalid invalid { path = "[" <> show idx <> "]" <> invalid.path }
+      where
+        invalidElem idx x = case validateForeignType (Proxy :: _ a) x of
+          Valid -> Nothing
+          Invalid invalid -> Just { idx, invalid }
 
 instance tojsNullable :: CanPassToJavaScript a => CanPassToJavaScript (Nullable a)
 instance fromjsNullable :: CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Nullable a) where
-    isForeignOfCorrectType _ v =
-        (isNull $ unsafeToForeign v)
-        || (isForeignOfCorrectType (Proxy :: Proxy a) $ unsafeToForeign v)
+    validateForeignType _ v
+      | isNull v || isUndefined v = Valid
+      | otherwise =
+          case validateForeignType (Proxy :: _ a) v of
+            Valid -> Valid
+            Invalid err -> Invalid err { expected = "Nullable " <> err.expected }
 
 instance tojsRecord :: (RowToList r rl, CanPassToJavaScriptRecord rl) => CanPassToJavaScript (Record r)
 instance fromjsRecord :: (RowToList r rl, CanReceiveFromJavaScriptRecord rl) => CanReceiveFromJavaScript (Record r) where
-    isForeignOfCorrectType _ = maybe false (validateJsRecord (Proxy :: _ rl)) <<< readForeign
-
+    validateForeignType _ v
+      | isObject v = validateJsRecord (Proxy :: _ rl) v
+      | otherwise = Invalid { path: "", expected: "Object", got: v }
 
 -- This instance allows passing functions of simple arguments to views.
 --
@@ -164,22 +185,25 @@ instance fromjsRecord :: (RowToList r rl, CanReceiveFromJavaScriptRecord rl) => 
 instance tojsPureFunction :: CanPassToJavaScript a => CanPassToJavaScript (Foreign -> a)
 
 
--- | This class is implementation of `isForeignOfCorrectType` for records. It
+-- | This class is implementation of `validateForeignType` for records. It
 -- | validates a given JS hash (aka "object") against a given type row that
 -- | represents a PureScript record, recursively calling
--- | `isForeignOfCorrectType` for each field.
+-- | `validateForeignType` for each field.
 class CanReceiveFromJavaScriptRecord (rowList :: RowList Type) where
-    validateJsRecord :: Proxy rowList -> Obj.Object Foreign -> Boolean
+    validateJsRecord :: Proxy rowList -> Foreign -> ValidationResult
 
 instance recfromjsNil :: CanReceiveFromJavaScriptRecord Nil where
-    validateJsRecord _ _ = true
+    validateJsRecord _ _ = Valid
 
 else instance recfromjsCons :: (IsSymbol name, CanReceiveFromJavaScript a, CanReceiveFromJavaScriptRecord rl') => CanReceiveFromJavaScriptRecord (Cons name a rl') where
-    validateJsRecord _ fs = validHead && validTail
+    validateJsRecord _ v =
+        case validHead of
+          Invalid err -> Invalid err { path = "." <> fieldName <> err.path }
+          Valid -> validateJsRecord (Proxy :: _ rl') v
         where
-            validTail = validateJsRecord (Proxy :: _ rl') fs
-            validHead = isForeignOfCorrectType (Proxy :: _ a) head
-            head = fs # Obj.lookup (reflectSymbol (Proxy :: _ name)) # fromMaybe foreignNull
+            validHead = validateForeignType (Proxy :: _ a) head
+            fieldName = reflectSymbol (Proxy :: _ name)
+            head = unsafeGet fieldName (unsafeFromForeign v :: {})
 
 
 -- | This class is implementation of `CanPassToJavaScript` for records. It
@@ -189,11 +213,20 @@ class CanPassToJavaScriptRecord (rowList :: RowList Type)
 instance rectojsNil :: CanPassToJavaScriptRecord Nil
 else instance rectojsCons :: (IsSymbol name, CanPassToJavaScript a, CanPassToJavaScriptRecord rl') => CanPassToJavaScriptRecord (Cons name a rl')
 
+-- | Verifies if the given raw JS value is of the right type/shape to be
+-- | represented as `a`, and if so, coerces the value to `a`.
+readForeign' :: ∀ a. CanReceiveFromJavaScript a => Foreign -> Either String a
+readForeign' v = case validateForeignType (Proxy :: _ a) v of
+  Valid -> Right $ unsafeFromForeign v
+  Invalid i -> Left $ fold
+    [ i.path
+    , if i.path == "" then "Expected " else ": expected "
+    , i.expected
+    , " but got: "
+    , showForeign i.got
+    ]
 
 -- | Verifies if the given raw JS value is of the right type/shape to be
 -- | represented as `a`, and if so, coerces the value to `a`.
 readForeign :: ∀ a. CanReceiveFromJavaScript a => Foreign -> Maybe a
-readForeign v | isForeignOfCorrectType (Proxy :: Proxy a) v = Just $ unsafeFromForeign v
-readForeign _ = Nothing
-
-foreignNull = unsafeToForeign null :: Foreign
+readForeign = hush <<< readForeign'
