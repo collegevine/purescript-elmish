@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.5.4
+
+### Added
+
+- `CanReceiveFromJavaScript (Object a)` instance for any `a`. Previously only
+  worked for `Foreign`.
+- `CanReceiveFromJavaScript (Array Foreign)` instance as an optimization. Unlke
+  the general `Array a` instance, the `Array Foreign` instance doesn't have to
+  check every element of the array.
+
 ## 0.5.3
 
 ### Added
