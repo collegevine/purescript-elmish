@@ -7,8 +7,11 @@ import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable, notNull, null)
 import Elmish.Foreign (class CanReceiveFromJavaScript, readForeign, readForeign')
 import Foreign (unsafeToForeign)
+import Foreign.Object (Object)
+import Foreign.Object as Obj
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
+import Type.Row.Homogeneous (class Homogeneous)
 
 spec :: Spec Unit
 spec = describe "Elmish.Foreign" do
@@ -23,6 +26,14 @@ spec = describe "Elmish.Foreign" do
     it "reads JS objects as records" do
       read [42, 42] `shouldEqual` Just { length: 2 }
       read { foo: "bar", one: "two" } `shouldEqual` Just { foo: "bar", one: "two" }
+
+    it "reads JS objects as homogeneous Object" do
+      let readRecord :: forall r a. Homogeneous r a => CanReceiveFromJavaScript a => Show a => Eq a => Record r -> _
+          readRecord rec = read rec `shouldEqual` Just (Obj.fromHomogeneous rec)
+      readRecord { foo: "bar", one: "two" }
+      readRecord { foo: { x: 1, y: "bar" }, one: { x: 2, y: "two" } }
+      readRecord { foo: [1,2,3], one: [4,5,6] }
+      readRecord { foo: Obj.fromHomogeneous { x: "1", y: "2" }, one: Obj.empty :: Object String }
 
     it "reads nullable values" do
       read null `shouldEqual` Just (null :: _ Int)
@@ -60,6 +71,16 @@ spec = describe "Elmish.Foreign" do
 
         (read' { x: 42, y: [] } :: _ _ { x :: Int, y :: { z :: Int } })
           `shouldEqual` Left ".y.z: expected Int but got: <undefined>"
+
+      it "record as Object" do
+        (read' { x: "foo", y: 42 } :: _ _ (Object String))
+          `shouldEqual` Left "['y']: expected String but got: 42"
+        (read' { x: "foo", y: 42 } :: _ _ (Object Int))
+          `shouldEqual` Left "['x']: expected Int but got: \"foo\""
+        (read' { x: { a: "foo" }, y: 42 } :: _ _ (Object { a :: String }))
+          `shouldEqual` Left "['y']: expected Object but got: 42"
+        (read' { x: { a: "foo", b: { z: 1 } }, y: { a: "bar", b: { p: 2, q: "x" } } } :: _ _ (Object { a :: String, b :: Object Int }))
+          `shouldEqual` Left "['y'].b['q']: expected Int but got: \"x\""
 
       it "multiple nesting levels" do
         let input = { a: [{ x: [{ y: f 42 }, { y: f 5 }, { y: f "foo" }]}] }
