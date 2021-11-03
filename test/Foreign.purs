@@ -2,6 +2,7 @@ module Test.Foreign (spec) where
 
 import Prelude
 
+import Data.Array ((!!))
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable, notNull, null)
@@ -10,7 +11,7 @@ import Foreign (unsafeToForeign)
 import Foreign.Object (Object)
 import Foreign.Object as Obj
 import Test.Spec (Spec, describe, it)
-import Test.Spec.Assertions (shouldEqual)
+import Test.Spec.Assertions (fail, shouldEqual)
 import Type.Row.Homogeneous (class Homogeneous)
 
 spec :: Spec Unit
@@ -34,6 +35,20 @@ spec = describe "Elmish.Foreign" do
       readRecord { foo: { x: 1, y: "bar" }, one: { x: 2, y: "two" } }
       readRecord { foo: [1,2,3], one: [4,5,6] }
       readRecord { foo: Obj.fromHomogeneous { x: "1", y: "2" }, one: Obj.empty :: Object String }
+
+    it "Objects and Arrays of Foreign" do
+      let readAndAssert :: forall a b. CanReceiveFromJavaScript a => b -> (a -> _) -> _
+          readAndAssert x f = case read' x of
+            Left err -> fail err
+            Right a -> f a
+
+      readAndAssert { foo: "bar", one: 42 } \obj -> do
+        (readForeign =<< Obj.lookup "foo" obj) `shouldEqual` Just "bar"
+        (readForeign =<< Obj.lookup "one" obj) `shouldEqual` Just 42
+
+      readAndAssert [f "bar", f 42] \arr -> do
+        (readForeign =<< arr !! 0) `shouldEqual` Just "bar"
+        (readForeign =<< arr !! 1) `shouldEqual` Just 42
 
     it "reads nullable values" do
       read null `shouldEqual` Just (null :: _ Int)

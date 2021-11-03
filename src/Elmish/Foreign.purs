@@ -172,7 +172,7 @@ instance CanPassToJavaScript a => CanPassToJavaScript (Array a)
 -- Even though there is a general instance for `Array a`, we still have this
 -- special-case `Array Foreign` instance here, because it's faster: we don't
 -- have to check every element.
-instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Array Foreign) where
+instance CanReceiveFromJavaScript (Array Foreign) where
     validateForeignType _ = validatePrimitive "Array" isArray
 else instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Array a) where
     validateForeignType _ v
