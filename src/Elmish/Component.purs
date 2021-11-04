@@ -58,6 +58,7 @@ import Elmish.Trace (traceTime)
 -- |
 data Transition' m msg state = Transition state (Array (Command m msg))
 
+-- A `Transition'` in which the effects run in `Aff`.
 type Transition msg state = Transition' Aff msg state
 
 -- | An effect that is launched as a result of a component state transition.
@@ -184,6 +185,7 @@ type ComponentDef' m msg state = {
     update :: state -> msg -> Transition' m msg state
 }
 
+-- | A `ComponentDef'` in which effects run in `Aff`.
 type ComponentDef msg state = ComponentDef' Aff msg state
 
 -- | A callback used to return multiple components of different types. See below
