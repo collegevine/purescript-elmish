@@ -9,10 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `ComponentDef` renamed to `ComponentDef'`
-- Added `ComponentDef` as type alias for `ComponentDef' Aff`
-- `Transition` renamed to `Transition'`
-- Added `Transition` as type alias for `Transition' Aff`
+- **Breaking**: `ComponentDef` renamed to `ComponentDef'`.
+- Added `ComponentDef` as type alias for `ComponentDef' Aff`.
+- **Breaking**: `Transition` renamed to `Transition'`.
+- Added `Transition` as type alias for `Transition' Aff`.
 
 ## 0.5.5
 
