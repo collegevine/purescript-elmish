@@ -8,7 +8,6 @@ import Prelude
 
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
-import Effect.Aff (Aff)
 import Effect.Class.Console as Console
 import Elmish.Component as Comp
 import Elmish.React as React
@@ -18,7 +17,7 @@ import Web.HTML.HTMLDocument (toNonElementParentNode) as DOM
 import Web.HTML.Window (document) as DOM
 
 -- | Support for the most common case entry point - i.e. mounting an Elmish
--- | component (i.e. `ComponentDef` structure) to an HTML DOM element with a
+-- | component (i.e. `ComponentDef'` structure) to an HTML DOM element with a
 -- | known ID, with support for server-side rendering.
 -- |
 -- | The function `boot` returns what we call `BootRecord` - a record of three
@@ -57,7 +56,7 @@ import Web.HTML.Window (document) as DOM
 -- |
 -- |     type Props = { hello :: String, world :: Int }
 -- |
--- |     component :: Props -> ComponentDef Aff Message State
+-- |     component :: Props -> ComponentDef' Aff Message State
 -- |     component = ...
 -- |
 -- |     bootRecord :: BootRecord Props
@@ -99,7 +98,7 @@ type BootRecord props =
 
 
 -- | Creates a boot record for the given component. See comments for `BootRecord`.
-boot :: forall msg state props. (props -> Comp.ComponentDef Aff msg state) -> BootRecord props
+boot :: forall msg state props. (props -> Comp.ComponentDef msg state) -> BootRecord props
 boot mkDef =
   { mount: mountVia React.render
   , renderToString
@@ -138,7 +137,7 @@ boot mkDef =
 -- |     main :: Effect Unit
 -- |     main = Boot.defaultMain { elementId: "app", def: def }
 -- |
-defaultMain :: forall msg state. { elementId :: String, def :: Comp.ComponentDef Aff msg state } -> Effect Unit
+defaultMain :: forall msg state. { elementId :: String, def :: Comp.ComponentDef msg state } -> Effect Unit
 defaultMain { elementId, def } =
     bootRec.mount elementId unit
     where
