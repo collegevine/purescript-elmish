@@ -36,7 +36,7 @@
     "global-jsdom": "^8.4.0",
     "jsdom": "^19.0.0",
     "lodash": "^4.17.21",
-    "pulp": "^14.0.0",
+    "pulp": "^15.0.0",
     "purescript": "^0.14.4",
     "purescript-psa": "0.7.3",
     "react": "^16.14.0",
