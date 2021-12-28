@@ -22,7 +22,7 @@ jobs:
         key: build-atrifacts-v1-${{ hashFiles('package-lock.json', 'spago.dhall', 'packages.dhall') }}
     - uses: actions/setup-node@v1
       with:
-        node-version: 10.15
+        node-version: 12.16
     - run: npm i
     - run: npm run build
     - run: npm run test
