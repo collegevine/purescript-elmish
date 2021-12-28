@@ -4,6 +4,7 @@ const ReactDOMServer = require("react-dom/server")
 
 exports.getState_ = component => component.state && component.state.s
 exports.setState_ = (component, state, callback) => component.setState({ s: state }, callback)
+exports.assignState_ = (component, state) => component.state = { s: state }
 
 exports.render_ = ReactDOM.render
 exports.hydrate_ = ReactDOM.hydrate

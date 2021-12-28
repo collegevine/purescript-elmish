@@ -233,11 +233,11 @@ bindComponent :: forall msg state
     -> StateStrategy state           -- ^ Strategy of storing state
     -> ReactElement
 bindComponent cmpt def stateStrategy =
-    runFn2 instantiateBaseComponent cmpt { render, componentDidMount: runCmds initialCmds }
+    runFn2 instantiateBaseComponent cmpt { init: initialize, render, componentDidMount: runCmds initialCmds }
     where
         Transition initialState initialCmds = def.init
 
-        {getState, setState} = stateStrategy {initialState}
+        {initialize, getState, setState} = stateStrategy {initialState}
 
         render :: ReactComponentInstance -> Effect ReactElement
         render component = do
@@ -350,8 +350,9 @@ newtype ComponentName = ComponentName String
 --
 
 -- Props for the React component that is used as base for this framework. The
--- component itself is defined in `./ComponentClass.js`
+-- component itself is defined in the foreign module.
 type BaseComponentProps = {
+    init :: ReactComponentInstance -> Effect Unit,
     render :: ReactComponentInstance -> Effect ReactElement,
     componentDidMount :: ReactComponentInstance -> Effect Unit
 }

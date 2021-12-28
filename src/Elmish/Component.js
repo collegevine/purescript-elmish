@@ -16,13 +16,19 @@ exports.withFreshComponent = function(f) {
 exports.instantiateBaseComponent = React.createElement
 
 function mkFreshComponent() {
-  function ElmishComponent() {}
-  ElmishComponent.prototype = Object.create(React.Component.prototype)
-  ElmishComponent.prototype.render = function() {
-    return this.props.render(this)()
-  }
-  ElmishComponent.prototype.componentDidMount = function() {
-    this.props.componentDidMount(this)()
+  class ElmishComponent extends React.Component {
+    constructor(props) {
+      super(props)
+      props.init && props.init(this)()
+    }
+
+    render() {
+      return this.props.render(this)()
+    }
+
+    componentDidMount() {
+      this.props.componentDidMount(this)()
+    }
   }
 
   return ElmishComponent
