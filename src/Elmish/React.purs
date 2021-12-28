@@ -132,7 +132,7 @@ setState :: forall state. ReactComponentInstance -> state -> (Effect Unit) -> Ef
 setState = runEffectFn3 setState_
 foreign import setState_ :: forall state. EffectFn3 ReactComponentInstance state (Effect Unit) Unit
 
--- | The equivalent of `this.state = x`, as opposed to `setStae`, which is the
+-- | The equivalent of `this.state = x`, as opposed to `setState`, which is the
 -- | equivalent of `this.setState(x)`. This function is used in a component's
 -- | constructor to set the initial state.
 assignState :: forall state. ReactComponentInstance -> state -> Effect Unit

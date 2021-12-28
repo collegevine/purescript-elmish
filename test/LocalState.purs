@@ -34,7 +34,7 @@ spec = describe "Elmish.Component.wrapWithLocalState" do
       find ".t--wrapper-2 p" >> text >>= shouldEqual "The count is: 42"
       exists ".t--wrapper-1 p" >>= shouldEqual false
 
-  it "does not reset local state when initial state changes" do
+  it "does not reset local state when props/args change" do
     testComponent wrapperDef do
       find ".t--wrapper-1 p" >> text >>= shouldEqual "The count is: 42"
       clickOn "button.t--inc-initial-count"
