@@ -56,7 +56,7 @@ dedicatedStorage = mkStrategy <$> Ref.new Nothing
     where
     mkStrategy :: Ref (Maybe state) -> StateStrategy state
     mkStrategy stateVar {initialState} =
-      { initialize: \_ -> pure unit
+      { initialize: \_ -> Ref.write (Just initialState) stateVar
 
       , getState: \_ -> fromMaybe initialState <$> Ref.read stateVar
 
