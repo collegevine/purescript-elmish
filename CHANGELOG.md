@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.5.7
+
+## Changed
+
+- Fixed a bug related to maintaining state in `wrapWithLocalState`. See [#50](https://github.com/collegevine/purescript-elmish/pull/50).
+
+## Added
+
+- Integration tests powered by [enzyme](https://enzymejs.github.io/enzyme/)
+
 ## 0.5.6
 
 ### Changed

@@ -6,11 +6,11 @@ module Elmish.State
 
 import Prelude
 
+import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Nullable (toMaybe)
 import Effect (Effect)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
-import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Nullable (toMaybe)
 import Elmish.React as React
 
 -- | This type represents a strategy of storing UI component state. The strategy
@@ -32,16 +32,20 @@ import Elmish.React as React
 -- | of components.
 type StateStrategy state =
     { initialState :: state }
-    -> {
-        getState ::
-            React.ReactComponentInstance -- ^ component instance for which to get the state
-            -> Effect state,
+    ->
+    { initialize ::
+        React.ReactComponentInstance -- ^ component instance for which to initialize the state
+        -> Effect Unit
 
-        setState ::
-            React.ReactComponentInstance -- ^ component instance for which to set the state
-            -> state               -- ^ state to set
-            -> Effect Unit         -- ^ callback to invoke when the operation is complete
-            -> Effect Unit
+    , getState ::
+        React.ReactComponentInstance -- ^ component instance for which to get the state
+        -> Effect state
+
+    , setState ::
+        React.ReactComponentInstance -- ^ component instance for which to set the state
+        -> state               -- ^ state to set
+        -> Effect Unit         -- ^ callback to invoke when the operation is complete
+        -> Effect Unit
     }
 
 
@@ -51,25 +55,28 @@ dedicatedStorage :: forall state. Effect (StateStrategy state)
 dedicatedStorage = mkStrategy <$> Ref.new Nothing
     where
     mkStrategy :: Ref (Maybe state) -> StateStrategy state
-    mkStrategy stateVar {initialState} = {
+    mkStrategy stateVar {initialState} =
+      { initialize: \_ -> Ref.write (Just initialState) stateVar
 
-        getState: \_ -> fromMaybe initialState <$> Ref.read stateVar,
+      , getState: \_ -> fromMaybe initialState <$> Ref.read stateVar
 
-        setState: \c s cb -> do
+      , setState: \c s cb -> do
             Ref.write (Just s) stateVar
             React.setState c s (pure unit)
             cb
-    }
+      }
 
 
 -- | Stores state on the React component instance - i.e. `this.setState`. See
 -- | comment on `StateStrategy`.
 localState :: forall state. StateStrategy state
-localState {initialState} = {
+localState {initialState} =
+  { initialize: \component ->
+      React.assignState component initialState
 
-    getState: \component -> do
-        mState <- toMaybe <$> React.getState component
-        pure $ fromMaybe initialState mState,
+  , getState: \component -> do
+      mState <- toMaybe <$> React.getState component
+      pure $ fromMaybe initialState mState
 
-    setState: React.setState
-}
+  , setState: React.setState
+  }

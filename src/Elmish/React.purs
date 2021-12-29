@@ -4,6 +4,7 @@ module Elmish.React
     , ReactComponentInstance
     , class ValidReactProps, class ValidReactPropsRL
     , class ReactChildren, asReactChildren
+    , assignState
     , createElement
     , createElement'
     , getState
@@ -130,6 +131,13 @@ foreign import getState_ :: forall state. EffectFn1 ReactComponentInstance (Null
 setState :: forall state. ReactComponentInstance -> state -> (Effect Unit) -> Effect Unit
 setState = runEffectFn3 setState_
 foreign import setState_ :: forall state. EffectFn3 ReactComponentInstance state (Effect Unit) Unit
+
+-- | The equivalent of `this.state = x`, as opposed to `setState`, which is the
+-- | equivalent of `this.setState(x)`. This function is used in a component's
+-- | constructor to set the initial state.
+assignState :: forall state. ReactComponentInstance -> state -> Effect Unit
+assignState = runEffectFn2 assignState_
+foreign import assignState_ :: forall state. EffectFn2 ReactComponentInstance state Unit
 
 render :: ReactElement -> HTML.Element -> Effect Unit
 render = runEffectFn2 render_

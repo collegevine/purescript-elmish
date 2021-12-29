@@ -8,6 +8,7 @@ import Elmish.Enzyme as Enzyme
 import Elmish.Enzyme.Adapter as Adapter
 import Test.Component as Component
 import Test.Foreign as Foreign
+import Test.LocalState as LocalState
 import Test.Spec.Reporter (specReporter)
 import Test.Spec.Runner (runSpec)
 
@@ -19,3 +20,4 @@ main = do
   launchAff_ $ runSpec [specReporter] do
     Foreign.spec
     Component.spec
+    LocalState.spec
