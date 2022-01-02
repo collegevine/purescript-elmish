@@ -11,6 +11,6 @@ in  upstream
       with elmish-enzyme = {
             dependencies = ["prelude"],
             repo = "https://github.com/collegevine/purescript-elmish-enzyme.git",
-            version = "main"
+            version = "v0.0.2"
       }
       with elmish-html.dependencies = ["prelude", "record"]
