@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.5.7
 
-## Changed
+### Changed
 
 - Fixed a bug related to maintaining state in `wrapWithLocalState`. See [#50](https://github.com/collegevine/purescript-elmish/pull/50).
 
-## Added
+### Added
 
 - Integration tests powered by [enzyme](https://enzymejs.github.io/enzyme/)
 
