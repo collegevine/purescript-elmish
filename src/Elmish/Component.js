@@ -4,7 +4,7 @@ exports.withCachedComponent = (function() {
   const cache = {}
 
   return function(name, f) {
-    const c = cache[name] || (cache[name] = mkFreshComponent())
+    const c = cache[name] || (cache[name] = mkFreshComponent(name))
     return f(c)
   }
 })()
@@ -15,7 +15,7 @@ exports.withFreshComponent = function(f) {
 
 exports.instantiateBaseComponent = React.createElement
 
-function mkFreshComponent() {
+function mkFreshComponent(name) {
   class ElmishComponent extends React.Component {
     constructor(props) {
       super(props)
@@ -31,5 +31,6 @@ function mkFreshComponent() {
     }
   }
 
+  ElmishComponent.displayName = name ? ("Elmish:" + name) : "ElmishRoot"
   return ElmishComponent
 }

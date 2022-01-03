@@ -3,7 +3,7 @@ module Test.LocalState (spec) where
 import Prelude
 
 import Elmish.Component (ComponentName(..), wrapWithLocalState)
-import Elmish.Enzyme (clickOn, exists, find, testComponent, text, (>>))
+import Elmish.Enzyme (clickOn, exists, find, name, parent, testComponent, text, (>>))
 import Elmish.HTML.Styled as H
 import Test.Examples.Counter as Counter
 import Test.Spec (Spec, describe, it)
@@ -49,6 +49,10 @@ spec = describe "Elmish.Component.wrapWithLocalState" do
       -- But the counter in wrapper-2 gets initialized _after_ initialCount
       -- became 43, so that's what wrapper-2's state should become.
       find ".t--wrapper-2 p" >> text >>= shouldEqual "The count is: 43"
+
+  it "names the React component according to the ComponentName passed in" $
+    testComponent wrapperDef $
+      find ".t--wrapper-1 div" >> parent >> name >>= shouldEqual "Elmish:Counter"
 
   where
     wrappedCounter =

@@ -2,7 +2,7 @@ module Test.Component (spec) where
 
 import Prelude
 
-import Elmish.Enzyme (clickOn, find, testComponent, text, (>>))
+import Elmish.Enzyme (clickOn, find, name, parent, testComponent, text, (>>))
 import Test.Examples.Counter as Counter
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
@@ -18,3 +18,7 @@ spec = describe "Elmish.Component" do
       find "p" >> text >>= shouldEqual "The count is: 2"
       clickOn "button.t--dec"
       find "p" >> text >>= shouldEqual "The count is: 1"
+
+  it "names the root component ElmishRoot" $
+    testComponent (Counter.def { initialCount: 0 }) $
+      find "div" >> parent >> name >>= shouldEqual "ElmishRoot"
