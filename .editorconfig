@@ -6,7 +6,7 @@ indent_style = space
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-[*.{js,json,yml,yaml}]
+[*.{js,json,yml,yaml,dhall}]
 indent_size = 2
 
 [*.purs]
