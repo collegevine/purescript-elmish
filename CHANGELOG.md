@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - React props for FFI-imported components are now allowed to have a `ref` prop.
   This was a silly restriction.
+- Generated React component classes now have more descriptive names. This is to
+  help with debugging and testing. See
+  [#52](https://github.com/collegevine/purescript-elmish/pull/52).
 
 ## 0.5.7
 
