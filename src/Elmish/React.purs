@@ -91,12 +91,8 @@ instance validProps ::
     )
     => ValidReactProps (Record r)
 else instance validPropsNonRecord ::
-    Fail InvalidProps
+    Fail (Text "React props must be a record with all fields of JavaScript-compatible types")
     => ValidReactProps a
-
--- | Custom error message for the `ValidReactProps` and `ValidReactPropsRL` classes
-type InvalidProps = Text "React props must be a record and cannot contain a prop named 'ref'"
-
 
 -- | Describes a type that can be used as "content" (aka "children") of a React
 -- | JSX element. The three instances below make it possible to use `String` and
