@@ -2,7 +2,7 @@ module Elmish.React
     ( ReactElement
     , ReactComponent
     , ReactComponentInstance
-    , class ValidReactProps, class ValidReactPropsRL
+    , class ValidReactProps
     , class ReactChildren, asReactChildren
     , assignState
     , createElement
@@ -21,7 +21,7 @@ import Data.Nullable (Nullable)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, runEffectFn1, runEffectFn2, runEffectFn3)
 import Elmish.Foreign (class CanPassToJavaScript)
-import Prim.RowList (class RowToList, RowList, Cons, Nil)
+import Prim.RowList (class RowToList)
 import Prim.TypeError (Text, class Fail)
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM as HTML
@@ -84,26 +84,15 @@ createElement' component props = createElement component props ([] :: Array Reac
 -- | 1. The type must be a record.
 -- | 2. The types of all props must be safe to pass to JavaScript,
 -- |    which is asserted via the `CanPassToJavaScript` class.
--- | 3. There cannot be a prop named 'ref'. Currently we do not support React
--- |    refs, and when we do, the type of that prop will have to be restricted
--- |    to something special and effectful.
 class ValidReactProps (a :: Type)
 instance validProps ::
     ( RowToList r rl
-    , ValidReactPropsRL rl
     , CanPassToJavaScript (Record r)
     )
     => ValidReactProps (Record r)
 else instance validPropsNonRecord ::
     Fail InvalidProps
     => ValidReactProps a
-
--- | Internal implementation detail of the `ValidReactProps` class. This has to be a
--- | separate class due to how rows work at type level.
-class ValidReactPropsRL (a :: RowList Type)
-instance validPropsNil :: ValidReactPropsRL Nil
-else instance validPropsConsRef :: Fail InvalidProps => ValidReactPropsRL (Cons "ref" t r)
-else instance validPropsCons :: ValidReactPropsRL (Cons n t r)
 
 -- | Custom error message for the `ValidReactProps` and `ValidReactPropsRL` classes
 type InvalidProps = Text "React props must be a record and cannot contain a prop named 'ref'"
