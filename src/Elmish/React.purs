@@ -21,7 +21,6 @@ import Data.Nullable (Nullable)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, runEffectFn1, runEffectFn2, runEffectFn3)
 import Elmish.Foreign (class CanPassToJavaScript)
-import Prim.RowList (class RowToList)
 import Prim.TypeError (Text, class Fail)
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM as HTML
@@ -85,12 +84,8 @@ createElement' component props = createElement component props ([] :: Array Reac
 -- | 2. The types of all props must be safe to pass to JavaScript,
 -- |    which is asserted via the `CanPassToJavaScript` class.
 class ValidReactProps (a :: Type)
-instance validProps ::
-    ( RowToList r rl
-    , CanPassToJavaScript (Record r)
-    )
-    => ValidReactProps (Record r)
-else instance validPropsNonRecord ::
+instance CanPassToJavaScript (Record r) => ValidReactProps (Record r)
+else instance
     Fail (Text "React props must be a record with all fields of JavaScript-compatible types")
     => ValidReactProps a
 
