@@ -31,6 +31,6 @@ function mkFreshComponent(name) {
     }
   }
 
-  ElmishComponent.displayName = name ? ("Elmish:" + name) : "ElmishRoot"
+  ElmishComponent.displayName = name ? ("Elmish_" + name) : "ElmishRoot"
   return ElmishComponent
 }
