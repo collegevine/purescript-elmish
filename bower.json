@@ -37,6 +37,6 @@
         "purescript-typelevel-prelude": "^v6.0.0",
         "purescript-unsafe-coerce": "^v5.0.0",
         "purescript-web-dom": "^v5.0.0",
-        "purescript-web-html": "^v3.1.0"
+        "purescript-web-html": "^v3.2.0"
     }
 }
