@@ -16,8 +16,8 @@ import Unsafe.Coerce (unsafeCoerce)
 
 -- | An opaque reference for tunneling through JSX code.
 -- |
--- | This type is a wrapper that lets us pass any PureScript values into JSX
--- | code, with the expectation that the JSX code cannot mess with (inspect,
+-- | This type is a wrapper that lets us pass any PureScript values into JS
+-- | code, with the expectation that the JS code cannot mess with (inspect,
 -- | mutate) these values, but can pass them back to the PureScript code in
 -- | messages. This type has instances of `CanPassToJavaScript` and
 -- | `CanReceiveFromJavaScript`, which allows it to be passed in React props or
@@ -31,16 +31,16 @@ import Unsafe.Coerce (unsafeCoerce)
 -- | target of the ref, and where "name" is the first type argument of this
 -- | `Ref`. This way, we have at least _something_ to verify (see the
 -- | `CanReceiveFromJavaScript` instance below) that the object passed by the
--- | JSX code is not some random value, but actually originated as a `Ref a` of
+-- | JS code is not some random value, but actually originated as a `Ref a` of
 -- | the right type.
 -- |
--- | Admittedly, this is only weak protection, because the JSX code can still,
+-- | Admittedly, this is only weak protection, because the JS code can still,
 -- | if it really wanted to, construct a hash like `{ "ref:name": "abracadabra"}`
 -- | and pass it to the PureScript code, which would happily
 -- | accept the "abracadabra" value as if it was the right type.
 -- |
 -- | Here are my arguments for why this weak protection is enough:
--- |   1) The JSX code has to actually _try_ to be destructive. Can't happen by
+-- |   1) The JS code has to actually _try_ to be destructive. Can't happen by
 -- |      accident.
 -- |   2) It's technically impossible to do any better without putting
 -- |      significant restrictions on the type `a` (i.e. requiring it to be
