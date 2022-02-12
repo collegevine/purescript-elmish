@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import ReactDOMServer from "react-dom/server";
+import ReactDOMServer from "react-dom/server.js";
 
 export function getState_(component) {
   return component.state && component.state.s;

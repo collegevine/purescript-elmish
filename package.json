@@ -23,7 +23,6 @@
     }
   ],
   "scripts": {
-    "install": "spago install",
     "build": "spago build --no-psa",
     "test": "spago -x test.dhall test --no-psa"
   },
@@ -37,7 +36,6 @@
     "jsdom": "^19.0.0",
     "lodash": "^4.17.21",
     "pulp": "^15.0.0",
-    "purescript": "^0.14.5",
     "purescript-psa": "0.7.3",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
