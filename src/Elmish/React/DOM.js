@@ -1,1 +1,1 @@
-exports.fragment_ = require("react").Fragment
+export var fragment_ = import("react").Fragment;

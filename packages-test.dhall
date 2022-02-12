@@ -8,7 +8,10 @@ in  upstream
   -- dependencies, otherwise Spago will install another copy of Elmish from the
   -- package set, and we'll end up with two copies of Elmish, leading to module
   -- name conflicts during compilation.
-  -- with elmish-enzyme.dependencies = [ "prelude" ]
-  -- with elmish-enzyme.version = "v0.0.2"
-  -- with elmish-html.dependencies = [ "prelude", "record" ]
+  with elmish-enzyme = {
+    repo = "https://github.com/working-group-purescript-es/purescript-elmish-enzyme.git"
+  , dependencies = [ "prelude" ]
+  , version = "es-modules"
+  }
+  with elmish-html.dependencies = [ "prelude", "record" ]
   with metadata.version = "v0.15.0"
