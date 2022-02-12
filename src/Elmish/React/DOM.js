@@ -1,1 +1,2 @@
-export var fragment_ = import("react").Fragment;
+import { Fragment } from "react/index.js";
+export var fragment_ = Fragment;
