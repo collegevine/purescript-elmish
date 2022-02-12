@@ -1,16 +1,24 @@
-const React = require("react")
-const ReactDOM = require("react-dom")
-const ReactDOMServer = require("react-dom/server")
+import React from "react";
+import ReactDOM from "react-dom";
+import ReactDOMServer from "react-dom/server";
 
-exports.getState_ = component => component.state && component.state.s
-exports.setState_ = (component, state, callback) => component.setState({ s: state }, callback)
-exports.assignState_ = (component, state) => component.state = { s: state }
+export function getState_(component) {
+  return component.state && component.state.s;
+}
 
-exports.render_ = ReactDOM.render
-exports.hydrate_ = ReactDOM.hydrate
-exports.renderToString = (ReactDOMServer && ReactDOMServer.renderToString) || (_ => "")
+export function setState_(component, state, callback) {
+  return component.setState({ s: state }, callback);
+}
 
-exports.createElement_ = function(component, props, children) {
+export function assignState_(component, state) {
+  return component.state = { s: state };
+}
+
+export var render_ = ReactDOM.render;
+export var hydrate_ = ReactDOM.hydrate;
+export var renderToString = (ReactDOMServer && ReactDOMServer.renderToString) || (_ => "");
+
+export function createElement_(component, props, children) {
   // The type of `children` is `Array ReactElement`. If we pass that in as
   // third parameter of `React.createElement` directly, React complains about
   // missing `key`s. Instead, we pass it as an array to

@@ -1,23 +1,28 @@
-exports.isString = function(s) {
+export function isString(s) {
   return typeof s === "string"
 }
-exports.isNumber = function(s) {
+
+export function isNumber(s) {
   return typeof s === "number"
 }
-exports.isBoolean = function(s) {
+
+export function isBoolean(s) {
   return typeof s === "boolean"
 }
-exports.isDate = function(s) {
+
+export function isDate(s) {
   return s instanceof Date
 }
-exports.isObject = function(s) {
+
+export function isObject(s) {
   return s instanceof Object
 }
-exports.isFunction = function(s) {
+
+export function isFunction(s) {
   return s instanceof Function
 }
 
-exports.showForeign = function(x) {
+export function showForeign(x) {
   return (
     x === null ? "<null>"
     : x === undefined ? "<undefined>"
@@ -27,13 +32,13 @@ exports.showForeign = function(x) {
   )
 }
 
-exports.mkVarArgEff_ = function(k) {
+export function mkVarArgEff_(k) {
   return function() {
     k(arguments)()
   }
 }
 
-exports.getArgument_ = function(args) {
+export function getArgument_(args) {
   return function(index) {
     return function(just) {
       return function(nothing) {
@@ -43,6 +48,6 @@ exports.getArgument_ = function(args) {
   }
 }
 
-exports.argumentsToArray_ = function(args) {
+export function argumentsToArray_(args) {
   return Array.from(args)
 }
