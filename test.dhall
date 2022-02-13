@@ -28,7 +28,7 @@ let conf =
         , "web-html"
         ]
       , license = "MIT"
-      , packages = ./packages.dhall // ./packages-test.dhall
+      , packages = ./packages.dhall
       , repository = "https://github.com/collegevine/purescript-elmish.git"
       , sources = [ "src/**/*.purs" ]
       }
