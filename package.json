@@ -23,6 +23,7 @@
     }
   ],
   "scripts": {
+    "install": "spago install",
     "build": "spago build --no-psa",
     "test": "spago -x test.dhall test --no-psa"
   },
