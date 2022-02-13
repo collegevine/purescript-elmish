@@ -12,14 +12,12 @@ import Test.Foreign as Foreign
 import Test.LocalState as LocalState
 import Test.Spec.Reporter (specReporter)
 import Test.Spec.Runner (runSpec)
-import Debug (spy)
 
 foreign import _configureJsDomViaFfi :: Type
 
 main :: Effect Unit
 main = launchAff_ $ do
   adapter <- Adapter.react_16_4
-  let _ = spy "test" adapter
   liftEffect $ Enzyme.configure adapter
   runSpec [specReporter] do
     Foreign.spec
