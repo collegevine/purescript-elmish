@@ -11,7 +11,7 @@ The name "Elmish" is an homage to the F# library of the same name: <https://elmi
 
 ______
 
-For technical documentation, see Pursuit: <https://pursuit.purescript.org/packages/purescript-elmish/0.5.8>
+For technical documentation, see Pursuit: <https://pursuit.purescript.org/packages/purescript-elmish/>
 
 For guides and tutorials (not yet finished), see: <https://collegevine.github.io/purescript-elmish/>
 
