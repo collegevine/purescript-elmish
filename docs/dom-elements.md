@@ -140,15 +140,15 @@ change in the future.
 {: .callout }
 
 Since the props record is passed directly to React, and in React event handlers
-are modeled as functions taking [Synthetic
-Event](https://reactjs.org/docs/events.html), the `elmish-html` library simply
-directly maps that to PureScript:
+are modeled as functions taking
+[`SyntheticEvent`](https://reactjs.org/docs/events.html), the `elmish-html`
+library simply directly maps that to PureScript:
 
 ```haskell
 onChange :: EffectFn1 Foreign Unit
 ```
 
-We represent the Synthetic Event argument as `Foreign` in order to avoid taking
+We represent the `SyntheticEvent` argument as `Foreign` in order to avoid taking
 `purescript-web-events` (or any other similar library) as a dependency. Our
 experience shows that well-typed `Event` functions are not actually useful in
 practice.
@@ -237,7 +237,7 @@ Though this function is not (yet?) part of the library.
 
 ## Lower-level event access
 
-In extreme cases it may be necessary to access the React Synthetic Event after
+In extreme cases it may be necessary to access the React `SyntheticEvent` after
 all, even when it's not part of the event's type signature (such as `onClick`),
 for example to `preventDefault` or `stopPropagation`.
 

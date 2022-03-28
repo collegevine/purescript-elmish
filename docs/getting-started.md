@@ -46,9 +46,9 @@ well as Node and its associated tooling.
     <script>window.Main.main()</script>
    ```
 
-   The first line is the container for the application to render itself in. The
-   second line references the JavaScript bundle (result of your code
-   compilation). The third line invokes the PureScript entry point function.
+   The second line is the container for the application to render itself in. The
+   third line references the JavaScript bundle (result of your code
+   compilation). The fourth line invokes the PureScript entry point function.
 
    **NOTE:** we're using Bootstrap for styling. Looks better that way.
    {: .callout }
@@ -103,10 +103,10 @@ view _ _ =
    ]
 ```
 
-**NOTE**: the `H.div` function takes CSS class as first parameter, and so does
-the `H.strong` function. This style works very well with Bootstrap (where most
-elements have a class), but it's not the only choice. See [Rendering HTML](dom-elements.md#atomic-css-support)
-for more.
+**NOTE**: the `H.div` function takes a CSS class as the first parameter, and so
+does the `H.strong` function. This style works very well with Bootstrap (where
+most elements have a class), but it's not the only choice. See [Rendering
+HTML](dom-elements.md#atomic-css-support) for more.
 {: .callout }
 
 To make that compile, you'll need the following imports:
@@ -278,8 +278,8 @@ eventTargetValue f =
 
 ## Effects
 
-A rare UI comes without _effects_ - something that happens outside the UI, be it
-local storage, timers, communication with a server, and so on.
+It is a rare UI that comes without _effects_ - something that happens outside
+the UI, be it local storage, timers, communication with a server, and so on.
 
 In Elmish effects are defined by the `update` function. Its return type
 `Transition Message State` encodes the new ("updated") state and zero or more
