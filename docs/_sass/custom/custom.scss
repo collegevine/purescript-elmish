@@ -5,6 +5,11 @@
   background: #FFFFF0;
   box-shadow: 3px 3px 5px #f0f0f0;
 
+  @media (max-width: 576px) {
+    margin-left: 0;
+    padding: 0.5em
+  }
+
   li & {
     border: 1px solid #F0F0F0;
     padding: 0.3em;
