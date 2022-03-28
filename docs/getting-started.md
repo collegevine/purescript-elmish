@@ -3,6 +3,12 @@ title: Getting Started
 nav_order: 1
 ---
 
+# Getting Started
+{: .no_toc }
+
+1. TOC
+{:toc}
+
 ## Requisite tools
 
 Elmish is a PureScript library, and PureScript works with
