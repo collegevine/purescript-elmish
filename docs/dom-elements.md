@@ -6,9 +6,6 @@ nav_order: 4
 # Rendering HTML
 {:.no_toc}
 
-> **Under construction**. This page is unfinished. Many headings just have some
-> bullet points sketching the main points that should be discussed.
-
 1. TOC
 {:toc}
 
@@ -30,16 +27,17 @@ For example:
 ```haskell
 import Elmish.HTML as H
 
-H.div {}
-[ H.h1 {} "Welcome!"
-, H.p {}
-  [ H.text "This is just an example to demonstrate usage of the "
-  , H.a { href: "https://github.com/collegevine/purescript-elmish-html" } "elmish-html"
-  , H.text " library"
+view =
+  H.div {}
+  [ H.h1 {} "Welcome!"
+  , H.p {}
+    [ H.text "This is just an example to demonstrate usage of the "
+    , H.a { href: "https://github.com/collegevine/purescript-elmish-html" } "elmish-html"
+    , H.text " library"
+    ]
+  , H.img { src: "/img/welcome.png", width: 100, height: 200 }
+  , H.button { onClick: dispatch Login } "Click here to login"
   ]
-, H.img { src: "/img/welcome.png", width: 100, height: 200 }
-, H.button { onClick: dispatch Login } "Click here to login"
-]
 ```
 
 Most functions have two parameters - HTML attributes and content.
@@ -81,10 +79,11 @@ prop. For example:
 ```haskell
 import Elmish.HTML as H
 
-H.div { className: "border bg-light" }
-[ H.p { className: "mt-4 mb-3" } "Click this button:"
-, H.button { className: "btn btn-primary px-4", onClick: dispatch ButtonClicked } "Click me!"
-]
+view =
+  H.div { className: "border bg-light" }
+  [ H.p { className: "mt-4 mb-3" } "Click this button:"
+  , H.button { className: "btn btn-primary px-4", onClick: dispatch ButtonClicked } "Click me!"
+  ]
 ```
 
 But we found that this quickly becomes quite inconvenient. So the `elmish-html`
@@ -94,10 +93,11 @@ alternative versions of all elements taking the CSS class as first parameter:
 ```haskell
 import Elmish.HTML.Styled as H
 
-H.div "border bg-light"
-[ H.p "mt-4 mb-3" "Click this button:"
-, H.button "btn btn-primary px-4" "Click me!"
-]
+view =
+  H.div "border bg-light"
+  [ H.p "mt-4 mb-3" "Click this button:"
+  , H.button "btn btn-primary px-4" "Click me!"
+  ]
 ```
 
 This scheme is somewhat inspired by the [HAML templates](https://haml.info/),
@@ -122,10 +122,11 @@ class as parameter, while the latter also takes other props as a record:
 ```haskell
 import Elmish.HTML.Styled as H
 
-H.div "border bg-light"
-[ H.p "mt-4 mb-3" "Click this button:"
-, H.button_ "btn btn-primary px-4" { onClick: foo } "Click me!"
-]
+view =
+  H.div "border bg-light"
+  [ H.p "mt-4 mb-3" "Click this button:"
+  , H.button_ "btn btn-primary px-4" { onClick: foo } "Click me!"
+  ]
 ```
 
 This scheme is used for all elements, even those that don't make sense without
