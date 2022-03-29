@@ -72,52 +72,52 @@
     "relUrl": "/dom-elements/#lower-level-event-access"
   },"12": {
     "doc": "Getting Started",
+    "title": "Getting Started",
+    "content": ". | Requisite tools | Initialize an empty project | Minimal SPA scaffolding | Hello World | Interaction | More complex events | Effects | . ",
+    "url": "/purescript-elmish/getting-started/",
+    "relUrl": "/getting-started/"
+  },"13": {
+    "doc": "Getting Started",
     "title": "Requisite tools",
     "content": "Elmish is a PureScript library, and PureScript works with NodeJS, and that’s pretty much the only tool you’ll need to install upfront. This tutorial assumes a basic familiarity with PureScript language as such, as well as Node and its associated tooling. ",
     "url": "/purescript-elmish/getting-started/#requisite-tools",
     "relUrl": "/getting-started/#requisite-tools"
-  },"13": {
+  },"14": {
     "doc": "Getting Started",
     "title": "Initialize an empty project",
     "content": ". | Create an empty directory, run npm init to initialize a new Node project. The result should be a lone package.json file. | Run npm install --save purescript spago react react-dom esbuild to install: . | purescript - the PureScript compiler. | spago - the PureScript package manager. | react and react-dom - the React library, on which Elmish is based. | esbuild - the fastest JavaScript bundler currently available. | . | Run npx spago init to initialize a new PureScript project in the directory. This should create a bit of scaffolding, including a couple of *.dhall files and an src directory with Main.purs in it. | Run npx spago install elmish elmish-html to install the Elmish library and its companion elmish-html. | . ",
     "url": "/purescript-elmish/getting-started/#initialize-an-empty-project",
     "relUrl": "/getting-started/#initialize-an-empty-project"
-  },"14": {
+  },"15": {
     "doc": "Getting Started",
     "title": "Minimal SPA scaffolding",
     "content": ". | Using your favourite text editor, create a file named index.html and put the following code in it: . &lt;link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css\"&gt; &lt;div id=\"app\"&gt;The UI is not here yet&lt;/div&gt; &lt;script src=\"output/index.js\"&gt;&lt;/script&gt; &lt;script&gt;window.Main.main()&lt;/script&gt; . The first line is the container for the application to render itself in. The second line references the JavaScript bundle (result of your code compilation). The third line invokes the PureScript entry point function. NOTE: we’re using Bootstrap for styling. Looks better that way. | Open package.json, find the scripts section in it, and add the following line: . \"start\": \"spago build &amp;&amp; esbuild ./output/Main/index.js --bundle --serve --servedir=. --outfile=output/index.js --global-name=Main\" . This command first builds your project (via spago build) and then starts the esbuild bundler to bundle the compilation results and simultaneously serve them with a built-in web server. | To verify, run npm start. This should, after a few seconds, display something along the lines of: . Local: http://127.0.0.1:8000/ . Open that address in a browser. You should see text “The UI is not here yet”. If you don’t see that, something is wrong with the setup so far. | . ",
     "url": "/purescript-elmish/getting-started/#minimal-spa-scaffolding",
     "relUrl": "/getting-started/#minimal-spa-scaffolding"
-  },"15": {
+  },"16": {
     "doc": "Getting Started",
     "title": "Hello World",
     "content": "To start your Elmish UI, first you’ll need to define the five elements, as explained in the overview, - State, Message, init, update, and view. We’re going to put all of this in Main.purs: . -- Nothing happens in our UI so far, so there are no messages data Message -- The UI is just static text, so there is no initial state type State = Unit -- Since there is no state, there is nothing to initialize init :: Transition Message State init = pure unit -- Since there are no messages, the `update` function is also trivial update :: State -&gt; Message -&gt; Transition Message State update _ _ = pure unit view :: State -&gt; Dispatch Message -&gt; ReactElement view _ _ = H.div \"p-4\" [ H.text \"Hello, \" , H.strong \"\" \"World!\" ] . NOTE: the H.div function takes CSS class as first parameter, and so does the H.strong function. This style works very well with Bootstrap (where most elements have a class), but it’s not the only choice. See Rendering HTML for more. To make that compile, you’ll need the following imports: . import Elmish (Transition, Dispatch, ReactElement) import Elmish.HTML.Styled as H -- This is more convenient to import qualified import Elmish.Boot (defaultMain) -- We'll need this in a moment . Now all that remains is to hook that up to the entry point. To do that, put the following in main: . main :: Effect Unit main = defaultMain { def: { init, view, update }, elementId: \"app\" } . Now save and refresh your browser. Assuming you still have npm start running, you should see “Hello, World!” on the screen. ",
     "url": "/purescript-elmish/getting-started/#hello-world",
     "relUrl": "/getting-started/#hello-world"
-  },"16": {
+  },"17": {
     "doc": "Getting Started",
     "title": "Interaction",
     "content": "Now let’s add some interaction. We’ll do the simplest kind for now: a button click. To do that, we’ll need a message to describe the click: . - data Message + data Message = ButtonClicked . And in order for the button to have a visible effect, we’ll add some state for it to change: . - type State = Unit + type State = { word :: String } . The init function should provide initial state of the right type: . init :: Transition Message State - init = pure unit + init = pure { word: \"World\" } . And the update function should react to the button click by updating the state: . update :: State -&gt; Message -&gt; Transition Message State - update _ _ = pure unit + update state ButtonClicked = pure state { word = \"Elmish\" } . And finally, the view function should add a button: . view :: State -&gt; Dispatch Message -&gt; ReactElement - view _ _ = + view state dispatch = H.div \"p-4\" + [ H.div \"\" [ H.text \"Hello, \" - , H.strong \"\" \"World!\" + , H.strong \"\" state.word , H.text \"! \" ] + , H.button_ \"btn btn-primary mt-3\" { onClick: dispatch ButtonClicked } \"Click me!\" ] . If you refresh your browser now, you should see this: . NOTE: we just introduced the first prop (onClick) passed to a DOM element (button). For a more detailed discussion of props, see Rendering HTML. ",
     "url": "/purescript-elmish/getting-started/#interaction",
     "relUrl": "/getting-started/#interaction"
-  },"17": {
+  },"18": {
     "doc": "Getting Started",
     "title": "More complex events",
     "content": "The onClick event we used above is nice, but it’s a limited example of an event: it doesn’t have any parameters, but most events do. The elmish-html library models all events of standard DOM elements as an effectful function (i.e. EffectFn1) taking a Foreign parameter, even though the underlying value is actually React Synthetic Event. Mostly this is because it’s still a work in progress. Events may get a more interesting type in the future. But for now, the idea is to get the Foreign parameter and extract interesting values from it via readForeign, which is a standard Elmish mechanism for dealing with JS values of unknown nature (see here for more on it). To illustrate this, let’s add a textbox to our application to let the user edit the text: . - data Message = ButtonClicked + data Message + = ButtonClicked + | WordChanged String type State = { word :: String } init :: Transition Message State init = pure { word: \"World\" } update :: State -&gt; Message -&gt; Transition Message State update state ButtonClicked = pure state { word = \"Elmish\" } + update state (WordChanged s) = pure state { word = s } view :: State -&gt; Dispatch Message -&gt; ReactElement view state dispatch = H.div \"p-4\" + [ H.input_ \"d-block\" + { type: \"text\" + , value: state.word + , onChange: mkEffectFn1 \\f -&gt; do + let parsed = readForeign f :: Maybe { target :: { value :: String } } + case parsed of + Nothing -&gt; pure unit + Just e -&gt; dispatch $ WordChanged e.target.value + } , H.div \"mt-3\" [ H.text \"Hello, \" , H.strong \"\" state.word , H.text \"! \" ] , H.button_ \"btn btn-primary mt-3\" { onClick: dispatch ButtonClicked } \"Click me!\" ] . But of course, this is a bit too much ceremony, so there is a special operator &lt;?| that takes care of the case and the mkEffectFn1 parts for us: . - import Elmish (Dispatch, ReactElement, Transition) + import Elmish (Dispatch, ReactElement, Transition, (&lt;?|)) ... , onChange: dispatch &lt;?| \\f -&gt; (readForeign f :: _ { target :: { value :: String } }) &lt;#&gt; \\e -&gt; WordChanged e.target.value . Unfortunately, we still have to specify the shape of the record. Otherwise the compiler won’t be able to tell what we expect to find. For frequently used patterns like this, it’s often benefitial to extract them as a function: . eventTargetValue :: Foreign -&gt; Maybe String eventTargetValue f = (readForeign f :: _ { target :: { value :: String } }) &lt;#&gt; _.target.value ... , onChange: dispatch &lt;?| \\f -&gt; WordChanged &lt;$&gt; eventTargetValue f . ",
     "url": "/purescript-elmish/getting-started/#more-complex-events",
     "relUrl": "/getting-started/#more-complex-events"
-  },"18": {
+  },"19": {
     "doc": "Getting Started",
     "title": "Effects",
     "content": "A rare UI comes without effects - something that happens outside the UI, be it local storage, timers, communication with a server, and so on. In Elmish effects are defined by the update function. Its return type Transition Message State encodes the new (“updated”) state and zero or more effects that should happen as a result of this state transition (hence the name Transition). Let’s add a simple effect as a result of our ButtonClicked message: output a line to the console. + import Effect.Class.Console (log) - import Elmish (Transition, Dispatch, ReactElement, (&lt;?|)) + import Elmish (Transition, Dispatch, ReactElement, forkVoid, (&lt;?|)) ... update :: State -&gt; Message -&gt; Transition Message State - update state ButtonClicked = pure state { word = \"Elmish\" } + update state ButtonClicked = do + forkVoid $ log \"Button clicked\" + pure state { word = \"Elmish\" } update state (WordChanged s) = pure state { word = s } . If you refresh your browser now and open console in the developer tools, you should see something like this: . The forkVoid function adds an effect to the current state transition. The “void” suffix means that the effect does not produce any more messages. But most effects do eventually produce a message. Think of a server interaction: in most cases the server response has to affect the UI somehow. To achieve this, use the function fork (without the “void” suffix). Server communication is a bit too complicated for this tutorial, so let’s add a timer instead: . + import Effect.Aff (Milliseconds(..), delay) import Effect.Class.Console (log) - import Elmish (Dispatch, ReactElement, Transition, forkVoid, (&lt;?|)) + import Elmish (Dispatch, ReactElement, Transition, fork, forkVoid, (&lt;?|)) ... data Message = ButtonClicked | WordChanged String + | TimeoutElapsed ... update :: State -&gt; Message -&gt; Transition Message State update state ButtonClicked = do forkVoid $ log \"Button clicked\" + fork do + delay $ Milliseconds 1000.0 + pure TimeoutElapsed pure state { word = \"Elmish\" } update state (WordChanged s) = pure state { word = s } + update state TimeoutElapsed = + pure state { word = state.word &lt;&gt; \" after a while\" } . NOTE: there are many more ways to work with effects. For more information please see the page about state transitions . ",
     "url": "/purescript-elmish/getting-started/#effects",
     "relUrl": "/getting-started/#effects"
-  },"19": {
-    "doc": "Getting Started",
-    "title": "Getting Started",
-    "content": " ",
-    "url": "/purescript-elmish/getting-started/",
-    "relUrl": "/getting-started/"
   },"20": {
     "doc": "Intro",
     "title": "Intro",
