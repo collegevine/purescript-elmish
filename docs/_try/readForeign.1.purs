@@ -8,7 +8,7 @@ import Effect (Effect)
 import Effect.Console (log)
 import Foreign (Foreign, unsafeToForeign)
 import Elmish.Foreign (readForeign)
-import TryPureScript (p, render, text)
+import TryPureScript (render, withConsole)
 
 rightData :: Foreign
 rightData = unsafeToForeign { x: { y: 42 }, z: "foo" }
@@ -24,9 +24,6 @@ callMeFromJavaScript f =
     Nothing -> "Incoming data has the wrong shape"
     Just a -> "Got the right data: x.y = " <> show a.x.y <> ", z = " <> a.z
 
-main :: Effect Unit
-main =
-  render $ fold $ p <<< text <$>
-    [ callMeFromJavaScript rightData
-    , callMeFromJavaScript badData
-    ]
+main = render =<< withConsole do
+  log $ callMeFromJavaScript rightData
+  log $ callMeFromJavaScript badData
