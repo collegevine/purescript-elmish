@@ -20,7 +20,7 @@ type MyData = { x :: { y :: Int }, z :: String }
 
 callMeFromJavaScript :: Foreign -> String
 callMeFromJavaScript f =
-  case readForeign f :: _ _ MyData of
+  case readForeign' f :: _ _ MyData of
     Left err -> "Oops: " <> err
     Right a -> "Got the right data: x.y = " <> show a.x.y <> ", z = " <> a.z
 
