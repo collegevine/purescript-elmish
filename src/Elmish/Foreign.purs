@@ -93,7 +93,8 @@ class CanReceiveFromJavaScript (a :: Type) where
 -- |        where
 -- |
 -- |     newtype ButtonType = ButtonType String
--- |     instance toJsButtonType :: CanPassToJavaScript ButtonType
+-- |     derive newtype instance CanPassToJavaScript ButtonType
+-- |
 -- |     typeButton = ButtonType "button" :: ButtonType
 -- |     typeSubmit = ButtonType "submit" :: ButtonType
 -- |     typeReset = ButtonType "reset" :: ButtonType
