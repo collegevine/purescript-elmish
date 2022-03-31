@@ -2,9 +2,7 @@ module Main where
 
 import Prelude
 
-import Data.Foldable (fold)
 import Data.Either (Either(..))
-import Effect (Effect)
 import Effect.Console (log)
 import Foreign (Foreign, unsafeToForeign)
 import Elmish.Foreign (readForeign')

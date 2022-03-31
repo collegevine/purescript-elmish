@@ -18,6 +18,9 @@ data shapes.
 To make this data exchange saner and safer, Elmish provides a mechanism for data
 shape validation.
 
+1. TOC
+{: toc }
+
 ## Taking JS data as input
 
 If you're looking at a data structure you just got from some JavaScript code,
@@ -36,16 +39,18 @@ callMeFromJavaScript f =
     Just a -> "Got the right data: x.y = " <> show a.x.y <> ", z = " <> a.z
 ```
 
+{% include try-purescript.md file="readForeign.1.purs" %}
+
 `readForeign` will return `Nothing` if the value doesn't conform to the expected
 type, or `Just a` if it does, where `a` has the right type.
 
-**NOTE** `readForeign` doesn't actually _convert_ the data structure. It only
+**NOTE**: `readForeign` doesn't actually _convert_ the data structure. It only
 traverses it and makes sure that it has the right shape.
 {: .callout }
 
 This strategy turns out to be orders of magnitude faster than parsing with
-something like `purescript-argonaut`, which lets use it at all kinds of ingest
-boundaries, such as:
+something like `purescript-argonaut`, which lets us use it at all kinds of
+ingest boundaries, such as:
 
 * Network API calls
 * Top-level entry points
@@ -64,6 +69,8 @@ callMeFromJavaScript f =
     Left err -> "Oops: " <> err
     Right a -> "Got the right data: x.y = " <> show a.x.y <> ", z = " <> a.z
 ```
+
+{% include try-purescript.md file="readForeign.2.purs" %}
 
 **NOTE**: We're using type wildcards (underscores) so we don't have to write
 `Either String` every time.
