@@ -48,9 +48,9 @@ type, or `Just a` if it does, where `a` has the right type.
 traverses it and makes sure that it has the right shape.
 {: .callout }
 
-This strategy turns out to be orders of magnitude faster than parsing with
-something like `purescript-argonaut`, which lets us use it at all kinds of
-ingest boundaries, such as:
+This strategy turns out to much faster than parsing with something like
+`purescript-argonaut`, which lets us use it at all kinds of ingest boundaries,
+such as:
 
 * Network API calls
 * Top-level entry points
