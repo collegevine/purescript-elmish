@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Breaking**: Renamed `Elmish.Ref` to `Elmish.Opaque`
+- **Breaking**: changed the FFI mechanism to use `Opt` to denote optional props
+  instead of two separate rows.
 
 ## 0.6.0
 
