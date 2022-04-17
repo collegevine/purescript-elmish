@@ -10,3 +10,4 @@ in  upstream
   with elmish-enzyme.dependencies = [ "prelude" ]
   with elmish-enzyme.version = "v0.0.2"
   with elmish-html.dependencies = [ "prelude", "record" ]
+  with elmish-html.version = "opt"
