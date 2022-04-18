@@ -1,5 +1,5 @@
-module Elmish.React.ReactRef
-  ( ReactRef
+module Elmish.React.Ref
+  ( Ref
   , callbackRef
   )
   where
@@ -13,11 +13,11 @@ import Elmish.Foreign (class CanPassToJavaScript)
 import Unsafe.Coerce (unsafeCoerce)
 import Web.HTML (HTMLElement)
 
-data ReactRef
+data Ref
 
-instance CanPassToJavaScript ReactRef
+instance CanPassToJavaScript Ref
 
-callbackRef :: Maybe HTMLElement -> (HTMLElement -> Effect Unit) -> ReactRef
+callbackRef :: Maybe HTMLElement -> (HTMLElement -> Effect Unit) -> Ref
 callbackRef ref setRef = unsafeCoerce $ setRef <?| \r -> case eqByReference r <$> ref of
   Just true -> Nothing
   _ -> Just r
