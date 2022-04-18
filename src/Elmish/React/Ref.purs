@@ -11,13 +11,12 @@ import Effect (Effect)
 import Elmish.Dispatch ((<?|))
 import Elmish.Foreign (class CanPassToJavaScript)
 import Unsafe.Coerce (unsafeCoerce)
-import Web.HTML (HTMLElement)
 
-data Ref
+data Ref (el :: Type)
 
-instance CanPassToJavaScript Ref
+instance CanPassToJavaScript (Ref a)
 
-callbackRef :: Maybe HTMLElement -> (HTMLElement -> Effect Unit) -> Ref
+callbackRef :: forall el. Maybe el -> (el -> Effect Unit) -> Ref el
 callbackRef ref setRef = unsafeCoerce $ setRef <?| \r -> case eqByReference r <$> ref of
   Just true -> Nothing
   _ -> Just r
