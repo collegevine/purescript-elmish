@@ -7,6 +7,8 @@ module Elmish.React.Ref
 import Prelude
 
 import Data.Maybe (Maybe(..))
+import Data.Nullable (Nullable)
+import Data.Nullable as Nullable
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1)
 import Elmish.Dispatch ((<?|))
@@ -20,12 +22,16 @@ instance CanPassToJavaScript (Ref a)
 
 -- | Turns a callback function (`el -> Effect Unit`) into a `Ref`. The callback
 -- | function should add the `el` parameter to some state.
-callbackRef :: forall el. Maybe el -> (el -> Effect Unit) -> Ref el
-callbackRef ref setRef = mkCallbackRef $ setRef <?| \r -> case eqByReference r <$> ref of
-  Just true -> Nothing
-  _ -> Just r
+callbackRef :: forall el. Maybe el -> (Maybe el -> Effect Unit) -> Ref el
+callbackRef ref setRef = mkCallbackRef $ setRef <?| \ref' -> case ref, Nullable.toMaybe ref' of
+  Nothing, Nothing -> Nothing
+  _, Nothing -> Just Nothing
+  Nothing, r -> Just r
+  Just r, Just r'
+    | eqByReference r r' -> Nothing
+    | otherwise -> Just $ Just r'
   where
-    mkCallbackRef :: EffectFn1 el Unit -> Ref el
+    mkCallbackRef :: EffectFn1 (Nullable el) Unit -> Ref el
     mkCallbackRef = unsafeCoerce
 
 foreign import eqByReference :: forall a. a -> a -> Boolean
