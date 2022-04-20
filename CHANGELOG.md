@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Breaking**: `Elmish.Ref` to `Elmish.Opaque`
+- **Breaking**: Renamed `Elmish.Ref` to `Elmish.Opaque`
 
 ## 0.6.0
 
