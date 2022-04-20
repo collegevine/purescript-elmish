@@ -20,6 +20,7 @@
   , "prelude"
   , "refs"
   , "typelevel-prelude"
+  , "undefined-is-not-a-problem"
   , "unsafe-coerce"
   , "web-dom"
   , "web-html"

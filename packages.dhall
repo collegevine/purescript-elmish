@@ -8,5 +8,6 @@ in  upstream
   -- package set, and we'll end up with two copies of Elmish, leading to module
   -- name conflicts during compilation.
   with elmish-enzyme.dependencies = [ "prelude" ]
-  with elmish-enzyme.version = "v0.0.2"
+  with elmish-enzyme.version = "v0.0.3"
   with elmish-html.dependencies = [ "prelude", "record" ]
+  with elmish-html.version = "opt"
