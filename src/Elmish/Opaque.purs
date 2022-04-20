@@ -1,7 +1,7 @@
 -- | This module is an echo of an era gone by, it is deprecated and will be
 -- | removed soon.
-module Elmish.Ref
-    ( Ref, ref, deref
+module Elmish.Opaque
+    ( Opaque, wrap, unwrap
     ) where
 
 import Prelude
@@ -26,12 +26,12 @@ import Unsafe.Coerce (unsafeCoerce)
 -- | One challenge with this type is that we can't just `unsafeCoerce` its
 -- | values back and forth, because that would open a very big hole for data
 -- | corruption to get in. To have some protection against it, we add a weak
--- | form of verification: internally values of `Ref` are represented by a
+-- | form of verification: internally values of `Opaque` are represented by a
 -- | JavaScript hash with a sole key looking like "ref:name", whose value is the
 -- | target of the ref, and where "name" is the first type argument of this
--- | `Ref`. This way, we have at least _something_ to verify (see the
--- | `CanReceiveFromJavaScript` instance below) that the object passed by the
--- | JS code is not some random value, but actually originated as a `Ref a` of
+-- | `Opaque`. This way, we have at least _something_ to verify (see the
+-- | `CanReceiveFromJavaScript` instance below) that the object passed by the JS
+-- | code is not some random value, but actually originated as a `Opaque a` of
 -- | the right type.
 -- |
 -- | Admittedly, this is only weak protection, because the JS code can still,
@@ -47,33 +47,35 @@ import Unsafe.Coerce (unsafeCoerce)
 -- |      `Generic` or to provide type name, etc.), and without losing some
 -- |      performance.
 -- |   3) If such corruption proves to be a problem in the future, we can always
--- |      fall back to encoding/decoding `Json`, and pay some performance for it.
+-- |      fall back to encoding/decoding `Json`, and pay some performance for
+-- |      it.
 -- |
-newtype Ref (name :: Symbol) a = Ref (M.Object a)
+newtype Opaque (name :: Symbol) a = Opaque (M.Object a)
 
--- | Creates an instance of `Ref`. See comments on it above.
-ref :: ∀ name a. IsSymbol name => a -> Ref name a
-ref a = Ref $ M.singleton (refName (Proxy :: _ name)) a
+-- | Creates an instance of `Opaque`. See comments on it above.
+wrap :: ∀ name a. IsSymbol name => a -> Opaque name a
+wrap a = Opaque $ M.singleton (refName (Proxy :: _ name)) a
 
--- | Deconstructs an instance of `Ref`. See comments on it above.
-deref :: ∀ name a. IsSymbol name => Ref name a -> a
-deref (Ref m) =
-    -- This use of `fromJust` is justified, because the `Ref` constructor is not exported,
-    -- and the only two places where values of this type are constructed (`ref` above and
-    -- `CanReceiveFromJavaScript` below) guarantee that this key will be present.
+-- | Deconstructs an instance of `Opaque`. See comments on it above.
+unwrap :: ∀ name a. IsSymbol name => Opaque name a -> a
+unwrap (Opaque m) =
+    -- This use of `fromJust` is justified, because the `Opaque` constructor is
+    -- not exported, and the only two places where values of this type are
+    -- constructed (`wrap` above and `CanReceiveFromJavaScript` below) guarantee
+    -- that this key will be present.
     unsafePartial $ fromJust $ M.lookup (refName (Proxy :: _ name)) m
 
 refName :: ∀ name. IsSymbol name => Proxy name -> String
 refName p = "ref:" <> reflectSymbol p
 
 -- See comments on `Ref` above.
-instance readjsRef :: IsSymbol name => CanReceiveFromJavaScript (Ref name a) where
+instance IsSymbol name => CanReceiveFromJavaScript (Opaque name a) where
     validateForeignType _ v =
       case M.lookup sname map of
         Just _ -> Valid
-        Nothing -> Invalid { path: "", expected: "Ref", got: v }
+        Nothing -> Invalid { path: "", expected: "Opaque", got: v }
       where
           sname = refName (Proxy :: _ name)
           map = unsafeCoerce v
 
-instance writejsRef :: IsSymbol name => CanPassToJavaScript (Ref name a)
+instance IsSymbol name => CanPassToJavaScript (Opaque name a)

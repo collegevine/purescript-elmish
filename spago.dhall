@@ -19,7 +19,6 @@
   , "partial"
   , "prelude"
   , "refs"
-  , "strings"
   , "typelevel-prelude"
   , "unsafe-coerce"
   , "web-dom"
