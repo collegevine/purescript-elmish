@@ -12,6 +12,7 @@ module Elmish.React
     , setState
     , render
     , renderToString
+    , module Ref
     ) where
 
 import Prelude
@@ -21,6 +22,7 @@ import Data.Nullable (Nullable)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, runEffectFn1, runEffectFn2, runEffectFn3)
 import Elmish.Foreign (class CanPassToJavaScript)
+import Elmish.React.Ref (Ref, callbackRef) as Ref
 import Prim.TypeError (Text, class Fail)
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM as HTML
