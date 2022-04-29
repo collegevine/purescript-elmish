@@ -36,12 +36,12 @@
     "global-jsdom": "^8.4.0",
     "jsdom": "^19.0.0",
     "lodash": "^4.17.21",
-    "pulp": "^15.0.0",
+    "pulp": "^16.0.0",
     "purescript": "^0.15.0",
     "purescript-psa": "0.7.3",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
-    "spago": "^0.20.3",
+    "spago": "^0.20.8",
     "tree-kill": "^1.2.2"
   }
 }
