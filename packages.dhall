@@ -17,7 +17,7 @@ in  upstream
     { dependencies = [ "prelude", "functions" ]
     , repo =
         "https://github.com/working-group-purescript-es/purescript-debug.git"
-    , version = "es-modules"
+    , version = "v0.15.0-update"
     }
   with undefined-is-not-a-problem =
     { repo =
