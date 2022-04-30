@@ -4,14 +4,14 @@ let upstream =
 
 in  upstream
   with elmish-enzyme =
-    { dependencies = [ "prelude" ]
+    { dependencies = [ "prelude", "aff-promise" ]
     , repo = "https://github.com/collegevine/purescript-elmish-enzyme.git"
-    , version = "main"
+    , version = "v0.1.0"
     }
   with elmish-html =
     { dependencies = [ "prelude", "record" ]
     , repo = "https://github.com/collegevine/purescript-elmish-html.git"
-    , version = "v0.6.0"
+    , version = "v0.7.0"
     }
   with debug =
     { dependencies = [ "prelude", "functions" ]
