@@ -1,19 +1,19 @@
-const React = require("react")
+import React from "react";
 
-exports.withCachedComponent = (function() {
+export var withCachedComponent = (function() {
   const cache = {}
 
   return function(name, f) {
     const c = cache[name] || (cache[name] = mkFreshComponent(name))
     return f(c)
   }
-})()
+})();
 
-exports.withFreshComponent = function(f) {
+export function withFreshComponent(f) {
   return f(mkFreshComponent())
 }
 
-exports.instantiateBaseComponent = React.createElement
+export var instantiateBaseComponent = React.createElement;
 
 function mkFreshComponent(name) {
   class ElmishComponent extends React.Component {

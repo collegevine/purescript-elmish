@@ -1,1 +1,3 @@
-exports.eqByReference = a => b => a === b
+export function eqByReference(a) {
+  return b => a === b;
+}

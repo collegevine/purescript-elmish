@@ -1,1 +1,2 @@
-exports.fragment_ = require("react").Fragment
+import { Fragment } from "react/index.js";
+export var fragment_ = Fragment;

@@ -29,7 +29,7 @@ spec = describe "Elmish.Foreign" do
       read { foo: "bar", one: "two" } `shouldEqual` Just { foo: "bar", one: "two" }
 
     it "reads JS objects as homogeneous Object" do
-      let readRecord :: forall r a. Homogeneous r a => CanReceiveFromJavaScript a => Show a => Eq a => Record r -> _
+      let readRecord :: forall r a. Homogeneous r a => CanReceiveFromJavaScript (Object a) => Show a => Eq a => Record r -> _
           readRecord rec = read rec `shouldEqual` Just (Obj.fromHomogeneous rec)
       readRecord { foo: "bar", one: "two" }
       readRecord { foo: { x: 1, y: "bar" }, one: { x: 2, y: "two" } }

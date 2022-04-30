@@ -1,4 +1,4 @@
-exports.traceTime = function(name) {
+export function traceTime(name) {
     return function(f) {
         const start = new Date()
         const res = f()
