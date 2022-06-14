@@ -19,7 +19,7 @@
         "purescript-arrays": "^v7.0.0",
         "purescript-bifunctors": "^v6.0.0",
         "purescript-console": "^v6.0.0",
-        "purescript-debug": "https://github.com/working-group-purescript-es/purescript-debug.git#v0.15.0-update",
+        "purescript-debug": "v6.0.0",
         "purescript-effect": "^v4.0.0",
         "purescript-either": "^v6.0.0",
         "purescript-foldable-traversable": "^v6.0.0",
@@ -34,7 +34,7 @@
         "purescript-prelude": "^v6.0.0",
         "purescript-refs": "^v6.0.0",
         "purescript-typelevel-prelude": "^v7.0.0",
-        "purescript-undefined-is-not-a-problem": "https://github.com/working-group-purescript-es/purescript-undefined-is-not-a-problem.git#v0.15.0-update",
+        "purescript-undefined-is-not-a-problem": "v1.0.0",
         "purescript-unsafe-coerce": "^v6.0.0",
         "purescript-web-dom": "^v6.0.0",
         "purescript-web-html": "^v4.0.0"
