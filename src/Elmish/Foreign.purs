@@ -27,7 +27,7 @@ import Data.JSDate (JSDate)
 import Data.Maybe (Maybe(..), isJust)
 import Data.Nullable (Nullable)
 import Data.Symbol (class IsSymbol, reflectSymbol)
-import Data.Undefined.NoProblem (Opt)
+import Data.Undefined.NoProblem (Opt, Req)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2)
 import Foreign (Foreign) as ForeignReexport
@@ -198,7 +198,11 @@ instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Nullable a) whe
 
 instance CanPassToJavaScript a => CanPassToJavaScript (Opt a)
 instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Opt a) where
-    validateForeignType _ v = validateForeignType (Proxy :: _ (Nullable a)) v
+    validateForeignType _ = validateForeignType (Proxy :: _ (Nullable a))
+
+instance CanPassToJavaScript a => CanPassToJavaScript (Req a)
+instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Req a) where
+  validateForeignType _ = validateForeignType (Proxy :: _ a)
 
 instance (RowToList r rl, CanPassToJavaScriptRecord rl) => CanPassToJavaScript (Record r)
 instance (RowToList r rl, CanReceiveFromJavaScriptRecord rl) => CanReceiveFromJavaScript (Record r) where
