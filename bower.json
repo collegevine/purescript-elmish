@@ -34,7 +34,7 @@
         "purescript-prelude": "^v6.0.0",
         "purescript-refs": "^v6.0.0",
         "purescript-typelevel-prelude": "^v7.0.0",
-        "purescript-undefined-is-not-a-problem": "v1.0.0",
+        "purescript-undefined-is-not-a-problem": "https://github.com/paluh/purescript-undefined-is-not-a-problem.git#v1.1.0",
         "purescript-unsafe-coerce": "^v6.0.0",
         "purescript-web-dom": "^v6.0.0",
         "purescript-web-html": "^v4.0.0"
