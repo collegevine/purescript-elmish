@@ -2,7 +2,7 @@ module Test.Component (spec) where
 
 import Prelude
 
-import Elmish.Enzyme (clickOn, find, name, parent, testComponent, text, (>>))
+import Elmish.Test (clickOn, find, nearestEnclosingReactComponentName, testComponent, text, (>>))
 import Test.Examples.Counter as Counter
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
@@ -21,4 +21,4 @@ spec = describe "Elmish.Component" do
 
   it "names the root component ElmishRoot" $
     testComponent (Counter.def { initialCount: 0 }) $
-      find "div" >> parent >> name >>= shouldEqual "ElmishRoot"
+      find "div" >> nearestEnclosingReactComponentName >>= shouldEqual "ElmishRoot"
