@@ -23,7 +23,7 @@ init { initialCount } = pure { count: initialCount }
 
 view :: State -> Dispatch Message -> ReactElement
 view state dispatch =
-  H.div ""
+  H.div "t--counter"
   [ H.p "" $ "The count is: " <> show state.count
   , H.button_ "t--inc" { onClick: dispatch Inc } "Inc"
   , H.button_ "t--dec" { onClick: dispatch Dec } "Dec"
