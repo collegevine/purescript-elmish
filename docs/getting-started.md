@@ -106,7 +106,7 @@ view _ _ =
 **NOTE**: the `H.div` function takes a CSS class as the first parameter, and so
 does the `H.strong` function. This style works very well with Bootstrap (where
 most elements have a class), but it's not the only choice. See [Rendering
-HTML](dom-elements.md#atomic-css-support) for more.
+HTML](dom-elements#atomic-css-support) for more.
 {: .callout }
 
 To make that compile, you'll need the following imports:
