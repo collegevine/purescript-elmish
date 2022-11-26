@@ -2,8 +2,10 @@ name: documentation
 
 on:
   push:
-    branches: [ docs ]
+    branches: [ master ]
     paths: [ ".github/workflows/docs.yml", "docs/**" ]
+  pull_request:
+    branches: [ master ]
 
 permissions:
   contents: read
@@ -34,6 +36,7 @@ jobs:
       uses: actions/upload-pages-artifact@v1
       with:
         path: docs/_site
+      if: github.event_name != 'pull_request'
 
   deploy-docs:
     environment:
@@ -45,3 +48,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
+        if: github.event_name != 'pull_request'

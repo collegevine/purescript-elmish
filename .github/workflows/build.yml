@@ -3,12 +3,12 @@ name: build
 on:
   push:
     branches: [ master ]
+    paths: [ "!.github/workflows/docs.yml", "!docs/**" ]
   pull_request:
     branches: [ master ]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
