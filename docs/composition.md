@@ -305,7 +305,7 @@ use in the `Parent` module.
 
 **NOTE 1**: the `ComponentName` parameter is unfortunately required due to how
 React works under the hood. For a detailed explanation, see [docs on
-Pursuit](https://pursuit.purescript.org/packages/purescript-elmish/0.5.8/docs/Elmish.Component#t:ComponentName).
+Pursuit](https://pursuit.purescript.org/packages/purescript-elmish/docs/Elmish.Component#t:ComponentName).
 {: .callout }
 
 **NOTE 2**: the name `wrapWithLocalState` will probably be changed in the
