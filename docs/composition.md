@@ -43,7 +43,7 @@ button text onClick =
   ]
 ```
 
-![Counter example](counter-1.png)
+![Counter example]({% link counter-1.png %})
 
 Here, we have extracted the visuals for "increase" and "decrease" buttons as a
 partial view function named `button`, which is then used twice in the main
@@ -83,7 +83,7 @@ components".
 For example, let's say we wanted to create a UI consisting of _two_ such
 counters as shown above:
 
-![Counters composed](counter-2.png)
+![Counters composed]({% link counter-2.png %})
 
 To do this, we would aggregate the two counters' states, route their messages
 and state transitions, and compose their views:

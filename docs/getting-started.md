@@ -182,7 +182,7 @@ And finally, the `view` function should add a button:
 
 If you refresh your browser now, you should see this:
 
-![Interaction](getting-started-interaction.gif)
+![Interaction]({% link getting-started-interaction.gif %})
 
 **NOTE:** we just introduced the first prop (`onClick`) passed to a DOM
 element (`button`). For a more detailed discussion of props, see
@@ -243,7 +243,7 @@ the text:
     ]
 ```
 
-![Event Arguments](getting-started-eventargs.gif)
+![Event Arguments]({% link getting-started-eventargs.gif %})
 
 But of course, this is a bit too much ceremony, so there is a special operator
 `<?|` that takes care of the `case` and the `mkEffectFn1` parts for us:
@@ -307,7 +307,7 @@ line to the console.
 If you refresh your browser now and open console in the developer tools, you
 should see something like this:
 
-![Effect: Console](getting-started-effect-log.gif)
+![Effect: Console]({% link getting-started-effect-log.gif %})
 
 The `forkVoid` function adds an effect to the current state transition. The
 "void" suffix means that the effect does not produce any more messages.
@@ -347,7 +347,7 @@ timer instead:
 +   pure state { word = state.word <> " after a while" }
 ```
 
-![Effect: Timer](getting-started-effect-timer.gif)
+![Effect: Timer]({% link getting-started-effect-timer.gif %})
 
 **NOTE**: there are many more ways to work with effects. For more information
 please see [the page about state transitions]({% link transition.md %}#effects)

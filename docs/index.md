@@ -25,7 +25,7 @@ In short, the idea is that your UI consists of:
   figure out what the new state should be as a result of receiving that message.
 * "init" - a way to create initial "state".
 
-![Flow Diagram](diagram.png)
+![Flow Diagram]({% link diagram.png %})
 
 ## A small, yet complete example
 
@@ -78,4 +78,4 @@ update state msg = case msg of
         pure state
 ```
 
-![Example](example.gif)
+![Example]({% link example.gif %})
