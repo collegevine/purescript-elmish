@@ -123,7 +123,7 @@ messages in `LeftMsg` and the other wrapping them in `RightMsg`.
 So far so good. But what about the `update` function?
 
 Since `Transition` is a pair of state + effects
-(see [Transition: Under the Hood](transition.md#under-the-hood)),
+(see [Transition: Under the Hood]({% link transition.md %}#under-the-hood)),
 we could do it the straightforward way:
 
   1. Call `Counter.update`
@@ -158,7 +158,7 @@ update state (LeftMsg m) = do
   pure state { left = s' }
 ```
 
-**NOTE**: See the [Transition](transition.md) page for a detailed description
+**NOTE**: See the [Transition]({% link transition.md %}) page for a detailed description
 of how the `do` notation works with `Transition`
 {: .callout }
 

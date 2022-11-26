@@ -6,7 +6,7 @@ on:
     paths: [ ".github/workflows/docs.yml", "docs/**" ]
 
 jobs:
-  build-and-deploy-docs:
+  build-docs:
 
     runs-on: ubuntu-latest
     defaults:
@@ -21,10 +21,22 @@ jobs:
         ruby-version: 2.6
         bundler-cache: true
         working-directory: docs
+
     - name: Jekyll build
       run: bundler exec jekyll build
-    - name: Deploy to GitHub Pages
-      uses: JamesIves/github-pages-deploy-action@v4.2.5
+
+    - name: Upload GH Pages artifact
+      uses: actions/upload-pages-artifact@v1
       with:
-        branch: docs-built
-        folder: docs/_site
+        path: docs/_site
+
+  deploy-docs:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build-docs
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1

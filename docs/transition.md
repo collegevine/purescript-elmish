@@ -11,7 +11,7 @@ nav_order: 2
 
 ## Basics
 
-The `update` function (see [Intro](index.md)) describes a UI state transition in
+The `update` function (see [Intro]({% link index.md %})) describes a UI state transition in
 response to a particular message. This transition consists of two components:
 
 * the new state of the UI
@@ -198,4 +198,4 @@ the underlying pair of state+commands.
 
 This is especially true when composing multiple components into one (aka "child
 components"). For a detailed exploration of different modes of composition, see
-[Composition](composition.md).
+[Composition]({% link composition.md %}).

@@ -33,6 +33,12 @@ permalink: pretty
 
 footer_content: "Copyright &copy; 2018-2022 CollegeVine"
 
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+
 kramdown:
   syntax_highlighter_opts:
     block:

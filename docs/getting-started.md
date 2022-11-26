@@ -77,7 +77,7 @@ well as Node and its associated tooling.
 ## Hello World
 
 To start your Elmish UI, first you'll need to define the five elements, as
-explained in [the overview](index.md), - `State`, `Message`, `init`, `update`,
+explained in [the overview]({% link index.md %}), - `State`, `Message`, `init`, `update`,
 and `view`. We're going to put all of this in `Main.purs`:
 
 ```haskell
@@ -106,7 +106,7 @@ view _ _ =
 **NOTE**: the `H.div` function takes a CSS class as the first parameter, and so
 does the `H.strong` function. This style works very well with Bootstrap (where
 most elements have a class), but it's not the only choice. See [Rendering
-HTML](dom-elements#atomic-css-support) for more.
+HTML](../dom-elements#atomic-css-support) for more.
 {: .callout }
 
 To make that compile, you'll need the following imports:
@@ -186,7 +186,7 @@ If you refresh your browser now, you should see this:
 
 **NOTE:** we just introduced the first prop (`onClick`) passed to a DOM
 element (`button`). For a more detailed discussion of props, see
-[Rendering HTML](dom-elements.md#event-handlers).
+[Rendering HTML]({% link dom-elements.md %}#event-handlers).
 {: .callout }
 
 ## More complex events
@@ -202,7 +202,7 @@ future.
 
 But for now, the idea is to get the `Foreign` parameter and extract interesting
 values from it via `readForeign`, which is a standard Elmish mechanism for
-dealing with JS values of unknown nature ([see here for more on it](read-foreign.md)).
+dealing with JS values of unknown nature ([see here for more on it]({% link read-foreign.md %})).
 
 To illustrate this, let's add a textbox to our application to let the user edit
 the text:
@@ -350,5 +350,5 @@ timer instead:
 ![Effect: Timer](getting-started-effect-timer.gif)
 
 **NOTE**: there are many more ways to work with effects. For more information
-please see [the page about state transitions](transition.md#effects)
+please see [the page about state transitions]({% link transition.md %}#effects)
 {: .callout }
