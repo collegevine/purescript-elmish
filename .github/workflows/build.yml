@@ -11,6 +11,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        react-version: [16, 17, 18]
+
     steps:
     - uses: actions/checkout@v2
     - uses: actions/cache@v2
@@ -19,11 +23,11 @@ jobs:
           .spago
           output
           node_modules
-        key: build-atrifacts-v1-${{ hashFiles('package-lock.json', 'spago.dhall', 'packages.dhall') }}
+        key: build-atrifacts-v1-${{ matrix.react-version }}-${{ hashFiles('package-lock.json', 'spago.dhall', 'packages.dhall') }}
     - uses: actions/setup-node@v2
       with:
         node-version: 14.19.1
-    - run: npm i
+    - run: npm i --save react@${{ matrix.react-version }} && npm i
     - run: npm run build
     - run: npm run test
 
