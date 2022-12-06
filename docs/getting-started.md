@@ -22,7 +22,7 @@ well as Node and its associated tooling.
 
 1. Create an empty directory, run `npm init` to initialize a new Node project.
    The result should be a lone `package.json` file.
-2. Run `npm install --save purescript spago react react-dom esbuild` to install:
+2. Run `npm install --save purescript spago react@17 react-dom@17 esbuild` to install:
     * `purescript` - the PureScript compiler.
     * `spago` - [the PureScript package
       manager](https://github.com/purescript/spago).
