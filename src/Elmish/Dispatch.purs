@@ -38,8 +38,6 @@ infixr 9 handle as <|
 
 class SpecializedEvent raw specialized where
     specializeEvent :: raw -> specialized
-instance SpecializedEvent a a where
-    specializeEvent = identity
 
 class Handle msg raw f where
     handle :: Dispatch msg -> f -> E.EffectFn1 raw Unit
