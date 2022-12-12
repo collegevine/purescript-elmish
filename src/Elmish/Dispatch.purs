@@ -1,9 +1,14 @@
 module Elmish.Dispatch
   ( (<|)
+  , (<!|)
   , Dispatch
-  , class Handle, handle
-  , class SpecializedEvent, specializeEvent
-  , class HandleEffect, handleEffect
+  , class Handle
+  , class HandleEffect
+  , class SpecializedEvent
+  , handle
+  , handleEffect
+  , handleStrict
+  , specializeEvent
   )
   where
 
@@ -17,7 +22,7 @@ import Effect.Uncurried as E
 type Dispatch msg = msg -> Effect Unit
 
 infixr 9 handle as <|
--- infixr 9 handleMaybe as <?|
+infixr 9 handleStrict as <!|
 
 -- | A convenience function to make construction of event handlers with
 -- | arguments (i.e. `EffectFn1`) a bit shorter. The function takes a `Dispatch`
@@ -74,3 +79,6 @@ else instance SpecializedEvent raw specialized => HandleEffect raw (specialized 
     handleEffect f = E.mkEffectFn1 $ f <<< specializeEvent
 else instance HandleEffect raw (Effect Unit) where
     handleEffect f = E.mkEffectFn1 $ const f
+
+handleStrict :: ∀ event msg. Dispatch msg -> (event -> msg) -> E.EffectFn1 event Unit
+handleStrict dispatch f = E.mkEffectFn1 $ dispatch <<< f
