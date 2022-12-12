@@ -4,7 +4,7 @@ module Elmish.Dispatch
   , class Handle
   , class SpecializedEvent
   , handle
-  , handleEvent
+  , handleEffect
   , specializeEvent
   )
   where
@@ -45,8 +45,8 @@ class SpecializedEvent raw specialized where
 class Handle msg raw f where
     handle :: Dispatch msg -> f -> E.EffectFn1 raw Unit
 
-handleEvent :: forall raw specialized. SpecializedEvent raw specialized => (specialized -> Effect Unit) -> E.EffectFn1 raw Unit
-handleEvent f = E.mkEffectFn1 $ f <<< specializeEvent
+handleEffect :: forall raw specialized. SpecializedEvent raw specialized => (specialized -> Effect Unit) -> E.EffectFn1 raw Unit
+handleEffect f = E.mkEffectFn1 $ f <<< specializeEvent
 
 instance Handle msg raw (raw -> Maybe msg) where
     handle dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <<< f
