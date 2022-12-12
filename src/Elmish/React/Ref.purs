@@ -11,7 +11,7 @@ import Data.Nullable (Nullable)
 import Data.Nullable as Nullable
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1)
-import Elmish.Dispatch ((<?|))
+import Elmish.Dispatch ((<|))
 import Elmish.Foreign (class CanPassToJavaScript)
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -34,7 +34,7 @@ instance CanPassToJavaScript (Ref a)
 -- |   H.input_ "" { ref: callbackRef state.inputElement (dispatch <<< RefChanged), … }
 -- | ```
 callbackRef :: forall el. Maybe el -> (Maybe el -> Effect Unit) -> Ref el
-callbackRef ref setRef = mkCallbackRef $ setRef <?| \ref' -> case ref, Nullable.toMaybe ref' of
+callbackRef ref setRef = mkCallbackRef $ setRef <| \ref' -> case ref, Nullable.toMaybe ref' of
   Nothing, Nothing -> Nothing
   Just r, Just r'
     | eqByReference r r' -> Nothing
