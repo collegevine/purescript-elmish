@@ -1,23 +1,22 @@
 module Elmish.Dispatch
-    ( Dispatch
-    , handle
-    , handleMaybe
-    , (<|)
-    , (<?|)
-    , module E
-    ) where
+  ( (<|)
+  , Dispatch
+  , class SpecializedEvent, specializeEvent
+  , class Handle, handle
+  )
+  where
 
 import Prelude
 
 import Data.Maybe (Maybe, maybe)
 import Effect (Effect)
-import Effect.Uncurried (EffectFn1, EffectFn2, mkEffectFn1, mkEffectFn2) as E
+import Effect.Uncurried as E
 
 -- | A function that a view can use to report messages originating from JS/DOM.
 type Dispatch msg = msg -> Effect Unit
 
 infixr 9 handle as <|
-infixr 9 handleMaybe as <?|
+-- infixr 9 handleMaybe as <?|
 
 -- | A convenience function to make construction of event handlers with
 -- | arguments (i.e. `EffectFn1`) a bit shorter. The function takes a `Dispatch`
@@ -36,10 +35,32 @@ infixr 9 handleMaybe as <?|
 -- |       where
 -- |         eventTargetValue = readForeign >=> lookup "target" >=> readForeign >=> lookup "value"
 -- |
-handle :: forall arg msg. Dispatch msg -> (arg -> msg) -> E.EffectFn1 arg Unit
-handle dispatch fn = E.mkEffectFn1 $ dispatch <<< fn
 
--- | Same as `handle`, but dispatches a message optionally. See comments on
--- | `handle` for an example.
-handleMaybe :: forall arg msg. Dispatch msg -> (arg -> Maybe msg) -> E.EffectFn1 arg Unit
-handleMaybe dispatch fn = E.mkEffectFn1 $ maybe (pure unit) dispatch <<< fn
+class SpecializedEvent raw specialized where
+    specializeEvent :: raw -> specialized
+instance SpecializedEvent a a where
+    specializeEvent = identity
+
+class Handle msg raw f where
+    handle :: Dispatch msg -> f -> E.EffectFn1 raw Unit
+
+instance Handle msg raw (raw -> Maybe msg) where
+    handle dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <<< f
+else instance Handle msg raw (raw -> msg) where
+    handle dispatch f = E.mkEffectFn1 $ dispatch <<< f
+else instance SpecializedEvent raw specialized => Handle msg raw (specialized -> Maybe msg) where
+    handle dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <<< f <<< specializeEvent
+else instance SpecializedEvent raw specialized => Handle msg raw (specialized -> msg) where
+    handle dispatch f = E.mkEffectFn1 $ dispatch <<< f <<< specializeEvent
+else instance Handle msg raw (raw -> Effect (Maybe msg)) where
+    handle dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <=< f
+else instance Handle msg raw (raw -> Effect msg) where
+    handle dispatch f = E.mkEffectFn1 $ dispatch <=< f
+else instance SpecializedEvent raw specialized => Handle msg raw (specialized -> Effect (Maybe msg)) where
+    handle dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <=< (f <<< specializeEvent)
+else instance SpecializedEvent raw specialized => Handle msg raw (specialized -> Effect msg) where
+    handle dispatch f = E.mkEffectFn1 $ dispatch <=< (f <<< specializeEvent)
+else instance Handle msg raw (Effect msg) where
+    handle dispatch msg = E.mkEffectFn1 \_ -> dispatch =<< msg
+else instance Handle msg raw msg where
+    handle dispatch msg = E.mkEffectFn1 \_ -> dispatch msg
