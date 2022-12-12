@@ -3,11 +3,11 @@ module Elmish.Dispatch
   , (<?|)
   , (<|)
   , Dispatch
-  , class SpecializedEvent
+  , class SpecializedEvent, specializeEvent
+  , class SpecializedEvent', specializeEvent'
   , handle
   , handleEffect
   , handleMaybe
-  , specializeEvent
   )
   where
 
@@ -45,11 +45,16 @@ infixr 9 handleEffect as <!|
 class SpecializedEvent raw specialized where
     specializeEvent :: raw -> specialized
 
-handle :: forall msg raw specialized. SpecializedEvent raw specialized => Dispatch msg -> (specialized -> msg) -> E.EffectFn1 raw Unit
-handle dispatch f = E.mkEffectFn1 $ dispatch <<< f <<< specializeEvent
+class SpecializedEvent' raw specialized where
+    specializeEvent' :: raw -> specialized
+instance SpecializedEvent' a a where specializeEvent' = identity
+else instance SpecializedEvent a b => SpecializedEvent' a b where specializeEvent' = specializeEvent
 
-handleMaybe :: forall msg raw specialized. SpecializedEvent raw specialized => Dispatch msg -> (specialized -> Maybe msg) -> E.EffectFn1 raw Unit
-handleMaybe dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <<< f <<< specializeEvent
+handle :: forall msg raw specialized. SpecializedEvent' raw specialized => Dispatch msg -> (specialized -> msg) -> E.EffectFn1 raw Unit
+handle dispatch f = E.mkEffectFn1 $ dispatch <<< f <<< specializeEvent'
 
-handleEffect :: forall raw specialized. SpecializedEvent raw specialized => (specialized -> Effect Unit) -> E.EffectFn1 raw Unit
-handleEffect f = E.mkEffectFn1 \e -> f $ specializeEvent e
+handleMaybe :: forall msg raw specialized. SpecializedEvent' raw specialized => Dispatch msg -> (specialized -> Maybe msg) -> E.EffectFn1 raw Unit
+handleMaybe dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <<< f <<< specializeEvent'
+
+handleEffect :: forall raw specialized. SpecializedEvent' raw specialized => (specialized -> Effect Unit) -> E.EffectFn1 raw Unit
+handleEffect f = E.mkEffectFn1 \e -> f $ specializeEvent' e
