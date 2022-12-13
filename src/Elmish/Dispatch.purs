@@ -14,7 +14,7 @@ import Data.Maybe (Maybe, maybe)
 import Effect (Effect)
 import Effect.Uncurried as E
 import Safe.Coerce (coerce)
-import Type.Equality (class TypeEquals, proof)
+import Type.Equality (class TypeEquals)
 
 -- | A function that a view can use to report messages originating from JS/DOM.
 type Dispatch msg = msg -> Effect Unit
@@ -32,7 +32,7 @@ class Handle msg event f where
     -- |
     -- |     textarea
     -- |       { value: state.text
-    -- |       , onChange: dispatch <| E.inputText
+    -- |       , onChange: dispatch <| E.textareaText
     -- |       , onMouseDown: dispatch <| TextareaClicked
     -- |       }
     -- |
