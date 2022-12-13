@@ -19,25 +19,21 @@ type Dispatch msg = msg -> Effect Unit
 
 infixr 9 handle as <|
 
--- | A convenience function to make construction of event handlers with
--- | arguments (i.e. `EffectFn1`) a bit shorter. The function takes a `Dispatch`
--- | and a mapping from the event argument to a message which the given
--- | `Dispatch` accepts, and it's also available in operator form.
--- |
--- | The following example demonstrates expected usage of both `handle` (in its
--- | operator form `<|`) and `handleMaybe` (in its operator form `<?|`):
--- |
--- |     textarea
--- |       { value: state.text
--- |       , onChange: dispatch <?| \e -> TextChanged <$> eventTargetValue e
--- |       , onMouseDown: dispatch <| \_ -> TextareaClicked
--- |       }
--- |
--- |       where
--- |         eventTargetValue = readForeign >=> lookup "target" >=> readForeign >=> lookup "value"
--- |
-
 class Handle msg event f where
+    -- | A convenience function to make construction of event handlers with
+    -- | arguments (i.e. `EffectFn1`) a bit shorter. The function takes a `Dispatch`
+    -- | and a mapping from the event argument to a message which the given
+    -- | `Dispatch` accepts, and it's also available in operator form.
+    -- |
+    -- | The following example demonstrates expected usage of `handle` (in its
+    -- | operator form `<|`):
+    -- |
+    -- |     textarea
+    -- |       { value: state.text
+    -- |       , onChange: dispatch <| E.inputText
+    -- |       , onMouseDown: dispatch <| TextareaClicked
+    -- |       }
+    -- |
     handle :: Dispatch msg -> f -> E.EffectFn1 event Unit
 
 instance Handle msg event (event -> Maybe msg) where
