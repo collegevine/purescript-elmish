@@ -38,17 +38,17 @@ class Handle msg event f where
     -- |
     handle :: Dispatch msg -> f -> E.EffectFn1 event Unit
 
-instance TypeEquals res msg => Handle msg event (event -> Maybe res) where
-    handle dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <<< coerce <<< f
-else instance TypeEquals res msg => Handle msg event (event -> res) where
-    handle dispatch f = E.mkEffectFn1 $ dispatch <<< coerce <<< f
-else instance TypeEquals res msg => Handle msg event (event -> Effect (Maybe res)) where
-    handle dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <=< (map coerce <<< f)
-else instance TypeEquals res msg => Handle msg event (event -> Effect res) where
-    handle dispatch f = E.mkEffectFn1 $ dispatch <=< (coerce <<< f)
-else instance TypeEquals res msg => Handle msg event (Effect res) where
+instance (TypeEquals output msg, TypeEquals event input) => Handle msg event (input -> Maybe output) where
+    handle dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <<< coerce <<< f <<< coerce
+else instance (TypeEquals output msg, TypeEquals event input) => Handle msg event (input -> output) where
+    handle dispatch f = E.mkEffectFn1 $ dispatch <<< coerce <<< f <<< coerce
+else instance (TypeEquals output msg, TypeEquals event input) => Handle msg event (input -> Effect (Maybe output)) where
+    handle dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <=< (map coerce <<< f <<< coerce)
+else instance (TypeEquals output msg, TypeEquals event input) => Handle msg event (input -> Effect output) where
+    handle dispatch f = E.mkEffectFn1 $ dispatch <=< (coerce <<< f <<< coerce)
+else instance TypeEquals output msg => Handle msg event (Effect output) where
     handle dispatch msg = E.mkEffectFn1 \_ -> dispatch =<< coerce msg
-else instance TypeEquals res msg => Handle msg event res where
+else instance TypeEquals output msg => Handle msg event output where
     handle dispatch msg = E.mkEffectFn1 \_ -> dispatch $ coerce msg
 
 class HandleEffect event f where
@@ -57,4 +57,3 @@ instance TypeEquals event input => HandleEffect event (input -> Effect Unit) whe
     handleEffect f = E.mkEffectFn1 $ f <<< coerce
 else instance HandleEffect event (Effect Unit) where
     handleEffect = E.mkEffectFn1 <<< const
-
