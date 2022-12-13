@@ -2,9 +2,9 @@ module Elmish.Dispatch
   ( (<|)
   , Dispatch
   , class Handle
+  , class HandleEffect
   , handle
   , handleEffect
-  , handleEffect'
   )
   where
 
@@ -13,6 +13,8 @@ import Prelude
 import Data.Maybe (Maybe, maybe)
 import Effect (Effect)
 import Effect.Uncurried as E
+import Safe.Coerce (coerce)
+import Type.Equality (class TypeEquals, proof)
 
 -- | A function that a view can use to report messages originating from JS/DOM.
 type Dispatch msg = msg -> Effect Unit
@@ -36,21 +38,23 @@ class Handle msg event f where
     -- |
     handle :: Dispatch msg -> f -> E.EffectFn1 event Unit
 
-instance Handle msg event (event -> Maybe msg) where
-    handle dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <<< f
-else instance Handle msg event (event -> msg) where
-    handle dispatch f = E.mkEffectFn1 $ dispatch <<< f
-else instance Handle msg event (event -> Effect (Maybe msg)) where
-    handle dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <=< f
-else instance Handle msg event (event -> Effect msg) where
-    handle dispatch f = E.mkEffectFn1 $ dispatch <=< f
-else instance Handle msg event (Effect msg) where
-    handle dispatch msg = E.mkEffectFn1 \_ -> dispatch =<< msg
-else instance Handle msg event msg where
-    handle dispatch msg = E.mkEffectFn1 \_ -> dispatch msg
+instance TypeEquals res msg => Handle msg event (event -> Maybe res) where
+    handle dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <<< coerce <<< f
+else instance TypeEquals res msg => Handle msg event (event -> res) where
+    handle dispatch f = E.mkEffectFn1 $ dispatch <<< coerce <<< f
+else instance TypeEquals res msg => Handle msg event (event -> Effect (Maybe res)) where
+    handle dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <=< (map coerce <<< f)
+else instance TypeEquals res msg => Handle msg event (event -> Effect res) where
+    handle dispatch f = E.mkEffectFn1 $ dispatch <=< (coerce <<< f)
+else instance TypeEquals res msg => Handle msg event (Effect res) where
+    handle dispatch msg = E.mkEffectFn1 \_ -> dispatch =<< coerce msg
+else instance TypeEquals res msg => Handle msg event res where
+    handle dispatch msg = E.mkEffectFn1 \_ -> dispatch $ coerce msg
 
-handleEffect :: forall event. (event -> Effect Unit) -> E.EffectFn1 event Unit
-handleEffect = E.mkEffectFn1
+class HandleEffect event f where
+    handleEffect :: f -> E.EffectFn1 event Unit
+instance TypeEquals event input => HandleEffect event (input -> Effect Unit) where
+    handleEffect f = E.mkEffectFn1 $ f <<< coerce
+else instance HandleEffect event (Effect Unit) where
+    handleEffect = E.mkEffectFn1 <<< const
 
-handleEffect' :: forall event. Effect Unit -> E.EffectFn1 event Unit
-handleEffect' = E.mkEffectFn1 <<< const
