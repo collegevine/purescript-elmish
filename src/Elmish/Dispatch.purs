@@ -48,6 +48,8 @@ else instance (TypeEquals output msg, TypeEquals event input) => Handle msg even
     handle dispatch f = E.mkEffectFn1 $ dispatch <=< (coerce <<< f <<< coerce)
 else instance TypeEquals output msg => Handle msg event (Effect output) where
     handle dispatch msg = E.mkEffectFn1 \_ -> dispatch =<< coerce msg
+else instance TypeEquals output msg => Handle msg event (Maybe output) where
+    handle dispatch msg = E.mkEffectFn1 \_ -> maybe (pure unit) dispatch $ coerce msg
 else instance TypeEquals output msg => Handle msg event output where
     handle dispatch msg = E.mkEffectFn1 \_ -> dispatch $ coerce msg
 
@@ -57,3 +59,4 @@ instance TypeEquals event input => HandleEffect event (input -> Effect Unit) whe
     handleEffect f = E.mkEffectFn1 $ f <<< coerce
 else instance HandleEffect event (Effect Unit) where
     handleEffect = E.mkEffectFn1 <<< const
+
