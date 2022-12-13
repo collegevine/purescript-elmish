@@ -2,9 +2,9 @@ module Elmish.Dispatch
   ( (<|)
   , Dispatch
   , class Handle
-  , class HandleEffect
   , handle
   , handleEffect
+  , handleEffect'
   )
   where
 
@@ -49,10 +49,8 @@ else instance Handle msg event (Effect msg) where
 else instance Handle msg event msg where
     handle dispatch msg = E.mkEffectFn1 \_ -> dispatch msg
 
-class HandleEffect event f where
-    handleEffect :: f -> E.EffectFn1 event Unit
+handleEffect :: forall event. (event -> Effect Unit) -> E.EffectFn1 event Unit
+handleEffect = E.mkEffectFn1
 
-instance HandleEffect event (event -> Effect Unit) where
-    handleEffect f = E.mkEffectFn1 f
-else instance HandleEffect event (Effect Unit) where
-    handleEffect f = E.mkEffectFn1 $ const f
+handleEffect' :: forall event. Effect Unit -> E.EffectFn1 event Unit
+handleEffect' = E.mkEffectFn1 <<< const
