@@ -7,5 +7,5 @@ module Elmish
 
 import Elmish.Boot (BootRecord, boot)
 import Elmish.Component (ComponentDef, ComponentDef', Transition, Transition'(..), bimap, construct, fork, forks, forkVoid, forkMaybe, lmap, nat, rmap, transition, withTrace)
-import Elmish.Dispatch (Dispatch, handle, (<|))
+import Elmish.Dispatch (Dispatch, handle, handleMaybe, (<|), (<?|))
 import Elmish.React (ReactComponent, ReactElement, Ref, callbackRef, createElement, createElement')
