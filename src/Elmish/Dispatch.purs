@@ -23,7 +23,7 @@ import Type.Equality (class TypeEquals)
 type Dispatch msg = msg -> Effect Unit
 
 infixr 9 handle as <|
-infixr 9 handle as <?|
+infixr 9 handleMaybe as <?|
 
 class Handle msg event f where
     -- | A convenience function to make construction of event handlers with
