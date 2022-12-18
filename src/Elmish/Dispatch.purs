@@ -45,21 +45,15 @@ class Handle msg event f where
 class HandleMaybe msg event f where
     handleMaybe :: Dispatch msg -> f -> E.EffectFn1 event Unit
 
-instance (TypeEquals output msg, TypeEquals event input) => Handle msg event (input -> output) where
-    handle dispatch f = E.mkEffectFn1 $ dispatch <<< coerce <<< f <<< coerce
-else instance (TypeEquals output msg, TypeEquals event input) => Handle msg event (input -> Effect output) where
-    handle dispatch f = E.mkEffectFn1 $ dispatch <=< (coerce <<< f <<< coerce)
-else instance TypeEquals output msg => Handle msg event (Effect output) where
-    handle dispatch msg = E.mkEffectFn1 \_ -> dispatch =<< coerce msg
-else instance TypeEquals output msg => Handle msg event output where
-    handle dispatch msg = E.mkEffectFn1 \_ -> dispatch $ coerce msg
+instance (Dispatchable msg output, TypeEquals event input) => Handle msg event (input -> output) where
+    handle dispatch f = E.mkEffectFn1 $ dispatchIt dispatch <<< f <<< coerce
+else instance Dispatchable msg output => Handle msg event output where
+    handle dispatch a = E.mkEffectFn1 \_ -> dispatchIt dispatch a
 
-instance (TypeEquals output msg, TypeEquals event input) => HandleMaybe msg event (input -> Maybe output) where
-    handleMaybe dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <<< coerce <<< f <<< coerce
-else instance (TypeEquals output msg, TypeEquals event input) => HandleMaybe msg event (input -> Effect (Maybe output)) where
-    handleMaybe dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <=< (map coerce <<< f <<< coerce)
-else instance TypeEquals output msg => HandleMaybe msg event (Maybe output) where
-    handleMaybe dispatch msg = E.mkEffectFn1 \_ -> maybe (pure unit) dispatch $ coerce msg
+instance (Dispatchable msg output, TypeEquals event input) => HandleMaybe msg event (input -> Maybe output) where
+    handleMaybe dispatch f = E.mkEffectFn1 $ maybe (pure unit) (dispatchIt dispatch) <<< f <<< coerce
+else instance Dispatchable msg output => HandleMaybe msg event (Maybe output) where
+    handleMaybe dispatch a = E.mkEffectFn1 \_ -> maybe (pure unit) (dispatchIt dispatch) a
 
 class HandleEffect event f where
     handleEffect :: f -> E.EffectFn1 event Unit
@@ -68,3 +62,9 @@ instance TypeEquals event input => HandleEffect event (input -> Effect Unit) whe
 else instance HandleEffect event (Effect Unit) where
     handleEffect = E.mkEffectFn1 <<< const
 
+class Dispatchable msg a | a -> msg where
+    dispatchIt :: Dispatch msg -> a -> Effect Unit
+instance Dispatchable a (Effect a) where
+    dispatchIt = (=<<)
+else instance Dispatchable a a where
+    dispatchIt = ($)
