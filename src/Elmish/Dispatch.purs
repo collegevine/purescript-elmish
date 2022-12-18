@@ -2,6 +2,7 @@ module Elmish.Dispatch
   ( (<?|)
   , (<|)
   , Dispatch
+  , class Dispatchable, dispatchIt
   , class Handle
   , class HandleEffect
   , class HandleMaybe
