@@ -27,22 +27,31 @@ infixr 9 handleMaybe as <?|
 
 class Handle msg event f where
     -- | A convenience function to make construction of event handlers with
-    -- | arguments (i.e. `EffectFn1`) a bit shorter. The function takes a `Dispatch`
-    -- | and a mapping from the event argument to a message which the given
-    -- | `Dispatch` accepts, and it's also available in operator form.
+    -- | arguments (i.e. `EffectFn1`) a bit shorter. The first parameter is a
+    -- | `Dispatch`. The second parameter can be either a message or a function
+    -- | from the event object to a message.
     -- |
-    -- | The following example demonstrates expected usage of `handle` (in its
-    -- | operator form `<|`):
+    -- | Expected usage for this function is in its operator form `<|`
     -- |
     -- |     textarea
     -- |       { value: state.text
-    -- |       , onChange: dispatch <| E.textareaText
+    -- |       , onChange: dispatch <| \e -> TextAreaChanged (E.textareaText e)
     -- |       , onMouseDown: dispatch <| TextareaClicked
     -- |       }
     -- |
     handle :: Dispatch msg -> f -> E.EffectFn1 event Unit
 
 class HandleMaybe msg event f where
+    -- | A variant of `handle` (aka `<|`) that allows to dispatch a message or
+    -- | not conditionally via returning a `Maybe message`.
+    -- |
+    -- | Expected usage for this function is in its operator form `<?|`
+    -- |
+    -- |     div
+    -- |       { onMouseDown: dispatch <?| \(E.MouseEvent e) ->
+    -- |           if e.ctrlKey then Just ClickedWithControl else Nothing
+    -- |       }
+    -- |
     handleMaybe :: Dispatch msg -> f -> E.EffectFn1 event Unit
 
 instance (TypeEquals msg output, TypeEquals event input) => Handle msg event (input -> output) where
@@ -56,6 +65,24 @@ else instance TypeEquals msg output => HandleMaybe msg event (Maybe output) wher
     handleMaybe dispatch msg = E.mkEffectFn1 \_ -> maybe (pure unit) dispatch $ coerce msg
 
 class HandleEffect event f where
+    -- | An escape-hatch way to create an event handler for when neither
+    -- | `handle` nor `handleMaybe` are appropriate, which usually happens when
+    -- | the event handler must do something else, besides dispatching a
+    -- | message.
+    -- |
+    -- | The argument may be either an `Effect Unit` or a function from the
+    -- | event object to `Effect Unit`. If a message needs to be dispatched, the
+    -- | consuming code is expected to do it via calling the `Dispatch` function
+    -- | directly.
+    -- |
+    -- |     div
+    -- |       { onKeyDown: E.handleEffect \(E.KeyboardEvent e) -> do
+    -- |           window >>= localStorage >>= setItem "Last key pressed" e.key
+    -- |           dispatch PressedKey
+    -- |       , onClick: E.handleEffect \e -> do
+    -- |           E.stopPropagation e
+    -- |           dispatch ClickedDiv
+    -- |       }
     handleEffect :: f -> E.EffectFn1 event Unit
 instance TypeEquals event input => HandleEffect event (input -> Effect Unit) where
     handleEffect f = E.mkEffectFn1 $ f <<< coerce
