@@ -5,11 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.9.0
+
+### Added
+
+- `handleEffect` overloaded function for more ergonomic construction of event
+  handlers.
+
+### Changed
+
+- Operators `<|` and `<?|` (functions `handle` and `handleMaybe`) can now take
+  either a "message" or a function "event -> message" as their right argument
+  for more ergonomic construction of event handlers.
+
 ## 0.8.2
+
+### Changed
 
 - `Data.Undefined.NoProblem.Req` is now considered safe for passing to/from JS
 
 ## 0.8.0
+
+### Changed
 
 - Upgraded to PureScript 0.15
 

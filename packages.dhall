@@ -11,5 +11,5 @@ in  upstream
   with elmish-html =
     { dependencies = [ "prelude", "record" ]
     , repo = "https://github.com/collegevine/purescript-elmish-html.git"
-    , version = "v0.7.0"
+    , version = "events"
     }

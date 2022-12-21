@@ -19,6 +19,8 @@
   , "partial"
   , "prelude"
   , "refs"
+  , "safe-coerce"
+  , "type-equality"
   , "typelevel-prelude"
   , "undefined-is-not-a-problem"
   , "unsafe-coerce"

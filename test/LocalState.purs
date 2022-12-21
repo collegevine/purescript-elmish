@@ -3,6 +3,7 @@ module Test.LocalState (spec) where
 import Prelude
 
 import Data.Array (length)
+import Elmish ((<|))
 import Elmish.Component (ComponentName(..), wrapWithLocalState)
 import Elmish.HTML.Styled as H
 import Elmish.Test (clickOn, exists, find, findAll, forEach, nearestEnclosingReactComponentName, testComponent, text, (>>))
@@ -75,10 +76,10 @@ spec = describe "Elmish.Component.wrapWithLocalState" do
               if state.showFirst then wrappedCounter state.initialCount else H.empty
           , H.div "t--wrapper-2" $
               if state.showSecond then wrappedCounter state.initialCount else H.empty
-          , H.button_ "t--toggle-first" { onClick: dispatch "ToggleFirst" } "."
-          , H.button_ "t--toggle-second" { onClick: dispatch "ToggleSecond" } "."
-          , H.button_ "t--toggle-both" { onClick: dispatch "ToggleBoth" } "."
-          , H.button_ "t--inc-initial-count" { onClick: dispatch "IncInitialCount" } "."
+          , H.button_ "t--toggle-first" { onClick: dispatch <| "ToggleFirst" } "."
+          , H.button_ "t--toggle-second" { onClick: dispatch <| "ToggleSecond" } "."
+          , H.button_ "t--toggle-both" { onClick: dispatch <| "ToggleBoth" } "."
+          , H.button_ "t--inc-initial-count" { onClick: dispatch <| "IncInitialCount" } "."
           ]
 
         update state = case _ of
