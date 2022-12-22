@@ -23,7 +23,7 @@ type Dispatch msg = msg -> Effect Unit
 infixr 9 handle as <|
 infixr 9 handleMaybe as <?|
 
-class Handle msg event f | f -> msg, f -> event where
+class Handle msg event f | f -> msg event where
     -- | A convenience function to make construction of event handlers with
     -- | arguments (i.e. `EffectFn1`) a bit shorter. The first parameter is a
     -- | `Dispatch`. The second parameter can be either a message or a function
@@ -39,7 +39,7 @@ class Handle msg event f | f -> msg, f -> event where
     -- |
     handle :: Dispatch msg -> f -> E.EffectFn1 event Unit
 
-class HandleMaybe msg event f | f -> msg, f -> event where
+class HandleMaybe msg event f | f -> msg event where
     -- | A variant of `handle` (aka `<|`) that allows to dispatch a message or
     -- | not conditionally via returning a `Maybe message`.
     -- |
