@@ -16,8 +16,6 @@ import Prelude
 import Data.Maybe (Maybe, maybe)
 import Effect (Effect)
 import Effect.Uncurried as E
-import Safe.Coerce (coerce)
-import Type.Equality (class TypeEquals)
 
 -- | A function that a view can use to report messages originating from JS/DOM.
 type Dispatch msg = msg -> Effect Unit
@@ -25,7 +23,7 @@ type Dispatch msg = msg -> Effect Unit
 infixr 9 handle as <|
 infixr 9 handleMaybe as <?|
 
-class Handle msg event f where
+class Handle msg event f | f -> msg, f -> event where
     -- | A convenience function to make construction of event handlers with
     -- | arguments (i.e. `EffectFn1`) a bit shorter. The first parameter is a
     -- | `Dispatch`. The second parameter can be either a message or a function
@@ -41,7 +39,7 @@ class Handle msg event f where
     -- |
     handle :: Dispatch msg -> f -> E.EffectFn1 event Unit
 
-class HandleMaybe msg event f where
+class HandleMaybe msg event f | f -> msg, f -> event where
     -- | A variant of `handle` (aka `<|`) that allows to dispatch a message or
     -- | not conditionally via returning a `Maybe message`.
     -- |
@@ -54,17 +52,17 @@ class HandleMaybe msg event f where
     -- |
     handleMaybe :: Dispatch msg -> f -> E.EffectFn1 event Unit
 
-instance (TypeEquals msg output, TypeEquals event input) => Handle msg event (input -> output) where
-    handle dispatch f = E.mkEffectFn1 $ dispatch <<< coerce <<< f <<< coerce
-else instance TypeEquals msg output => Handle msg event output where
-    handle dispatch msg = E.mkEffectFn1 \_ -> dispatch $ coerce msg
+instance Handle msg event (event -> msg) where
+    handle dispatch f = E.mkEffectFn1 $ dispatch <<< f
+else instance Handle msg event msg where
+    handle dispatch msg = E.mkEffectFn1 \_ -> dispatch msg
 
-instance (TypeEquals msg output, TypeEquals event input) => HandleMaybe msg event (input -> Maybe output) where
-    handleMaybe dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <<< coerce <<< f <<< coerce
-else instance TypeEquals msg output => HandleMaybe msg event (Maybe output) where
-    handleMaybe dispatch msg = E.mkEffectFn1 \_ -> maybe (pure unit) dispatch $ coerce msg
+instance HandleMaybe msg event (event -> Maybe msg) where
+    handleMaybe dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <<< f
+else instance HandleMaybe msg event (Maybe msg) where
+    handleMaybe dispatch msg = E.mkEffectFn1 \_ -> maybe (pure unit) dispatch msg
 
-class HandleEffect event f where
+class HandleEffect event f | f -> event where
     -- | An escape-hatch way to create an event handler for when neither
     -- | `handle` nor `handleMaybe` are appropriate, which usually happens when
     -- | the event handler must do something else, besides dispatching a
@@ -84,7 +82,7 @@ class HandleEffect event f where
     -- |           dispatch ClickedDiv
     -- |       }
     handleEffect :: f -> E.EffectFn1 event Unit
-instance TypeEquals event input => HandleEffect event (input -> Effect Unit) where
-    handleEffect f = E.mkEffectFn1 $ f <<< coerce
+instance HandleEffect event (event -> Effect Unit) where
+    handleEffect f = E.mkEffectFn1 f
 else instance HandleEffect event (Effect Unit) where
     handleEffect = E.mkEffectFn1 <<< const
