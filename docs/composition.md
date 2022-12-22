@@ -31,11 +31,11 @@ view :: State -> Dispatch Message -> ReactElement
 view state dispatch =
   H.div ""
   [ H.div "" $ "The current count is: " <> show state.count
-  , button "increase" (dispatch Inc)
-  , button "decrease" (dispatch Dec)
+  , button "increase" (dispatch <| Inc)
+  , button "decrease" (dispatch <| Dec)
   ]
 
-button :: String -> Effect Unit -> ReactElement
+button :: String -> E.EventHandler E.SyntheticEvent -> ReactElement
 button text onClick =
   H.div ""
   [ H.text $ "To " <> text <> " the count, click here: "
@@ -61,11 +61,11 @@ view :: State -> Dispatch Message -> ReactElement
 view state dispatch =
   H.div ""
   [ H.div "" $ "The current count is: " <> show state.count
-  , button { text: "increase", onClick: dispatch Inc }
-  , button { text: "decrease", onClick: dispatch Dec }
+  , button { text: "increase", onClick: dispatch <| Inc }
+  , button { text: "decrease", onClick: dispatch <| Dec }
   ]
 
-button :: { text :: String, onClick :: Effect Unit } -> ReactElement
+button :: { text :: String, onClick :: E.EventHandler E.SyntheticEvent } -> ReactElement
 button { text, onClick } =
   H.div ""
   [ H.text $ "To " <> text <> " the count, click here: "
@@ -208,7 +208,7 @@ data Message = Toggle
 view :: { title :: String, content :: ReactElement } -> State -> Dispatch Message -> ReactElement
 view { title, content } state dispatch =
   H.div ""
-  [ H.div_ "bg-light" { onClick: dispatch Toggle } title
+  [ H.div_ "bg-light" { onClick: dispatch <| Toggle } title
   , if collapsed
       then H.empty
       else H.div "" content

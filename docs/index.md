@@ -54,10 +54,10 @@ view state dispatch =
   [ H.div "d-flex flex-column mb-3" $ 0..(bounds.y-1) <#> \row ->
       H.div "d-flex" $ 0..(bounds.x-1) <#> \col ->
         H.div_ "border border-dark p-2 m-1" { style: H.css { background: bgColor col row } } ""
-  , H.button_ "btn btn-outline-primary ml-5 mr-2" { onClick: dispatch Left } "⬅️"
-  , H.button_ "btn btn-outline-primary mr-2" { onClick: dispatch Down } "⬇️"
-  , H.button_ "btn btn-outline-primary mr-2" { onClick: dispatch Up } "⬆️"
-  , H.button_ "btn btn-outline-primary mr-2" { onClick: dispatch Right } "➡️"
+  , H.button_ "btn btn-outline-primary ml-5 mr-2" { onClick: dispatch <| Left } "⬅️"
+  , H.button_ "btn btn-outline-primary mr-2" { onClick: dispatch <| Down } "⬇️"
+  , H.button_ "btn btn-outline-primary mr-2" { onClick: dispatch <| Up } "⬆️"
+  , H.button_ "btn btn-outline-primary mr-2" { onClick: dispatch <| Right } "➡️"
   ]
   where
     bgColor x y = case findIndex (eq { x, y }) state of
