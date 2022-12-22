@@ -112,7 +112,8 @@ HTML](../dom-elements#atomic-css-support) for more.
 To make that compile, you'll need the following imports:
 
 ```haskell
-import Elmish (Transition, Dispatch, ReactElement)
+import Elmish (Transition, Dispatch, ReactElement, (<|))
+import Elmish.HTML.Events as E  -- This is more convenient to import qualified
 import Elmish.HTML.Styled as H  -- This is more convenient to import qualified
 import Elmish.Boot (defaultMain) -- We'll need this in a moment
 ```
@@ -176,7 +177,7 @@ And finally, the `view` function should add a button:
 +      , H.strong "" state.word
        , H.text "! "
        ]
-+    , H.button_ "btn btn-primary mt-3" { onClick: dispatch ButtonClicked } "Click me!"
++    , H.button_ "btn btn-primary mt-3" { onClick: dispatch <| ButtonClicked } "Click me!"
      ]
 ```
 
@@ -228,53 +229,18 @@ the text:
 +   [ H.input_ "d-block"
 +     { type: "text"
 +     , value: state.word
-+     , onChange: mkEffectFn1 \f -> do
-+         let parsed = readForeign f :: Maybe { target :: { value :: String } }
-+         case parsed of
-+           Nothing -> pure unit
-+           Just e -> dispatch $ WordChanged e.target.value
++     , onChange: dispatch <| \event -> WordChanged (E.inputText event)
 +     }
     , H.div "mt-3"
       [ H.text "Hello, "
       , H.strong "" state.word
       , H.text "! "
       ]
-    , H.button_ "btn btn-primary mt-3" { onClick: dispatch ButtonClicked } "Click me!"
+    , H.button_ "btn btn-primary mt-3" { onClick: dispatch <| ButtonClicked } "Click me!"
     ]
 ```
 
 ![Event Arguments]({% link getting-started-eventargs.gif %})
-
-But of course, this is a bit too much ceremony, so there is a special operator
-`<?|` that takes care of the `case` and the `mkEffectFn1` parts for us:
-
-```diff
-- import Elmish (Dispatch, ReactElement, Transition)
-+ import Elmish (Dispatch, ReactElement, Transition, (<?|))
-
-...
-
-   , onChange: dispatch <?| \f ->
-      (readForeign f :: _ { target :: { value :: String } })
-      <#> \e -> WordChanged e.target.value
-```
-
-Unfortunately, we still have to specify the shape of the record. Otherwise the
-compiler won't be able to tell what we expect to find.
-
-For frequently used patterns like this, it's often benefitial to extract them as
-a function:
-
-```haskell
-eventTargetValue :: Foreign -> Maybe String
-eventTargetValue f =
-   (readForeign f :: _ { target :: { value :: String } })
-   <#> _.target.value
-
-...
-
-   , onChange: dispatch <?| \f -> WordChanged <$> eventTargetValue f
-```
 
 ## Effects
 
@@ -291,8 +257,8 @@ line to the console.
 
 ```diff
 + import Effect.Class.Console (log)
-- import Elmish (Transition, Dispatch, ReactElement, (<?|))
-+ import Elmish (Transition, Dispatch, ReactElement, forkVoid, (<?|))
+- import Elmish (Transition, Dispatch, ReactElement, (<|))
++ import Elmish (Transition, Dispatch, ReactElement, forkVoid, (<|))
 
 ...
 
@@ -322,8 +288,8 @@ timer instead:
 ```diff
 + import Effect.Aff (Milliseconds(..), delay)
   import Effect.Class.Console (log)
-- import Elmish (Dispatch, ReactElement, Transition, forkVoid, (<?|))
-+ import Elmish (Dispatch, ReactElement, Transition, fork, forkVoid, (<?|))
+- import Elmish (Dispatch, ReactElement, Transition, forkVoid, (<|))
++ import Elmish (Dispatch, ReactElement, Transition, fork, forkVoid, (<|))
 
 ...
 
