@@ -134,123 +134,133 @@ props (such as `img` or `input`), just for consistency and predictability.
 
 ## Event handlers
 
-**NOTE**: the way DOM events are modeled in the `elmish-html` library is a work
-in progress. The API is functional, but not very ergonomic. It is subject to
-change in the future.
-{: .callout }
-
 Since the props record is passed directly to React, and in React event handlers
 are modeled as functions taking
 [`SyntheticEvent`](https://reactjs.org/docs/events.html), the `elmish-html`
 library simply directly maps that to PureScript:
 
 ```haskell
-onChange :: EffectFn1 Foreign Unit
+onClick :: EventHandler SyntheticEvent
 ```
 
-We represent the `SyntheticEvent` argument as `Foreign` in order to avoid taking
-`purescript-web-events` (or any other similar library) as a dependency. Our
-experience shows that well-typed `Event` functions are not actually useful in
-practice.
+`EventHandler` is just an alias for `EffectFn1`, so that it can be passed
+directly to React and understood.
 
-A notable exception is the `onClick` event, which is represented as just:
+The `SyntheticEvent` type is a `newtype` wrapping a record that directly
+represents React's `SyntheticEvent` as [described in its
+docs](https://reactjs.org/docs/events.html). To access the properties you can
+match on its constructor like this:
 
 ```haskell
-onClick :: Effect Unit
+import Elmish.HTML.Events as E
+
+data Message = ... | ButtonClicked { when :: Number } | ...
+
+H.button_ "btn btn-primary"
+  { onClick: dispatch <| \(E.SyntheticEvent e) -> ButtonClicked { when: e.timestamp }
+  }
+  "Click me!"
 ```
 
-We chose to ignore the argument in this particular case because it's very rarely
-useful in practice and most of the time ends up being ignored.
-
-### **Q:** but if the event is just `Foreign`, how do I get at its properties?
-{: .no_toc }
-
-To do this, Elmish provides a universal way to access JavaScript data in a safe
-way: `readForeign`. Given expected shape of the `Foreign` object, this function
-can verify that the object indeed has that shape, and return it correctly typed:
-
-```haskell
-view :: State -> Dispatch Message -> ReactElement
-view state dispatch =
-  ...
-  H.input_
-    { type: "text"
-    , value: state.inputValue
-    , onChange: mkEffectFn1 \foreignEvent -> do
-        let event :: Maybe { target :: { value :: String } } = readForeign foreignEvent
-        case event of
-          Just e -> dispatch $ InputChanged e.target.value
-          Noting -> pure unit -- Event did not have expected fields for some reason
-    }
-  ...
-```
-
-Here we are specifying the expected type of `event` variable, which is
-`readForeign`'s result, and if it ends up as `Just`, we can be sure the event
-has the specified shape. Then we can just access its properties -
-`e.target.value`.
-
-But of course, this is a lot of boilerplate: the `mkEffectFn1` call, the `case`
-expression - all of that would be exactly the same for every event handler. So
-Elmish provides two operators for convenience: `<|` and `<?|`
-
-The `<|` operator takes care of the `EffectFn1` business. It takes the
+The handy `<|` operator takes care of creating an `EventHandler` value (aka
+`EffectFn1`) in a bit more ergonomic way. It takes the
 `dispatch` function on the left and an `event -> message` function on the right,
-and takes care of piping through from one to the other:
+and takes care of piping through from one to the other.
+
+Its friend, the `<?|` operator does basically the same thing, except the
+function it takes on the right is `event -> Maybe message`, allowing to either
+dispatch a message or not, depending on some condition:
 
 ```haskell
-  , onChange: dispatch <| \event -> InputChanged "foo"
+  { onClick: dispatch <?| \(E.SyntheticEvent e) ->
+      if e.defaultPrevented then Nothing else Just ButtonClicked
+  }
 ```
 
-The `<?|` operator does basically the same thing, except the function it takes
-on the right is `event -> Maybe message`:
+If you don't need to examine the event object (often happens with `onClick`
+events), you can pass just a `message` instead of an `event -> message`
+function:
 
 ```haskell
-  , onChange: dispatch <?| \event -> do
-      e :: { target :: { value :: _ } } <- readForeign event
-      Just $ InputChanged e.target.value
+  { onClick: dispatch <| ButtonClicked
+  }
 ```
 
-**NOTE**: Here we're taking advantage of "type wildcards" - replacing `String`
-with an underscore means asking PureScript to infer it from context, which it
-can do from the type of `InputChanged`'s argument. Sadly, there seems to be no
-way to infer the whole shape of the nested records.
-{: .callout }
-
-In real applications that work a lot with textboxes, we usually end up defining
-a special-purpose function for accessing `event.target.value`:
+Some events will have a different type of event object. For example, mouse
+events will have `MouseEvent` and keyboard events will have `KeyboardEvent`.
+Their respective properties can be accessed by matching on their constructors in
+the same way:
 
 ```haskell
-eventTargetValue :: Foreign -> Maybe String
-eventTargetValue f =
-  e :: { target :: { value :: _ } } <- readForeign f
-  Just e.target.value
-
-...
-
-    , onChange: dispatch <?| \e -> InputChanged <$> eventTargetValue e
-
-...
+H.div_ ""
+  { onMouseMove: dispatch <| \(E.MouseMove e) -> MouseMoved { x: e.pageX, y: e.pageY }
+  , onKeyPress: dispatch <?| \(E.KeyboardEvent e) -> if e.key == "Enter" then Just EnterPressed else Nothing
+  }
 ```
 
-Though this function is not (yet?) part of the library.
+## Accessing input value
+
+Some events, such as `input.onChange`, require accessing the
+`event.target.value` property to get the new value of the input. While it is
+possible to get the `event.target` property (of type `Web.DOM.Element`), cast it
+to `HTMLInputElement`, and then call [the `value`
+function](https://pursuit.purescript.org/packages/purescript-web-html/4.1.0/docs/Web.HTML.HTMLInputElement#v:value)
+on it, that's a lot of ceremony for such a frequent operation. To reduce the
+friction, the `elmish-html` library provides a convenience function `inputText`,
+which does all of that in one go:
+
+```haskell
+H.input_ ""
+  { value: ...
+  , onChange: dispatch <| \e -> InputChanged (E.inputText e)
+  }
+```
+
+Note that the `inputText` function will not work on just any event of any tag,
+it only applies specifically to `input.onChange`. To guarantee this, the
+`input.onChage` event has a special event object type - `InputChangeEvent`, and
+the `inputText` function requires a parameter of that type.
+
+Similar convenience functions are available for other frequently occurring situations, including:
+
+* `inputChecked` - returns the `checked` property of an `<input type=checkbox>`
+  element. Applies only to `input.onChange` event.
+* `textareaText` - value of a `<textarea>` element. Applies only to
+  `textarea.onChange` event.
+* `selectSelectedValue` - selected value of a `<select>` element. Applies only
+  to `select.onChange` event.
 
 ## Lower-level event access
 
-In extreme cases it may be necessary to access the React `SyntheticEvent` after
-all, even when it's not part of the event's type signature (such as `onClick`),
-for example to `preventDefault` or `stopPropagation`.
+In extreme cases it may be necessary to perform side effects other than
+dispatching a message. Examples may include `stopPropagation`, `preventDefault`,
+or dispatching multiple messages (a discouraged practice, but sometimes
+necessary nevetherless).
 
-For these cases there is currently no good solution, and we're simply resorting
-to `unsafeCoerce`ing our way through it:
+In these situations, the lowest possible level of event handling may be
+employed: the `handleEffect` function. As the name implies, this function takes
+an effectful handler (either `Effect Unit` or an `event -> Effect Unit`
+function) and returns an `EventHandler` value suitable for passing as a prop to
+an element:
 
 ```haskell
-  ...
-  , onClick: unsafeCoerce $ mkEffectFn1 \e -> do
-      stopPropagation e
+H.button_ ""
+  { onClick: E.handleEffect \e -> do
+      E.preventDefault e
+      E.stopPropagation e
       dispatch ButtonClicked
-  ...
-```
+  }
+  "Click me!"
 
-If you find yourself in need to do this, use care and make sure you understand
-underlying JavaScript types.
+H.input_ ""
+  { onChange: E.handleEffect \e -> do
+      dispatch $ InputChanged (E.inputText e)
+      dispatch ResetSomething
+  }
+
+H.div_ ""
+  { onClick: E.handleEffect do  -- no parameter
+      window >>= location >>= setHash "foo"
+      dispatch NavigatedToHashFoo
+  }
+```
