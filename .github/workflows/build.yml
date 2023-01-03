@@ -19,7 +19,7 @@ jobs:
           .spago
           output
           node_modules
-        key: build-atrifacts-v2-${{ hashFiles('package-lock.json', 'spago.dhall', 'packages.dhall') }}
+        key: build-artifacts-v2-${{ hashFiles('package-lock.json', 'spago.dhall', 'packages.dhall') }}
     - uses: actions/setup-node@v2
       with:
         node-version: 14.19.1
