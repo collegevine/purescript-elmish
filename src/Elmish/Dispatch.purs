@@ -20,8 +20,8 @@ import Effect.Uncurried as E
 -- | A function that a view can use to report messages originating from JS/DOM.
 type Dispatch msg = msg -> Effect Unit
 
-infixr 9 handle as <|
-infixr 9 handleMaybe as <?|
+infixr 0 handle as <|
+infixr 0 handleMaybe as <?|
 
 class Handle msg event f | f -> msg event where
     -- | A convenience function to make construction of event handlers with
