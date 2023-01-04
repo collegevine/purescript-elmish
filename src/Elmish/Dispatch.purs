@@ -16,6 +16,8 @@ import Prelude
 import Data.Maybe (Maybe, maybe)
 import Effect (Effect)
 import Effect.Uncurried as E
+import Safe.Coerce (coerce)
+import Type.Equality (class TypeEquals)
 
 -- | A function that a view can use to report messages originating from JS/DOM.
 type Dispatch msg = msg -> Effect Unit
@@ -57,10 +59,10 @@ instance Handle msg event (event -> msg) where
 else instance Handle msg event msg where
     handle dispatch msg = E.mkEffectFn1 \_ -> dispatch msg
 
-instance HandleMaybe msg event (event -> Maybe msg) where
-    handleMaybe dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <<< f
-else instance HandleMaybe msg event (Maybe msg) where
-    handleMaybe dispatch msg = E.mkEffectFn1 \_ -> maybe (pure unit) dispatch msg
+instance TypeEquals (t msg) (Maybe msg) => HandleMaybe msg event (event -> t msg) where
+    handleMaybe dispatch f = E.mkEffectFn1 $ maybe (pure unit) dispatch <<< coerce <<< f
+else instance TypeEquals (t msg) (Maybe msg) => HandleMaybe msg event (t msg) where
+    handleMaybe dispatch msg = E.mkEffectFn1 \_ -> maybe (pure unit) dispatch $ coerce msg
 
 class HandleEffect event f | f -> event where
     -- | An escape-hatch way to create an event handler for when neither
