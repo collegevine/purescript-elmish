@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- type parameters of `readForeign` and `readForeign` can now be specified via
+- type parameters of `readForeign` and `readForeign'` can now be specified via
   visible type application, a new feature in PureScript 0.15.10
 
 ## 0.9.3
