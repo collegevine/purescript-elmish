@@ -34,11 +34,11 @@
     "elliptic": "^6.5.4",
     "lodash": "^4.17.21",
     "pulp": "^16.0.0",
-    "purescript": "^0.15.7",
+    "purescript": "^0.15.10",
     "purescript-psa": "0.7.3",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "spago": "^0.20.9",
+    "spago": "^0.21.0",
     "tree-kill": "^1.2.2"
   }
 }

@@ -38,9 +38,9 @@ spec = describe "Elmish.Foreign" do
 
     it "Objects and Arrays of Foreign" do
       let readAndAssert :: forall a b. CanReceiveFromJavaScript a => b -> (a -> _) -> _
-          readAndAssert x f = case read' x of
+          readAndAssert x g = case read' x of
             Left err -> fail err
-            Right a -> f a
+            Right a -> g a
 
       readAndAssert { foo: "bar", one: 42 } \obj -> do
         (readForeign =<< Obj.lookup "foo" obj) `shouldEqual` Just "bar"
@@ -53,7 +53,7 @@ spec = describe "Elmish.Foreign" do
     it "reads nullable values" do
       read null `shouldEqual` Just (null :: _ Int)
       read (notNull 42) `shouldEqual` Just (notNull 42)
-      (read { x: null :: _ Int } :: _ { x :: Nullable { y :: Int } })
+      (read @{ x :: Nullable { y :: Int } } { x: null :: _ Int })
         `shouldEqual` Just { x: null }
 
     it "treats missing record fields as null" do
@@ -61,52 +61,52 @@ spec = describe "Elmish.Foreign" do
 
     describe "errors" do
       it "primitive types" do
-        (read' 42 :: _ _ String) `shouldEqual` Left "Expected String but got: 42"
-        (read' "foo" :: _ _ Number) `shouldEqual` Left "Expected Number but got: \"foo\""
-        (read' "foo" :: _ _ Int) `shouldEqual` Left "Expected Int but got: \"foo\""
-        (read' "foo" :: _ _ Boolean) `shouldEqual` Left "Expected Boolean but got: \"foo\""
-        (read' "foo" :: _ _ (Array Int)) `shouldEqual` Left "Expected Array but got: \"foo\""
+        (read' @String 42) `shouldEqual` Left "Expected String but got: 42"
+        (read' @Number "foo") `shouldEqual` Left "Expected Number but got: \"foo\""
+        (read' @Int "foo") `shouldEqual` Left "Expected Int but got: \"foo\""
+        (read' @Boolean "foo") `shouldEqual` Left "Expected Boolean but got: \"foo\""
+        (read' @(Array Int) "foo") `shouldEqual` Left "Expected Array but got: \"foo\""
 
       it "nullable" do
-        (read' "foo" :: _ _ (Nullable Int)) `shouldEqual` Left "Expected Nullable Int but got: \"foo\""
+        (read' @(Nullable Int) "foo") `shouldEqual` Left "Expected Nullable Int but got: \"foo\""
 
       it "nested within array" do
-        (read' [f 42, f "foo"] :: _ _ (Array Int)) `shouldEqual` Left "[1]: expected Int but got: \"foo\""
-        (read' [f 42, f 5, f "foo"] :: _ _ (Array Int)) `shouldEqual` Left "[2]: expected Int but got: \"foo\""
+        (read' @(Array Int) [f 42, f "foo"]) `shouldEqual` Left "[1]: expected Int but got: \"foo\""
+        (read' @(Array Int) [f 42, f 5, f "foo"]) `shouldEqual` Left "[2]: expected Int but got: \"foo\""
 
       it "nested within record" do
-        (read' { x: 42, y: "foo" } :: _ _ { x :: Int, y :: Boolean })
+        (read' @{ x :: Int, y :: Boolean } { x: 42, y: "foo" })
           `shouldEqual` Left ".y: expected Boolean but got: \"foo\""
 
-        (read' { x: 42, y: "foo" } :: _ _ { x :: Int, y :: { z :: Int } })
+        (read' @{ x :: Int, y :: { z :: Int } } { x: 42, y: "foo" })
           `shouldEqual` Left ".y: expected Object but got: \"foo\""
 
-        (read' { x: 42, y: { z: "foo" } } :: _ _ { x :: Int, y :: { z :: Int } })
+        (read' @{ x :: Int, y :: { z :: Int } } { x: 42, y: { z: "foo" } })
           `shouldEqual` Left ".y.z: expected Int but got: \"foo\""
 
-        (read' { x: 42, y: [] } :: _ _ { x :: Int, y :: { z :: Int } })
+        (read' @{ x :: Int, y :: { z :: Int } } { x: 42, y: [] })
           `shouldEqual` Left ".y.z: expected Int but got: <undefined>"
 
       it "record as Object" do
-        (read' { x: "foo", y: 42 } :: _ _ (Object String))
+        (read' @(Object String) { x: "foo", y: 42 })
           `shouldEqual` Left "['y']: expected String but got: 42"
-        (read' { x: "foo", y: 42 } :: _ _ (Object Int))
+        (read' @(Object Int) { x: "foo", y: 42 })
           `shouldEqual` Left "['x']: expected Int but got: \"foo\""
-        (read' { x: { a: "foo" }, y: 42 } :: _ _ (Object { a :: String }))
+        (read' @(Object { a :: String }) { x: { a: "foo" }, y: 42 })
           `shouldEqual` Left "['y']: expected Object but got: 42"
-        (read' { x: { a: "foo", b: { z: 1 } }, y: { a: "bar", b: { p: 2, q: "x" } } } :: _ _ (Object { a :: String, b :: Object Int }))
+        (read' @(Object { a :: String, b :: Object Int }) { x: { a: "foo", b: { z: 1 } }, y: { a: "bar", b: { p: 2, q: "x" } } })
           `shouldEqual` Left "['y'].b['q']: expected Int but got: \"x\""
 
       it "multiple nesting levels" do
         let input = { a: [{ x: [{ y: f 42 }, { y: f 5 }, { y: f "foo" }]}] }
-        let output = read' input :: _ _ { a :: Array { x :: Array { y :: Int } } }
+        let output = read' @{ a :: Array { x :: Array { y :: Int } } } input
         output `shouldEqual` Left ".a[0].x[2].y: expected Int but got: \"foo\""
 
   where
-    read :: forall a b. CanReceiveFromJavaScript b => a -> Maybe b
+    read :: forall a @b. CanReceiveFromJavaScript b => a -> Maybe b
     read = readForeign <<< unsafeToForeign
 
-    read' :: forall a b. CanReceiveFromJavaScript b => a -> Either String b
+    read' :: forall a @b. CanReceiveFromJavaScript b => a -> Either String b
     read' = readForeign' <<< unsafeToForeign
 
     f = unsafeToForeign
