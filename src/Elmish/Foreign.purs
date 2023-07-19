@@ -148,7 +148,7 @@ else instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Obj.Object
     | otherwise = Obj.foldMaybe invalidElem Valid (unsafeFromForeign v)
     where
       invalidElem (Invalid _) _ _ = Nothing
-      invalidElem _ key x = case validateForeignType (Proxy :: _ a) x of
+      invalidElem _ key x = case validateForeignType (Proxy @a) x of
         Valid -> Just Valid
         Invalid invalid -> Just $ Invalid invalid { path = "['" <> key <> "']" <> invalid.path }
 
@@ -183,7 +183,7 @@ else instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Array a) w
           Nothing -> Valid
           Just { idx, invalid } -> Invalid invalid { path = "[" <> show idx <> "]" <> invalid.path }
       where
-        invalidElem idx x = case validateForeignType (Proxy :: _ a) x of
+        invalidElem idx x = case validateForeignType (Proxy @a) x of
           Valid -> Nothing
           Invalid invalid -> Just { idx, invalid }
 
@@ -193,22 +193,22 @@ instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Nullable a) whe
     validateForeignType _ v
       | isNull v || isUndefined v = Valid
       | otherwise =
-          case validateForeignType (Proxy :: _ a) v of
+          case validateForeignType (Proxy @a) v of
             Valid -> Valid
             Invalid err -> Invalid err { expected = "Nullable " <> err.expected }
 
 instance CanPassToJavaScript a => CanPassToJavaScript (Opt a)
 instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Opt a) where
-    validateForeignType _ = validateForeignType (Proxy :: _ (Nullable a))
+    validateForeignType _ = validateForeignType (Proxy @(Nullable a))
 
 instance CanPassToJavaScript a => CanPassToJavaScript (Req a)
 instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Req a) where
-  validateForeignType _ = validateForeignType (Proxy :: _ a)
+  validateForeignType _ = validateForeignType (Proxy @a)
 
 instance (RowToList r rl, CanPassToJavaScriptRecord rl) => CanPassToJavaScript (Record r)
 instance (RowToList r rl, CanReceiveFromJavaScriptRecord rl) => CanReceiveFromJavaScript (Record r) where
     validateForeignType _ v
-      | isObject v = validateJsRecord (Proxy :: _ rl) v
+      | isObject v = validateJsRecord (Proxy @rl) v
       | otherwise = Invalid { path: "", expected: "Object", got: v }
 
 
@@ -234,10 +234,10 @@ else instance (IsSymbol name, CanReceiveFromJavaScript a, CanReceiveFromJavaScri
     validateJsRecord _ v =
         case validHead of
           Invalid err -> Invalid err { path = "." <> fieldName <> err.path }
-          Valid -> validateJsRecord (Proxy :: _ rl') v
+          Valid -> validateJsRecord (Proxy @rl') v
         where
-            validHead = validateForeignType (Proxy :: _ a) head
-            fieldName = reflectSymbol (Proxy :: _ name)
+            validHead = validateForeignType (Proxy @a) head
+            fieldName = reflectSymbol (Proxy @name)
             head = unsafeGet fieldName (unsafeFromForeign v :: {})
 
 
@@ -251,8 +251,8 @@ else instance (IsSymbol name, CanPassToJavaScript a, CanPassToJavaScriptRecord r
 
 -- | Verifies if the given raw JS value is of the right type/shape to be
 -- | represented as `a`, and if so, coerces the value to `a`.
-readForeign' :: ∀ a. CanReceiveFromJavaScript a => Foreign -> Either String a
-readForeign' v = case validateForeignType (Proxy :: _ a) v of
+readForeign' :: ∀ @a. CanReceiveFromJavaScript a => Foreign -> Either String a
+readForeign' v = case validateForeignType (Proxy @a) v of
   Valid -> Right $ unsafeFromForeign v
   Invalid i -> Left $ fold
     [ i.path
@@ -264,5 +264,5 @@ readForeign' v = case validateForeignType (Proxy :: _ a) v of
 
 -- | Verifies if the given raw JS value is of the right type/shape to be
 -- | represented as `a`, and if so, coerces the value to `a`.
-readForeign :: ∀ a. CanReceiveFromJavaScript a => Foreign -> Maybe a
+readForeign :: ∀ @a. CanReceiveFromJavaScript a => Foreign -> Maybe a
 readForeign = hush <<< readForeign'

@@ -34,7 +34,7 @@ type MyData = { x :: { y :: Int }, z :: String }
 
 callMeFromJavaScript :: Foreign -> String
 callMeFromJavaScript f =
-  case readForeign f :: Maybe MyData of
+  case readForeign @MyData f of
     Nothing -> "Incoming data has the wrong shape"
     Just a -> "Got the right data: x.y = " <> show a.x.y <> ", z = " <> a.z
 ```
@@ -65,7 +65,7 @@ data:
 ```haskell
 callMeFromJavaScript :: Foreign -> String
 callMeFromJavaScript f =
-  case readForeign' f :: _ _ MyData of
+  case readForeign' @MyData f of
     Left err -> "Oops: " <> err
     Right a -> "Got the right data: x.y = " <> show a.x.y <> ", z = " <> a.z
 ```

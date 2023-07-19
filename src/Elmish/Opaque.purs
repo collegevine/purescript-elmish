@@ -53,20 +53,20 @@ import Unsafe.Coerce (unsafeCoerce)
 newtype Opaque (name :: Symbol) a = Opaque (M.Object a)
 
 -- | Creates an instance of `Opaque`. See comments on it above.
-wrap :: ∀ name a. IsSymbol name => a -> Opaque name a
-wrap a = Opaque $ M.singleton (refName (Proxy :: _ name)) a
+wrap :: ∀ @name a. IsSymbol name => a -> Opaque name a
+wrap a = Opaque $ M.singleton (refName @name) a
 
 -- | Deconstructs an instance of `Opaque`. See comments on it above.
-unwrap :: ∀ name a. IsSymbol name => Opaque name a -> a
+unwrap :: ∀ @name a. IsSymbol name => Opaque name a -> a
 unwrap (Opaque m) =
     -- This use of `fromJust` is justified, because the `Opaque` constructor is
     -- not exported, and the only two places where values of this type are
     -- constructed (`wrap` above and `CanReceiveFromJavaScript` below) guarantee
     -- that this key will be present.
-    unsafePartial $ fromJust $ M.lookup (refName (Proxy :: _ name)) m
+    unsafePartial $ fromJust $ M.lookup (refName @name) m
 
-refName :: ∀ name. IsSymbol name => Proxy name -> String
-refName p = "ref:" <> reflectSymbol p
+refName :: ∀ @name. IsSymbol name => String
+refName = "ref:" <> reflectSymbol (Proxy @name)
 
 -- See comments on `Ref` above.
 instance IsSymbol name => CanReceiveFromJavaScript (Opaque name a) where
@@ -75,7 +75,7 @@ instance IsSymbol name => CanReceiveFromJavaScript (Opaque name a) where
         Just _ -> Valid
         Nothing -> Invalid { path: "", expected: "Opaque", got: v }
       where
-          sname = refName (Proxy :: _ name)
+          sname = refName @name
           map = unsafeCoerce v
 
 instance IsSymbol name => CanPassToJavaScript (Opaque name a)
