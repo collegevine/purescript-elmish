@@ -94,7 +94,7 @@ subscriptionViaForks { alive, trigger } =
 
 subscriptionViaSubscriptionApi :: ∀ msg. { alive :: Ref.Ref Boolean, trigger :: AVar.AVar msg } -> Transition msg Unit
 subscriptionViaSubscriptionApi { alive, trigger } =
-  subscribe $ Subscription \dispatch -> do
+  subscribe identity $ Subscription \dispatch -> do
     liftEffect $ Ref.write true alive
     void $ forkAff do
       msg <- AVar.take trigger

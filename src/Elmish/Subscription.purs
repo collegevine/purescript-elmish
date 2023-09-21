@@ -46,7 +46,7 @@
 -- |          update = ...
 -- |
 module Elmish.Subscription
-  ( Subscription
+  ( Subscription(..)
   , subscribe
   , subscribeMaybe
   )
