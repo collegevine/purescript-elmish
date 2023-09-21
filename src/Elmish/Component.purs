@@ -152,7 +152,7 @@ fork cmd = transition unit [cmd]
 -- | component is unmounted.
 -- |
 -- | NOTE: the `onStop` callback is not recommended for direct use, use the
--- | subscriptions API in `Elmish.Subscriptions` instead.
+-- | subscriptions API in `Elmish.Subscription` instead.
 -- |
 -- | Example:
 -- |

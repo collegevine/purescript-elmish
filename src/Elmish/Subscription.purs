@@ -45,7 +45,7 @@
 -- |          view = ...
 -- |          update = ...
 -- |
-module Elmish.Subscriptions
+module Elmish.Subscription
   ( Subscription(..)
   , subscribe
   , subscribeMaybe
