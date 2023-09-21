@@ -10,7 +10,7 @@ import Effect.Ref as Ref
 import Elmish (ComponentDef, Transition, forks, (<|))
 import Elmish.Component (ComponentName(..), wrapWithLocalState)
 import Elmish.HTML.Styled as H
-import Elmish.Subscription (Subscription(..), subscribe)
+import Elmish.Subscriptions (Subscription(..), subscribe)
 import Elmish.Test (clickOn, find, testComponent, text, waitUntil, (>>))
 import Test.Examples.Counter as Counter
 import Test.Spec (Spec, describe, it)
