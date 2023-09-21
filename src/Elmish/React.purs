@@ -7,8 +7,10 @@ module Elmish.React
     , assignState
     , createElement
     , createElement'
+    , getField
     , getState
     , hydrate
+    , setField
     , setState
     , render
     , renderToString
@@ -18,10 +20,11 @@ module Elmish.React
 import Prelude
 
 import Data.Function.Uncurried (Fn3, runFn3)
+import Data.Maybe (Maybe)
 import Data.Nullable (Nullable)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, runEffectFn1, runEffectFn2, runEffectFn3)
-import Elmish.Foreign (class CanPassToJavaScript)
+import Elmish.Foreign (class CanPassToJavaScript, class CanReceiveFromJavaScript, Foreign, readForeign)
 import Elmish.React.Ref (Ref, callbackRef) as Ref
 import Prim.TypeError (Text, class Fail)
 import Unsafe.Coerce (unsafeCoerce)
@@ -60,7 +63,7 @@ foreign import data ReactComponentInstance :: Type
 -- |
 -- | represents the `<div data-toggle="buttons">` DOM element.
 -- |
-createElement :: forall props content
+createElement :: ∀ props content
      . ValidReactProps props
     => ReactChildren content
     => ReactComponent props
@@ -68,10 +71,10 @@ createElement :: forall props content
     -> content                      -- Children
     -> ReactElement
 createElement component props content = runFn3 createElement_ component props $ asReactChildren content
-foreign import createElement_ :: forall props. Fn3 (ReactComponent props) props (Array ReactElement) ReactElement
+foreign import createElement_ :: ∀ props. Fn3 (ReactComponent props) props (Array ReactElement) ReactElement
 
 -- | Variant of `createElement` for creating an element without children.
-createElement' :: forall props
+createElement' :: ∀ props
      . ValidReactProps props
     => ReactComponent props
     -> props                        -- Props
@@ -94,42 +97,48 @@ else instance
 -- | Describes a type that can be used as "content" (aka "children") of a React
 -- | JSX element. The three instances below make it possible to use `String` and
 -- | `ReactElement` as children directly, without wrapping them in an array.
-class ReactChildren a where
-    asReactChildren :: a -> Array ReactElement
+class ReactChildren a where asReactChildren :: a -> Array ReactElement
 
-instance reactChildrenArray :: ReactChildren (Array ReactElement) where
-    asReactChildren = identity
+instance ReactChildren (Array ReactElement) where asReactChildren = identity
+instance ReactChildren String where asReactChildren s = [ unsafeCoerce s ]
+instance ReactChildren ReactElement where asReactChildren e = [ e ]
 
-instance reactChildrenString :: ReactChildren String where
-    asReactChildren s = [ unsafeCoerce s ]
-
-instance reactChildrenSingle :: ReactChildren ReactElement where
-    asReactChildren e = [ e ]
-
-getState :: forall state. ReactComponentInstance -> Effect (Nullable state)
+getState :: ∀ state. ReactComponentInstance -> Effect (Nullable state)
 getState = runEffectFn1 getState_
-foreign import getState_ :: forall state. EffectFn1 ReactComponentInstance (Nullable state)
+foreign import getState_ :: ∀ state. EffectFn1 ReactComponentInstance (Nullable state)
 
-setState :: forall state. ReactComponentInstance -> state -> (Effect Unit) -> Effect Unit
+setState :: ∀ state. ReactComponentInstance -> state -> (Effect Unit) -> Effect Unit
 setState = runEffectFn3 setState_
-foreign import setState_ :: forall state. EffectFn3 ReactComponentInstance state (Effect Unit) Unit
+foreign import setState_ :: ∀ state. EffectFn3 ReactComponentInstance state (Effect Unit) Unit
+
+getField :: ∀ @a. CanReceiveFromJavaScript a => String -> ReactComponentInstance -> Effect (Maybe a)
+getField field object = runEffectFn2 getField_ field object <#> readForeign @a
+foreign import getField_ :: EffectFn2 String ReactComponentInstance Foreign
+
+setField :: ∀ @a. CanPassToJavaScript a => String -> a -> ReactComponentInstance -> Effect Unit
+setField = runEffectFn3 setField_
+foreign import setField_ :: ∀ a. EffectFn3 String a ReactComponentInstance Unit
 
 -- | The equivalent of `this.state = x`, as opposed to `setState`, which is the
 -- | equivalent of `this.setState(x)`. This function is used in a component's
 -- | constructor to set the initial state.
-assignState :: forall state. ReactComponentInstance -> state -> Effect Unit
+assignState :: ∀ state. ReactComponentInstance -> state -> Effect Unit
 assignState = runEffectFn2 assignState_
-foreign import assignState_ :: forall state. EffectFn2 ReactComponentInstance state Unit
+foreign import assignState_ :: ∀ state. EffectFn2 ReactComponentInstance state Unit
 
+-- FFI import of ReactDOM.render
 render :: ReactElement -> HTML.Element -> Effect Unit
 render = runEffectFn2 render_
 foreign import render_ :: EffectFn2 ReactElement HTML.Element Unit
 
+-- FFI import of ReactDOM.hydrate (used to instantiate server-side-rendered
+-- components on the client side)
 hydrate :: ReactElement -> HTML.Element -> Effect Unit
 hydrate = runEffectFn2 hydrate_
 foreign import hydrate_ :: EffectFn2 ReactElement HTML.Element Unit
 
+-- FFI import of ReactDOM.renderToString (used for server-side rendering)
 foreign import renderToString :: ReactElement -> String
 
 -- This instance allows including `ReactElement` in view arguments.
-instance tojsReactElement :: CanPassToJavaScript ReactElement
+instance CanPassToJavaScript ReactElement

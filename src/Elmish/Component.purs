@@ -17,16 +17,18 @@ module Elmish.Component
 
 import Prelude
 
+import Data.Array ((:))
 import Data.Bifunctor (bimap, lmap, rmap) as Bifunctor
 import Data.Bifunctor (class Bifunctor)
+import Data.Foldable (sequence_)
 import Data.Function.Uncurried (Fn2, runFn2)
-import Data.Maybe (Maybe, maybe)
+import Data.Maybe (Maybe, fromMaybe, maybe)
 import Debug as Debug
 import Effect (Effect, foreachE)
 import Effect.Aff (Aff, Milliseconds(..), delay, launchAff_)
 import Effect.Class (class MonadEffect, liftEffect)
 import Elmish.Dispatch (Dispatch)
-import Elmish.React (ReactComponent, ReactComponentInstance, ReactElement)
+import Elmish.React (ReactComponent, ReactComponentInstance, ReactElement, getField, setField)
 import Elmish.State (StateStrategy, dedicatedStorage, localState)
 import Elmish.Trace (traceTime)
 
@@ -36,12 +38,12 @@ import Elmish.Trace (traceTime)
 -- |
 -- | Instances of this type may be created either by using the smart constructor:
 -- |
--- |     update :: State -> Message -> Transition' Aff Message State
+-- |     update :: State -> Message -> Transition Message State
 -- |     update state m = transition state [someCommand]
 -- |
 -- | or in monadic style (see comments on `fork` for more on this):
 -- |
--- |     update :: State -> Message -> Transition' Aff Message State
+-- |     update :: State -> Message -> Transition Message State
 -- |     update state m = do
 -- |         s1 <- Child1.update state.child1 Child1.SomeMessage # lmap Child1Msg
 -- |         s2 <- Child2.modifyFoo state.child2 # lmap Child2Msg
@@ -51,7 +53,7 @@ import Elmish.Trace (traceTime)
 -- | or, for simple sub-component delegation, the `BiFunctor` instance may be
 -- | used:
 -- |
--- |     update :: State -> Message -> Transition' Aff Message State
+-- |     update :: State -> Message -> Transition Message State
 -- |     update state (ChildMsg m) =
 -- |         Child.update state.child m
 -- |         # bimap ChildMsg (state { child = _ })
@@ -63,31 +65,36 @@ type Transition msg state = Transition' Aff msg state
 
 -- | An effect that is launched as a result of a component state transition.
 -- | It's a function that takes a callback, which allows it to produce (aka
--- | "dispatch") messages.
-type Command m msg = (msg -> Effect Unit) -> m Unit
+-- | "dispatch") messages, as well as an `onStop` function, which allows it to
+-- | install a handler to be executed whent the component is destroyed (aka
+-- | "unmounted").
+-- |
+-- | See `forks` for a more detailed explanation.
+type Command m msg = { dispatch :: Dispatch msg, onStop :: m Unit -> Effect Unit } -> m Unit
 
-instance trBifunctor :: Functor m => Bifunctor (Transition' m) where
-    bimap f g (Transition s cmds) = Transition (g s) (cmds <#> \cmd sink -> cmd $ sink <<< f)
-instance trFunctor :: Functor (Transition' m msg) where
+instance Functor m => Bifunctor (Transition' m) where
+    bimap f g (Transition s cmds) =
+      Transition (g s) (cmds <#> \cmd { dispatch, onStop } -> cmd { dispatch: dispatch <<< f, onStop })
+instance Functor (Transition' m msg) where
     map f (Transition x cmds) = Transition (f x) cmds
-instance trApply :: Apply (Transition' m msg) where
+instance Apply (Transition' m msg) where
     apply (Transition f cmds1) (Transition x cmds2) = Transition (f x) (cmds1 <> cmds2)
-instance trApplicative :: Applicative (Transition' m msg) where
+instance Applicative (Transition' m msg) where
     pure a = Transition a []
-instance trBind :: Bind (Transition' m msg) where
+instance Bind (Transition' m msg) where
     bind (Transition s cmds) f =
         let (Transition s' cmds') = f s
         in Transition s' (cmds <> cmds')
-instance trMonad :: Monad (Transition' m msg)
+instance Monad (Transition' m msg)
 
 -- | Smart constructor for the `Transition'` type. See comments there. This
 -- | function takes the new (i.e. updated) state and an array of commands - i.e.
 -- | effects producing messages - and constructs a `Transition'` out of them
-transition :: forall m state msg. Bind m => MonadEffect m => state -> Array (m msg) -> Transition' m msg state
+transition :: ∀ m state msg. Bind m => MonadEffect m => state -> Array (m msg) -> Transition' m msg state
 transition s cmds =
-    Transition s $ cmds <#> \cmd sink -> do
+    Transition s $ cmds <#> \cmd { dispatch } -> do
         msg <- cmd
-        liftEffect $ sink msg
+        liftEffect $ dispatch msg
 
 -- | Creates a `Transition'` that contains the given command (i.e. a
 -- | message-producing effect). This is intended to be used for "accumulating"
@@ -116,7 +123,7 @@ transition s cmds =
 -- |
 -- |     data Message = ButtonClicked | OnNewItem String
 -- |
--- |     update :: State -> Message -> Transition' Aff Message State
+-- |     update :: State -> Message -> Transition Message State
 -- |     update state ButtonClick = do
 -- |         fork $ insertItem "new list"
 -- |         incButtonClickCount state
@@ -128,46 +135,63 @@ transition s cmds =
 -- |         delay $ Milliseconds 1000.0
 -- |         pure $ OnNewItem name
 -- |
--- |     incButtonClickCount :: Transition' Aff Message State
+-- |     incButtonClickCount :: Transition Message State
 -- |     incButtonClickCount state = do
 -- |         forkVoid $ trackingEvent "Button click"
 -- |         pure $ state { buttonsClicked = state.buttonsClicked + 1 }
 -- |
-fork :: forall m message. MonadEffect m => m message -> Transition' m message Unit
+fork :: ∀ m message. MonadEffect m => m message -> Transition' m message Unit
 fork cmd = transition unit [cmd]
 
 -- | Similar to `fork` (see comments there for detailed explanation), but the
--- | parameter is a function that takes a message-dispatching callback. This
--- | structure allows the command to produce zero or multiple messages, unlike
--- | `fork`, whose callback has to produce exactly one.
+-- | parameter is a function that takes `dispatch` - a message-dispatching
+-- | callback, as well as `onStop` - a way to be notified when the component is
+-- | destroyed (aka "unmounted"). This structure allows the command to produce
+-- | zero or multiple messages, unlike `fork`, whose callback has to produce
+-- | exactly one, as well as stop listening or free resources etc. when the
+-- | component is unmounted.
+-- |
+-- | NOTE: the `onStop` callback is not recommended for direct use, use the
+-- | subscriptions API in `Elmish.Subscriptions` instead.
 -- |
 -- | Example:
 -- |
--- |     update :: State -> Message -> Transition' Aff Message State
+-- |     update :: State -> Message -> Transition Message State
 -- |     update state msg = do
 -- |         forks countTo10
+-- |         forks listenToUrl
 -- |         pure state
 -- |
 -- |     countTo10 :: Command Aff Message
--- |     countTo10 msgSink =
+-- |     countTo10 { dispatch } =
 -- |         for_ (1..10) \n ->
 -- |             delay $ Milliseconds 1000.0
--- |             msgSink $ Count n
+-- |             dispatch $ Count n
 -- |
-forks :: forall m message. Command m message -> Transition' m message Unit
+-- |     listenToUrl :: Command Aff Message
+-- |     listenToUrl { dispatch, onStop } =
+-- |         listener <-
+-- |           window >>= addEventListener "popstate" do
+-- |             newUrl <- window >>= location >>= href
+-- |             dispatch $ UrlChanged newUrl
+-- |
+-- |         onStop $
+-- |            window >>= removeEventListener listener
+-- |
+forks :: ∀ m message. Command m message -> Transition' m message Unit
 forks cmd = Transition unit [cmd]
 
 -- | Similar to `fork` (see comments there for detailed explanation), but the
 -- | effect doesn't produce any messages, it's a fire-and-forget sort of effect.
-forkVoid :: forall m message. m Unit -> Transition' m message Unit
+forkVoid :: ∀ m message. m Unit -> Transition' m message Unit
 forkVoid cmd = forks $ const cmd
 
 -- | Similar to `fork` (see comments there for detailed explanation), but the
 -- | effect may or may not produce a message, as modeled by returning `Maybe`.
-forkMaybe :: forall m message. MonadEffect m => m (Maybe message) -> Transition' m message Unit
-forkMaybe cmd = forks \sink -> do
+forkMaybe :: ∀ m message. MonadEffect m => m (Maybe message) -> Transition' m message Unit
+forkMaybe cmd = forks \{ dispatch } -> do
     msg <- cmd
-    liftEffect $ maybe (pure unit) sink msg
+    liftEffect $ maybe (pure unit) dispatch msg
 
 -- | Definition of a component according to The Elm Architecture. Consists of
 -- | three functions - `init`, `view`, `update`, - that together describe the
@@ -207,12 +231,12 @@ type ComponentDef msg state = ComponentDef' Aff msg state
 -- | Even though this type is rather trivial, it is included in the library for
 -- | the purpose of attaching this documentation to it.
 type ComponentReturnCallback m a =
-    forall state msg. ComponentDef' m msg state -> a
+    ∀ state msg. ComponentDef' m msg state -> a
 
 -- | Wraps the given component, intercepts its update cycle, and traces (i.e.
 -- | prints to dev console) every command and every state value (as JSON
 -- | objects), plus timing of renders and state transitions.
-withTrace :: forall m msg state
+withTrace :: ∀ m msg state
      . Debug.DebugWarning
     => ComponentDef' m msg state
     -> ComponentDef' m msg state
@@ -224,16 +248,24 @@ withTrace def = def { update = tracingUpdate, view = tracingView }
         tracingView s d =
             traceTime "Rendering" \_ -> def.view s d
 
+-- | This function is low level, not intended for a use in typical consumer
+-- | code. Use `construct` or `wrapWithLocalState` instead.
+-- |
 -- | Takes a component definition (i.e. init+view+update functions) and
 -- | "renders" it as a React DOM element, suitable for passing to
 -- | `ReactDOM.render` or embedding in a JSX DOM tree.
-bindComponent :: forall msg state
+bindComponent :: ∀ msg state
      . BaseComponent                 -- ^ A JS class inheriting from React.Component to serve as base
     -> ComponentDef msg state        -- ^ The component definition
     -> StateStrategy state           -- ^ Strategy of storing state
     -> ReactElement
 bindComponent cmpt def stateStrategy =
-    runFn2 instantiateBaseComponent cmpt { init: initialize, render, componentDidMount: runCmds initialCmds }
+    runFn2 instantiateBaseComponent cmpt
+      { init: initialize
+      , render
+      , componentDidMount: runCmds initialCmds
+      , componentWillUnmount: stopSubscriptions
+      }
     where
         Transition initialState initialCmds = def.init
 
@@ -256,28 +288,38 @@ bindComponent cmpt def stateStrategy =
                 runCmd :: Command Aff msg -> Effect Unit
                 runCmd cmd = launchAff_ do
                     delay $ Milliseconds 0.0 -- Make sure this call is actually async
-                    cmd $ liftEffect <<< dispatchMsg component
+                    cmd { dispatch: liftEffect <<< dispatchMsg component, onStop: addSubscription component }
+
+        addSubscription :: ReactComponentInstance -> Aff Unit -> Effect Unit
+        addSubscription component sub = do
+            subs <- getSubscriptions component
+            setSubscriptions (launchAff_ sub : subs) component
+
+        stopSubscriptions :: ReactComponentInstance -> Effect Unit
+        stopSubscriptions component = do
+            sequence_ =<< getSubscriptions component
+            setSubscriptions [] component
+
+        subscriptionsField = "__subscriptions"
+        getSubscriptions = getField @(Array (Effect Unit)) subscriptionsField >>> map (fromMaybe [])
+        setSubscriptions = setField @(Array (Effect Unit)) subscriptionsField
 
 -- | Given a `ComponentDef'`, binds that def to a freshly created React class,
--- | instantiates that class, and returns a rendering function. Note that the
--- | return type of this function is almost the same as that of
--- | `ComponentDef'::view` - except for state. This is not a coincidence: it is
--- | done this way on purpose, so that the result of this call can be used to
--- | construct another `ComponentDef'`.
+-- | instantiates that class, and returns a rendering function.
 -- |
 -- | Unlike `wrapWithLocalState`, this function uses the bullet-proof strategy
 -- | of storing the component state in a dedicated mutable cell, but that
 -- | happens at the expense of being effectful.
-construct :: forall msg state
+construct :: ∀ msg state
      . ComponentDef msg state       -- ^ The component definition
     -> Effect ReactElement
 construct def = do
     stateStorage <- liftEffect dedicatedStorage
-    pure $ withFreshComponent $ \cmpt ->
+    pure $ withFreshComponent \cmpt ->
         bindComponent cmpt def stateStorage
 
 -- | Monad transformation applied to `ComponentDef'`
-nat :: forall m n msg state. (m ~> n) -> ComponentDef' m msg state -> ComponentDef' n msg state
+nat :: ∀ m n msg state. (m ~> n) -> ComponentDef' m msg state -> ComponentDef' n msg state
 nat map def =
     {
         view: def.view,
@@ -286,7 +328,7 @@ nat map def =
     }
     where
         mapTransition (Transition state cmds) = Transition state (mapCmd <$> cmds)
-        mapCmd cmd sink = map $ cmd sink
+        mapCmd cmd { dispatch, onStop } = map $ cmd { dispatch, onStop: onStop <<< map }
 
 -- | Creates a React component that can be bound to a varying `ComponentDef'`,
 -- | returns a function that performs the binding.
@@ -310,13 +352,13 @@ nat map def =
 -- | proven to be fragile in some specific circumstances (e.g. multiple events
 -- | occurring within the same JS synchronous frame), so it is not recommended
 -- | to use this mechanism for complex components or the top-level program.
-wrapWithLocalState :: forall msg state args
+wrapWithLocalState :: ∀ msg state args
      . ComponentName
     -> (args -> ComponentDef msg state)
     -> args
     -> ReactElement
 wrapWithLocalState name mkDef =
-    runFn2 withCachedComponent name $ \cmpt args ->
+    runFn2 withCachedComponent name \cmpt args ->
         bindComponent cmpt (mkDef args) localState
 
 -- | A unique name for a component created via `wrapWithLocalState`. These names
@@ -351,11 +393,12 @@ newtype ComponentName = ComponentName String
 
 -- Props for the React component that is used as base for this framework. The
 -- component itself is defined in the foreign module.
-type BaseComponentProps = {
-    init :: ReactComponentInstance -> Effect Unit,
-    render :: ReactComponentInstance -> Effect ReactElement,
-    componentDidMount :: ReactComponentInstance -> Effect Unit
-}
+type BaseComponentProps =
+  { init :: ReactComponentInstance -> Effect Unit
+  , render :: ReactComponentInstance -> Effect ReactElement
+  , componentDidMount :: ReactComponentInstance -> Effect Unit
+  , componentWillUnmount :: ReactComponentInstance -> Effect Unit
+  }
 
 type BaseComponent = ReactComponent BaseComponentProps
 
@@ -376,9 +419,9 @@ foreign import instantiateBaseComponent :: Fn2 BaseComponent BaseComponentProps 
 -- This is essentially a hack, but not quite. It operates in the grey area
 -- between PureScript and JavaScript. See comments on `ComponentName` for a more
 -- detailed explanation.
-foreign import withCachedComponent :: forall a. Fn2 ComponentName (BaseComponent -> a) a
+foreign import withCachedComponent :: ∀ a. Fn2 ComponentName (BaseComponent -> a) a
 
 -- | Creates a fresh React component on every call. This is similar to
 -- | `withCachedComponent`, but without the cache - creates a new component
 -- | every time.
-foreign import withFreshComponent :: forall a. (BaseComponent -> a) -> a
+foreign import withFreshComponent :: ∀ a. (BaseComponent -> a) -> a

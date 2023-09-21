@@ -29,6 +29,10 @@ function mkFreshComponent(name) {
     componentDidMount() {
       this.props.componentDidMount(this)()
     }
+
+    componentWillUnmount() {
+      this.props.componentWillUnmount(this)()
+    }
   }
 
   ElmishComponent.displayName = name ? ("Elmish_" + name) : "ElmishRoot"
