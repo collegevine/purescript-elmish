@@ -7,5 +7,5 @@ in  upstream
   with elmish-html =
     { dependencies = [ "prelude", "record" ]
     , repo = "https://github.com/collegevine/purescript-elmish-html.git"
-    , version = "v0.8.0"
+    , version = "upgrade-15.13"
     }
