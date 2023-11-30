@@ -70,7 +70,7 @@ refName = "ref:" <> reflectSymbol (Proxy @name)
 
 -- See comments on `Ref` above.
 instance IsSymbol name => CanReceiveFromJavaScript (Opaque name a) where
-    validateForeignType _ v =
+    validateForeignType v =
       case M.lookup sname map of
         Just _ -> Valid
         Nothing -> Invalid { path: "", expected: "Opaque", got: v }
