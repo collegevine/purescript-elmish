@@ -72,7 +72,7 @@ data ValidationResult = Valid | Invalid { path :: String, expected :: String, go
 -- | is defined for primitives (strings, numbers, booleans), arrays, and
 -- | records.
 class CanReceiveFromJavaScript (a :: Type) where
-    validateForeignType :: Proxy a -> Foreign -> ValidationResult
+    validateForeignType :: Foreign -> ValidationResult
 
 -- | This class is used to assert that values of a type can be passed to
 -- | JavaScript code directly (without conversion) and understood by that code.
@@ -116,23 +116,23 @@ validatePrimitive expected isValidType x =
   if isValidType x then Valid else Invalid { path: "", got: x, expected }
 
 instance CanPassToJavaScript Foreign
-instance CanReceiveFromJavaScript Foreign where validateForeignType _ _ = Valid
+instance CanReceiveFromJavaScript Foreign where validateForeignType _ = Valid
 
 instance CanPassToJavaScript String
-instance CanReceiveFromJavaScript String where validateForeignType _ = validatePrimitive "String" isString
+instance CanReceiveFromJavaScript String where validateForeignType = validatePrimitive "String" isString
 
 instance CanPassToJavaScript Number
-instance CanReceiveFromJavaScript Number where validateForeignType _ = validatePrimitive "Number" isNumber
+instance CanReceiveFromJavaScript Number where validateForeignType = validatePrimitive "Number" isNumber
 
 instance CanPassToJavaScript Boolean
-instance CanReceiveFromJavaScript Boolean where validateForeignType _ = validatePrimitive "Boolean" isBoolean
+instance CanReceiveFromJavaScript Boolean where validateForeignType = validatePrimitive "Boolean" isBoolean
 
 instance CanPassToJavaScript JSDate
-instance CanReceiveFromJavaScript JSDate where validateForeignType _ = validatePrimitive "Date" isDate
+instance CanReceiveFromJavaScript JSDate where validateForeignType = validatePrimitive "Date" isDate
 
 instance CanPassToJavaScript Int
 instance CanReceiveFromJavaScript Int where
-    validateForeignType _ = validatePrimitive "Int" $ isNumber && (isJust <<< fromNumber <<< unsafeFromForeign)
+    validateForeignType = validatePrimitive "Int" $ isNumber && (isJust <<< fromNumber <<< unsafeFromForeign)
 
 
 instance CanPassToJavaScript a => CanPassToJavaScript (Obj.Object a)
@@ -141,14 +141,14 @@ instance CanPassToJavaScript a => CanPassToJavaScript (Obj.Object a)
 -- special-case `Object Foreign` instance here, because it's faster: we don't
 -- have to check every element.
 instance CanReceiveFromJavaScript (Obj.Object Foreign) where
-  validateForeignType _ = validatePrimitive "Object" isObject
+  validateForeignType = validatePrimitive "Object" isObject
 else instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Obj.Object a) where
-  validateForeignType _ v
+  validateForeignType v
     | not isObject v = Invalid { path: "", expected: "Object", got: v }
     | otherwise = Obj.foldMaybe invalidElem Valid (unsafeFromForeign v)
     where
       invalidElem (Invalid _) _ _ = Nothing
-      invalidElem _ key x = case validateForeignType (Proxy @a) x of
+      invalidElem _ key x = case validateForeignType @a x of
         Valid -> Just Valid
         Invalid invalid -> Just $ Invalid invalid { path = "['" <> key <> "']" <> invalid.path }
 
@@ -156,17 +156,17 @@ else instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Obj.Object
 instance CanPassToJavaScript (Effect Unit)
 else instance CanPassToJavaScript a => CanPassToJavaScript (Effect a)
 instance CanReceiveFromJavaScript (Effect Unit) where
-    validateForeignType _ = validatePrimitive "Function" isFunction
+    validateForeignType = validatePrimitive "Function" isFunction
 
 instance CanReceiveFromJavaScript a => CanPassToJavaScript (EffectFn1 a Unit)
 else instance (CanReceiveFromJavaScript a, CanPassToJavaScript b) => CanPassToJavaScript (EffectFn1 a b)
 instance CanPassToJavaScript a => CanReceiveFromJavaScript (EffectFn1 a Unit) where
-    validateForeignType _ = validatePrimitive "Function" isFunction
+    validateForeignType = validatePrimitive "Function" isFunction
 
 instance CanReceiveFromJavaScript a => CanPassToJavaScript (EffectFn2 a b Unit)
 else instance (CanReceiveFromJavaScript a, CanReceiveFromJavaScript b, CanPassToJavaScript c) => CanPassToJavaScript (EffectFn2 a b c)
 instance (CanPassToJavaScript a, CanPassToJavaScript b) => CanReceiveFromJavaScript (EffectFn2 a b Unit) where
-    validateForeignType _ = validatePrimitive "Function" isFunction
+    validateForeignType = validatePrimitive "Function" isFunction
 
 
 instance CanPassToJavaScript a => CanPassToJavaScript (Array a)
@@ -175,40 +175,40 @@ instance CanPassToJavaScript a => CanPassToJavaScript (Array a)
 -- special-case `Array Foreign` instance here, because it's faster: we don't
 -- have to check every element.
 instance CanReceiveFromJavaScript (Array Foreign) where
-    validateForeignType _ = validatePrimitive "Array" isArray
+    validateForeignType = validatePrimitive "Array" isArray
 else instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Array a) where
-    validateForeignType _ v
+    validateForeignType v
       | not isArray v = Invalid { path: "", expected: "Array", got: v }
       | otherwise = case findMapWithIndex invalidElem (unsafeFromForeign v :: Array Foreign) of
           Nothing -> Valid
           Just { idx, invalid } -> Invalid invalid { path = "[" <> show idx <> "]" <> invalid.path }
       where
-        invalidElem idx x = case validateForeignType (Proxy @a) x of
+        invalidElem idx x = case validateForeignType @a x of
           Valid -> Nothing
           Invalid invalid -> Just { idx, invalid }
 
 
 instance CanPassToJavaScript a => CanPassToJavaScript (Nullable a)
 instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Nullable a) where
-    validateForeignType _ v
+    validateForeignType v
       | isNull v || isUndefined v = Valid
       | otherwise =
-          case validateForeignType (Proxy @a) v of
+          case validateForeignType @a v of
             Valid -> Valid
             Invalid err -> Invalid err { expected = "Nullable " <> err.expected }
 
 instance CanPassToJavaScript a => CanPassToJavaScript (Opt a)
 instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Opt a) where
-    validateForeignType _ = validateForeignType (Proxy @(Nullable a))
+    validateForeignType = validateForeignType @(Nullable a)
 
 instance CanPassToJavaScript a => CanPassToJavaScript (Req a)
 instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Req a) where
-  validateForeignType _ = validateForeignType (Proxy @a)
+  validateForeignType = validateForeignType @a
 
 instance (RowToList r rl, CanPassToJavaScriptRecord rl) => CanPassToJavaScript (Record r)
 instance (RowToList r rl, CanReceiveFromJavaScriptRecord rl) => CanReceiveFromJavaScript (Record r) where
-    validateForeignType _ v
-      | isObject v = validateJsRecord (Proxy @rl) v
+    validateForeignType v
+      | isObject v = validateJsRecord @rl v
       | otherwise = Invalid { path: "", expected: "Object", got: v }
 
 
@@ -225,19 +225,19 @@ instance CanPassToJavaScript a => CanPassToJavaScript (Foreign -> a)
 -- | represents a PureScript record, recursively calling
 -- | `validateForeignType` for each field.
 class CanReceiveFromJavaScriptRecord (rowList :: RowList Type) where
-    validateJsRecord :: Proxy rowList -> Foreign -> ValidationResult
+    validateJsRecord :: Foreign -> ValidationResult
 
 instance CanReceiveFromJavaScriptRecord Nil where
-    validateJsRecord _ _ = Valid
+    validateJsRecord _ = Valid
 
 else instance (IsSymbol name, CanReceiveFromJavaScript a, CanReceiveFromJavaScriptRecord rl') => CanReceiveFromJavaScriptRecord (Cons name a rl') where
-    validateJsRecord _ v =
+    validateJsRecord v =
         case validHead of
           Invalid err -> Invalid err { path = "." <> fieldName <> err.path }
-          Valid -> validateJsRecord (Proxy @rl') v
+          Valid -> validateJsRecord @rl' v
         where
-            validHead = validateForeignType (Proxy @a) head
-            fieldName = reflectSymbol (Proxy @name)
+            validHead = validateForeignType @a head
+            fieldName = reflectSymbol @name Proxy
             head = unsafeGet fieldName (unsafeFromForeign v :: {})
 
 
@@ -252,7 +252,7 @@ else instance (IsSymbol name, CanPassToJavaScript a, CanPassToJavaScriptRecord r
 -- | Verifies if the given raw JS value is of the right type/shape to be
 -- | represented as `a`, and if so, coerces the value to `a`.
 readForeign' :: ∀ @a. CanReceiveFromJavaScript a => Foreign -> Either String a
-readForeign' v = case validateForeignType (Proxy @a) v of
+readForeign' v = case validateForeignType @a v of
   Valid -> Right $ unsafeFromForeign v
   Invalid i -> Left $ fold
     [ i.path
