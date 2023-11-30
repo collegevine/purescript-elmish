@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.10.1
+
+### Changed
+
+- Upgraded to PureScript 0.15.13
+- **Breaking**: `CanReceiveFromJavaScript.validateForeignType` method no longer
+  takes a `Proxy` as first parameter, relying instead on visible type
+  applications.
+
 ## 0.10.0
 
 ### Changed
