@@ -9,9 +9,11 @@ import Test.Foreign as Foreign
 import Test.LocalState as LocalState
 import Test.Spec.Reporter (specReporter)
 import Test.Spec.Runner (runSpec)
+import Test.Subscriptions as Subscriptions
 
 main :: Effect Unit
 main = launchAff_ $ runSpec [specReporter] do
   Foreign.spec
   Component.spec
   LocalState.spec
+  Subscriptions.spec
