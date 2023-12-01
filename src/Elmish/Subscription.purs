@@ -2,7 +2,7 @@
 -- | that do not originate in the UI itself, but come from other sources, such
 -- | as network, browser URL history manipulations, timer, JS workers, and so
 -- | on. The API in this module allows capturing such external events and
--- | convert them to Elmish messages, so they can be handled in the UI
+-- | converting them to Elmish messages, so they can be handled in the UI
 -- | component's `update` function.
 -- |
 -- | A `Subscription` value represents such an "external event" packaged for
