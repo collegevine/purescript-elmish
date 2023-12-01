@@ -138,7 +138,7 @@ be used to "issue" (or "dispatch") a message. For example:
 
 ```haskell
 update state StartInc = do
-  forks \dispatch -> do
+  forks \{ dispatch } -> do
     delay (Milliseconds 1000.0)
     dispatch Inc
     delay (Milliseconds 2000.0)
