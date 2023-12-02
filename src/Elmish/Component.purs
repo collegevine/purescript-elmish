@@ -264,45 +264,49 @@ bindComponent cmpt def stateStrategy =
       { init: initialize
       , render
       , componentDidMount: runCmds initialCmds
-      , componentWillUnmount: stopSubscriptions
+      , componentWillUnmount: setUnmounted true <> stopSubscriptions
       }
     where
         Transition initialState initialCmds = def.init
 
-        {initialize, getState, setState} = stateStrategy {initialState}
+        { initialize, getState, setState } = stateStrategy { initialState }
 
         render :: ReactComponentInstance -> Effect ReactElement
         render component = do
-            state <- getState component
-            pure $ def.view state $ dispatchMsg component
+          state <- getState component
+          pure $ def.view state $ dispatchMsg component
 
         dispatchMsg :: ReactComponentInstance -> Dispatch msg
-        dispatchMsg component msg = do
-            oldState <- getState component
-            let Transition newState cmds = def.update oldState msg
-            setState component newState $ runCmds cmds component
+        dispatchMsg component msg = unlessM (getUnmounted component) do
+          oldState <- getState component
+          let Transition newState cmds = def.update oldState msg
+          setState component newState $ runCmds cmds component
 
         runCmds :: Array (Command Aff msg) -> ReactComponentInstance -> Effect Unit
         runCmds cmds component = foreachE cmds runCmd
-            where
-                runCmd :: Command Aff msg -> Effect Unit
-                runCmd cmd = launchAff_ do
-                    delay $ Milliseconds 0.0 -- Make sure this call is actually async
-                    cmd { dispatch: liftEffect <<< dispatchMsg component, onStop: addSubscription component }
+          where
+            runCmd :: Command Aff msg -> Effect Unit
+            runCmd cmd = launchAff_ do
+              delay $ Milliseconds 0.0 -- Make sure this call is actually async
+              cmd { dispatch: liftEffect <<< dispatchMsg component, onStop: addSubscription component }
 
         addSubscription :: ReactComponentInstance -> Aff Unit -> Effect Unit
         addSubscription component sub = do
-            subs <- getSubscriptions component
-            setSubscriptions (launchAff_ sub : subs) component
+          subs <- getSubscriptions component
+          setSubscriptions (launchAff_ sub : subs) component
 
         stopSubscriptions :: ReactComponentInstance -> Effect Unit
         stopSubscriptions component = do
-            sequence_ =<< getSubscriptions component
-            setSubscriptions [] component
+          sequence_ =<< getSubscriptions component
+          setSubscriptions [] component
 
         subscriptionsField = "__subscriptions"
         getSubscriptions = getField @(Array (Effect Unit)) subscriptionsField >>> map (fromMaybe [])
         setSubscriptions = setField @(Array (Effect Unit)) subscriptionsField
+
+        unmountedField = "__unmounted"
+        getUnmounted = getField @Boolean unmountedField >>> map (fromMaybe false)
+        setUnmounted = setField @Boolean unmountedField
 
 -- | Given a `ComponentDef'`, binds that def to a freshly created React class,
 -- | instantiates that class, and returns a rendering function.

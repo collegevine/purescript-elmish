@@ -17,6 +17,7 @@ export function assignState_(component, state) {
 export var render_ = ReactDOM.render;
 export var hydrate_ = ReactDOM.hydrate;
 export var renderToString = (ReactDOMServer && ReactDOMServer.renderToString) || (_ => "");
+export var unmount_ = ReactDOM.unmountComponentAtNode
 
 export function createElement_(component, props, children) {
   // The type of `children` is `Array ReactElement`. If we pass that in as
