@@ -7,12 +7,11 @@ import Effect.Aff.AVar as AVar
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (liftEffect)
 import Effect.Ref as Ref
-import Elmish (ComponentDef, Transition, forks, (<|))
-import Elmish.Component (ComponentName(..), wrapWithLocalState)
-import Elmish.HTML.Styled as H
+import Elmish (ComponentDef, Transition, forks)
 import Elmish.Subscription (Subscription(..), subscribe)
 import Elmish.Test (clickOn, find, testComponent, text, waitUntil, (>>))
 import Test.Examples.Counter as Counter
+import Test.Examples.WrapperComponent (wrapperComponent)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (fail, shouldEqual)
 
@@ -104,20 +103,3 @@ subscriptionViaSubscriptionApi { alive, trigger } =
           else fail "Triggered while not alive"
 
     pure $ liftEffect $ Ref.write false alive
-
--- Wraps another component, instantiating it via `wrapWithLocalState`, so that
--- it would mount/unmount when toggled, and displays two buttons for toggling
--- it. The host test would click the buttons to show/hide the inner component
--- and verify that it correctly mounted/unmounted.
-wrapperComponent :: ∀ msg state. String -> ComponentDef msg state -> ComponentDef Boolean Boolean
-wrapperComponent className inner = { init: pure false, update, view }
-  where
-    update _ s = pure s
-
-    view s dispatch = H.fragment
-      [ H.button_ (className <> " t--show-child") { onClick: dispatch <| true } "Show"
-      , H.button_ (className <> " t--hide-child") { onClick: dispatch <| false } "Hide"
-      , if s
-          then wrapWithLocalState (ComponentName "Inner") (const inner) unit
-          else H.empty
-      ]

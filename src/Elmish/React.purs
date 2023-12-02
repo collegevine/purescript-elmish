@@ -14,6 +14,7 @@ module Elmish.React
     , setState
     , render
     , renderToString
+    , unmount
     , module Ref
     ) where
 
@@ -139,6 +140,10 @@ foreign import hydrate_ :: EffectFn2 ReactElement HTML.Element Unit
 
 -- FFI import of ReactDOM.renderToString (used for server-side rendering)
 foreign import renderToString :: ReactElement -> String
+
+unmount :: HTML.Element -> Effect Unit
+unmount = runEffectFn1 unmount_
+foreign import unmount_ :: EffectFn1 HTML.Element Unit
 
 -- This instance allows including `ReactElement` in view arguments.
 instance CanPassToJavaScript ReactElement
