@@ -12,7 +12,7 @@ import Elmish.HTML.Styled as H
 import Elmish.Test (clickOn, find, nearestEnclosingReactComponentName, testComponent, text, (>>))
 import Test.Examples.Counter as Counter
 import Test.Examples.WrapperComponent (wrapperComponent)
-import Test.Spec (Spec, describe, it, pending')
+import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
 
 spec :: Spec Unit
@@ -32,7 +32,7 @@ spec = describe "Elmish.Component" do
       find "div" >> nearestEnclosingReactComponentName >>= shouldEqual "ElmishRoot"
 
   describe "does not issue new messages after unmounting" do
-    pending' "for top-level component" do
+    it "for top-level component" do
       c <- effectfulComponent
 
       liftEffect (Ref.read c.componentMounted) >>= shouldEqual false

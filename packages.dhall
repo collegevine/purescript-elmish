@@ -4,6 +4,7 @@ let upstream =
 
 in  upstream
   with elmish-testing-library.dependencies = [ "prelude", "aff-promise" ]
+  with elmish-testing-library.version = "v0.3.2"
   with elmish-html =
     { dependencies = [ "prelude", "record" ]
     , repo = "https://github.com/collegevine/purescript-elmish-html.git"
