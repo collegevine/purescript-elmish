@@ -35,6 +35,7 @@ instance CanPassToJavaScript (Ref a)
 callbackRef :: forall el. Maybe el -> (Maybe el -> Effect Unit) -> Ref el
 callbackRef ref setRef = mkCallbackRef $ mkEffectFn1 \ref' -> case ref, Nullable.toMaybe ref' of
   Nothing, Nothing -> pure unit
+  Just _, Nothing -> pure unit
   Just r, Just r'
     | eqByReference r r' -> pure unit
     | otherwise -> setRef $ Just r'
