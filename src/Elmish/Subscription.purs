@@ -47,14 +47,18 @@
 -- |
 module Elmish.Subscription
   ( Subscription(..)
+  , hush
+  , quasiBind
   , subscribe
+  , subscribe'
   , subscribeMaybe
   )
   where
 
 import Prelude
 
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe, maybe)
+import Effect.Aff (Aff, launchAff_)
 import Effect.Class (class MonadEffect, liftEffect)
 import Elmish.Component (Transition', forks)
 import Elmish.Dispatch (Dispatch)
@@ -90,7 +94,7 @@ derive instance Functor (Subscription m)
 -- |          update = ...
 -- |
 subscribe :: ∀ m a msg. MonadEffect m => (a -> msg) -> Subscription m a -> Transition' m msg Unit
-subscribe f = subscribeMaybe (Just <<< f)
+subscribe f sub = sub <#> f # subscribe'
 
 -- | Similar to `subscribe`, but instead of a message constructor, takes a
 -- | function returning `Maybe Message` for issuing messages conditionally.
@@ -113,7 +117,49 @@ subscribe f = subscribeMaybe (Just <<< f)
 -- |          update = ...
 -- |
 subscribeMaybe :: ∀ m a msg. MonadEffect m => (a -> Maybe msg) -> Subscription m a -> Transition' m msg Unit
-subscribeMaybe f (Subscription go) =
+subscribeMaybe f sub = sub <#> f # hush # subscribe'
+
+-- | A version of `subscribe` without the convenience mapping function. This
+-- | function is to support the implementation of lower-level primitives. In
+-- | most cases, in actual UI component code, `subscribe` should be used.
+subscribe' :: ∀ m a. MonadEffect m => Subscription m a -> Transition' m a Unit
+subscribe' (Subscription go) =
   forks \{ dispatch, onStop } -> do
-    stop <- go $ f >>> maybe (pure unit) dispatch
+    stop <- go dispatch
     liftEffect $ onStop stop
+
+-- | This is almost a `bind`, but not quite. The continuation function, instead
+-- | of returning another `Subscription` (as a well behaved `bind` would),
+-- | returns an `Aff`. Another way of looking at it is as a version of `map`,
+-- | but with the mapping function being effectful.
+-- |
+-- | This is useful for building more complicated subscriptions on top of
+-- | simpler ones. One can imagine a subscription that listens to a websocket,
+-- | and upon getting a signal, fetches some data from the server, and this data
+-- | becomes the "output" value of the subscription.
+-- |
+-- | Q: Why not have a real `bind`?
+-- |
+-- | A: Since subscriptions are basically "infinite" streams of future values,
+-- |    every incoming value from the outer subscription will have to create a
+-- |    new subscription and keep it indefinitely, or until the outer
+-- |    subscription is stopped. This means that the `bind` will have to have a
+-- |    local store of all new subscriptions created by the continuation
+-- |    function, so that it can stop all of them when the outer subscription is
+-- |    stopped. And this is just a memory leak. To be sure, there are ways
+-- |    around that (basically reinventing reactive programming), but this use
+-- |    case does not require that level of complexity.
+-- |
+quasiBind :: ∀ m a b. (a -> Aff b) -> Subscription m a -> Subscription m b
+quasiBind f (Subscription go) =
+  Subscription \dispatch ->
+    go \a -> launchAff_ do
+      b <- f a
+      liftEffect $ dispatch b
+
+-- | Given a `Maybe`-producing subscription, creates a new subscription that
+-- | filters out `Nothing` values and fires only on receiving `Just`.
+hush :: ∀ m a. Subscription m (Maybe a) -> Subscription m a
+hush (Subscription go) =
+  Subscription \dispatch ->
+    go $ maybe (pure unit) dispatch
