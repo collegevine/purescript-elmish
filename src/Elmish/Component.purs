@@ -255,31 +255,38 @@ withTrace def = def { update = tracingUpdate, view = tracingView }
 -- | "renders" it as a React DOM element, suitable for passing to
 -- | `ReactDOM.render` or embedding in a JSX DOM tree.
 bindComponent :: ∀ msg state
-     . BaseComponent                 -- ^ A JS class inheriting from React.Component to serve as base
-    -> ComponentDef msg state        -- ^ The component definition
+     . BaseComponent state msg       -- ^ A JS class inheriting from React.Component to serve as base
     -> StateStrategy state           -- ^ Strategy of storing state
+    -> ComponentDef msg state        -- ^ The component definition
     -> ReactElement
-bindComponent cmpt def stateStrategy =
+bindComponent cmpt stateStrategy = \def -> -- Explicit lambda to make sure `def` isn't captured by closures under `where`
     runFn2 instantiateBaseComponent cmpt
-      { init: initialize
+      { def
+      , init: let (Transition s _) = def.init in (stateStrategy { initialState: s }).initialize
       , render
-      , componentDidMount: runCmds initialCmds
+      , componentDidMount: let (Transition _ cmds) = def.init in runCmds cmds
       , componentWillUnmount: setUnmounted true <> stopSubscriptions
       }
     where
-        Transition initialState initialCmds = def.init
+        getState component = do
+          Transition s _ <- instancePropDef component <#> _.init
+          (stateStrategy { initialState: s }).getState component
 
-        { initialize, getState, setState } = stateStrategy { initialState }
+        setState component newState callback = do
+          Transition s _ <- instancePropDef component <#> _.init
+          (stateStrategy { initialState: s }).setState component newState callback
 
         render :: ReactComponentInstance -> Effect ReactElement
         render component = do
           state <- getState component
-          pure $ def.view state $ dispatchMsg component
+          view <- instancePropDef component <#> _.view
+          pure $ view state $ dispatchMsg component
 
         dispatchMsg :: ReactComponentInstance -> Dispatch msg
         dispatchMsg component msg = unlessM (getUnmounted component) do
           oldState <- getState component
-          let Transition newState cmds = def.update oldState msg
+          update <- instancePropDef component <#> _.update
+          let Transition newState cmds = update oldState msg
           setState component newState $ runCmds cmds component
 
         runCmds :: Array (Command Aff msg) -> ReactComponentInstance -> Effect Unit
@@ -320,7 +327,7 @@ construct :: ∀ msg state
 construct def = do
     stateStorage <- liftEffect dedicatedStorage
     pure $ withFreshComponent \cmpt ->
-        bindComponent cmpt def stateStorage
+        bindComponent cmpt stateStorage def
 
 -- | Monad transformation applied to `ComponentDef'`
 nat :: ∀ m n msg state. (m ~> n) -> ComponentDef' m msg state -> ComponentDef' n msg state
@@ -362,8 +369,8 @@ wrapWithLocalState :: ∀ msg state args
     -> args
     -> ReactElement
 wrapWithLocalState name mkDef =
-    runFn2 withCachedComponent name \cmpt args ->
-        bindComponent cmpt (mkDef args) localState
+    runFn2 withCachedComponent name \cmpt ->
+        bindComponent cmpt localState <<< mkDef
 
 -- | A unique name for a component created via `wrapWithLocalState`. These names
 -- | don't technically need to be _completely_ unique, but they do need to be
@@ -397,14 +404,15 @@ newtype ComponentName = ComponentName String
 
 -- Props for the React component that is used as base for this framework. The
 -- component itself is defined in the foreign module.
-type BaseComponentProps =
-  { init :: ReactComponentInstance -> Effect Unit
+type BaseComponentProps state msg =
+  { def :: ComponentDef msg state
+  , init :: ReactComponentInstance -> Effect Unit
   , render :: ReactComponentInstance -> Effect ReactElement
   , componentDidMount :: ReactComponentInstance -> Effect Unit
   , componentWillUnmount :: ReactComponentInstance -> Effect Unit
   }
 
-type BaseComponent = ReactComponent BaseComponentProps
+type BaseComponent state msg = ReactComponent (BaseComponentProps state msg)
 
 -- This is just a call to `React.createElement`, but we can't use the
 -- general-purpose `createElement` function from `./React.purs`, because it
@@ -413,7 +421,7 @@ type BaseComponent = ReactComponent BaseComponentProps
 -- possible to make this type passable to JS by using `Foreign` and maybe even
 -- `unsafeCoerce` in places, but I have decided it wasn't worth it, because this
 -- is just one place at the core of the framework.
-foreign import instantiateBaseComponent :: Fn2 BaseComponent BaseComponentProps ReactElement
+foreign import instantiateBaseComponent :: ∀ state msg. Fn2 (BaseComponent state msg) (BaseComponentProps state msg) ReactElement
 
 -- | On first call with a given name, this function returns a fresh React class.
 -- | On subsequent calls with the same name, it returns the same class. It has
@@ -423,9 +431,12 @@ foreign import instantiateBaseComponent :: Fn2 BaseComponent BaseComponentProps 
 -- This is essentially a hack, but not quite. It operates in the grey area
 -- between PureScript and JavaScript. See comments on `ComponentName` for a more
 -- detailed explanation.
-foreign import withCachedComponent :: ∀ a. Fn2 ComponentName (BaseComponent -> a) a
+foreign import withCachedComponent :: ∀ a state msg. Fn2 ComponentName (BaseComponent state msg -> a) a
 
 -- | Creates a fresh React component on every call. This is similar to
 -- | `withCachedComponent`, but without the cache - creates a new component
 -- | every time.
-foreign import withFreshComponent :: ∀ a. (BaseComponent -> a) -> a
+foreign import withFreshComponent :: ∀ a state msg. (BaseComponent state msg -> a) -> a
+
+-- Retrieves the `this.props.def` from the given component
+foreign import instancePropDef :: ∀ state msg. ReactComponentInstance -> Effect (ComponentDef msg state)

@@ -15,6 +15,8 @@ export function withFreshComponent(f) {
 
 export var instantiateBaseComponent = React.createElement;
 
+export const instancePropDef = component => () => component.props.def
+
 function mkFreshComponent(name) {
   class ElmishComponent extends React.Component {
     constructor(props) {
