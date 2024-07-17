@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   time, which could lead to using stale values in complex scenarios where
   `ComponentDef` is not constant, but depends on arguments. #83
 
-- **Breaking**: Change the order of arguments of `bindComponent`
+- **Breaking**: Changed the order of arguments of `bindComponent`
 
 ## 0.11.4
 
