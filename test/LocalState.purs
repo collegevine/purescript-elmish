@@ -3,7 +3,9 @@ module Test.LocalState (spec) where
 import Prelude
 
 import Data.Array (length)
-import Elmish ((<|))
+import Effect.Aff (Milliseconds(..), delay)
+import Effect.Aff.Class (liftAff)
+import Elmish (fork, (<|))
 import Elmish.Component (ComponentName(..), wrapWithLocalState)
 import Elmish.HTML.Styled as H
 import Elmish.Test (clickOn, exists, find, findAll, forEach, nearestEnclosingReactComponentName, testComponent, text, (>>))
@@ -61,6 +63,35 @@ spec = describe "Elmish.Component.wrapWithLocalState" do
       findAll ".t--counter" <#> length >>= shouldEqual 2
       findAll ".t--counter" >>= forEach (nearestEnclosingReactComponentName >>= shouldEqual "Elmish_Counter")
 
+  it "calls the correct closure of `update` when dispatching events" $
+    testComponent closureOuter do
+      find ".t--count" >> text >>= shouldEqual "0"
+      find ".t--increment" >> text >>= shouldEqual "10"
+      clickOn ".t--inc"
+      find ".t--count" >> text >>= shouldEqual "10"
+      find ".t--increment" >> text >>= shouldEqual "10"
+      clickOn ".t--increase-increment"
+      find ".t--count" >> text >>= shouldEqual "10"
+      find ".t--increment" >> text >>= shouldEqual "11"
+      clickOn ".t--long-inc"
+      liftAff $ delay $ Milliseconds 20.0
+      find ".t--count" >> text >>= shouldEqual "21"
+      find ".t--increment" >> text >>= shouldEqual "11"
+
+      -- We're going to initiate a "long inc" and while it's in flight, we're
+      -- going to increase increment. If the closure that captured the previous
+      -- value of `increment` survives until after the long inc is done, the
+      -- resulting count will be incorrectly set at 21 + 11 = 32. If the old
+      -- value of `increment` wasn't captured and the fresh value is used, the
+      -- count will be 21 + 12 = 33.
+      clickOn ".t--long-inc"
+      liftAff $ delay $ Milliseconds 5.0
+      clickOn ".t--increase-increment"
+      find ".t--count" >> text >>= shouldEqual "21"
+      find ".t--increment" >> text >>= shouldEqual "12"
+      liftAff $ delay $ Milliseconds 15.0
+      find ".t--count" >> text >>= shouldEqual "33"
+
   where
     wrappedCounter =
       wrapWithLocalState (ComponentName "Counter") \c ->
@@ -89,3 +120,29 @@ spec = describe "Elmish.Component.wrapWithLocalState" do
           "IncInitialCount" -> pure state { initialCount = state.initialCount + 1 }
           _ -> pure state
 
+    closureOuter =
+      { init: pure { increment: 10 }
+      , update: \state -> case _ of
+          "IncreaseIncrement" -> pure state { increment = state.increment + 1 }
+          _ -> pure state
+      , view: \state dispatch ->
+          H.fragment
+          [ H.button_ "t--increase-increment" { onClick: dispatch <| "IncreaseIncrement" } "."
+          , H.p "t--increment" $ show state.increment
+          , closureInner state.increment
+          ]
+      }
+
+    closureInner = wrapWithLocalState (ComponentName "Inner") \increment ->
+      { init: pure { count: 0 }
+      , update: \state -> case _ of
+          "Inc" -> pure state { count = state.count + increment }
+          "LongInc" -> fork (delay (Milliseconds 10.0) $> "Inc") *> pure state
+          _ -> pure state
+      , view: \state dispatch ->
+          H.fragment
+          [ H.button_ "t--inc" { onClick: dispatch <| "Inc" } "."
+          , H.button_ "t--long-inc" { onClick: dispatch <| "LongInc" } "."
+          , H.p "t--count" $ show $ state.count
+          ]
+      }
