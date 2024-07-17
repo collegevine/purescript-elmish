@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed a bug that allowed `ComponentDef` to be captured in closures for a long
   time, which could lead to using stale values in complex scenarios where
-  `ComponentDef` is not constant, but depends on arguments. #83
+  `ComponentDef` is not constant, but depends on arguments. See [#83](https://github.com/collegevine/purescript-elmish/pull/83).
 
 - **Breaking**: Changed the order of arguments of `bindComponent`
 
