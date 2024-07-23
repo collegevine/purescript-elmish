@@ -30,8 +30,16 @@ github_username:  collegevine
 theme: just-the-docs
 plugins_dir: ./_plugins
 permalink: pretty
+search_enabled: false
 
 footer_content: "Copyright &copy; 2018-2022 CollegeVine"
+
+gh_edit_link: true
+gh_edit_link_text: "Edit this page on GitHub."
+gh_edit_repository: "https://github.com/collegevine/purescript-elmish"
+gh_edit_branch: "master"
+gh_edit_source: "docs"
+gh_edit_view_mode: "tree"
 
 defaults:
   - scope:
