@@ -7,6 +7,7 @@ import Effect.Aff (launchAff_)
 import Test.Component as Component
 import Test.Foreign as Foreign
 import Test.LocalState as LocalState
+import Test.ReactElement as ReactElement
 import Test.Spec.Reporter (specReporter)
 import Test.Spec.Runner (runSpec)
 import Test.Subscriptions as Subscriptions
@@ -17,3 +18,4 @@ main = launchAff_ $ runSpec [specReporter] do
   Component.spec
   LocalState.spec
   Subscriptions.spec
+  ReactElement.spec

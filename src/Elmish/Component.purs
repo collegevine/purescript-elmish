@@ -28,9 +28,9 @@ import Effect (Effect, foreachE)
 import Effect.Aff (Aff, Milliseconds(..), delay, launchAff_)
 import Effect.Class (class MonadEffect, liftEffect)
 import Elmish.Dispatch (Dispatch)
-import Elmish.React (ReactComponent, ReactComponentInstance, ReactElement, getField, setField)
+import Elmish.React (ReactComponent, ReactComponentInstance, ReactElement)
+import Elmish.React.Internal (Field(..), getField, setField)
 import Elmish.State (StateStrategy, dedicatedStorage, localState)
-import Elmish.Trace (traceTime)
 
 -- | A UI component state transition: wraps the new state value together with a
 -- | (possibly empty) list of effects that the transition has caused (called
@@ -243,10 +243,10 @@ withTrace :: ∀ m msg state
 withTrace def = def { update = tracingUpdate, view = tracingView }
     where
         tracingUpdate s m =
-            let (Transition s cmds) = traceTime "Update" \_ -> def.update s $ Debug.spy "Message" m
+            let (Transition s cmds) = Debug.traceTime "Update" \_ -> def.update s $ Debug.spy "Message" m
             in Transition (Debug.spy "State" s) cmds
         tracingView s d =
-            traceTime "Rendering" \_ -> def.view s d
+            Debug.traceTime "Rendering" \_ -> def.view s d
 
 -- | This function is low level, not intended for a use in typical consumer
 -- | code. Use `construct` or `wrapWithLocalState` instead.
@@ -307,13 +307,13 @@ bindComponent cmpt stateStrategy = \def -> -- Explicit lambda to make sure `def`
           sequence_ =<< getSubscriptions component
           setSubscriptions [] component
 
-        subscriptionsField = "__subscriptions"
-        getSubscriptions = getField @(Array (Effect Unit)) subscriptionsField >>> map (fromMaybe [])
-        setSubscriptions = setField @(Array (Effect Unit)) subscriptionsField
+        subscriptionsField = Field @"__subscriptions" @(Array (Effect Unit))
+        getSubscriptions = getField subscriptionsField >>> map (fromMaybe [])
+        setSubscriptions = setField subscriptionsField
 
-        unmountedField = "__unmounted"
-        getUnmounted = getField @Boolean unmountedField >>> map (fromMaybe false)
-        setUnmounted = setField @Boolean unmountedField
+        unmountedField = Field @"__unmounted" @Boolean
+        getUnmounted = getField unmountedField >>> map (fromMaybe false)
+        setUnmounted = setField unmountedField
 
 -- | Given a `ComponentDef'`, binds that def to a freshly created React class,
 -- | instantiates that class, and returns a rendering function.

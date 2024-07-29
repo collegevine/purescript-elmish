@@ -1,31 +1,31 @@
 module Elmish.React
-    ( ReactElement
-    , ReactComponent
-    , ReactComponentInstance
-    , class ValidReactProps
-    , class ReactChildren, asReactChildren
-    , assignState
-    , createElement
-    , createElement'
-    , getField
-    , getState
-    , hydrate
-    , setField
-    , setState
-    , render
-    , renderToString
-    , unmount
-    , module Ref
-    ) where
+  ( ReactElement
+  , ReactComponent
+  , ReactComponentInstance
+  , class ValidReactProps
+  , class ReactChildren, asReactChildren
+  , assignState
+  , createElement
+  , createElement'
+  , empty
+  , fragment
+  , getState
+  , hydrate
+  , setState
+  , render
+  , renderToString
+  , text
+  , unmount
+  , module Ref
+  ) where
 
 import Prelude
 
 import Data.Function.Uncurried (Fn3, runFn3)
-import Data.Maybe (Maybe)
 import Data.Nullable (Nullable)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, runEffectFn1, runEffectFn2, runEffectFn3)
-import Elmish.Foreign (class CanPassToJavaScript, class CanReceiveFromJavaScript, Foreign, readForeign)
+import Elmish.Foreign (class CanPassToJavaScript)
 import Elmish.React.Ref (Ref, callbackRef) as Ref
 import Prim.TypeError (Text, class Fail)
 import Unsafe.Coerce (unsafeCoerce)
@@ -33,6 +33,9 @@ import Web.DOM as HTML
 
 -- | Instantiated subtree of React DOM. JSX syntax produces values of this type.
 foreign import data ReactElement :: Type
+
+instance Semigroup ReactElement where append = appendElement_
+instance Monoid ReactElement where mempty = empty
 
 -- | This type represents constructor of a React component with a particular
 -- | behavior. The type prameter is the record of props (in React lingo) that
@@ -82,6 +85,20 @@ createElement' :: ∀ props
     -> ReactElement
 createElement' component props = createElement component props ([] :: Array ReactElement)
 
+-- | Empty React element.
+empty :: ReactElement
+empty = unsafeCoerce false
+
+-- | Render a plain string as a React element.
+text :: String -> ReactElement
+text = unsafeCoerce
+
+-- | Wraps multiple React elements as a single one (import of React.Fragment)
+fragment :: Array ReactElement -> ReactElement
+fragment = createElement fragment_ {}
+
+foreign import fragment_ :: ReactComponent {}
+foreign import appendElement_ :: ReactElement -> ReactElement -> ReactElement
 
 -- | Asserts that the given type is a valid React props structure. Currently
 -- | there are three rules for what is considered "valid":
@@ -111,14 +128,6 @@ foreign import getState_ :: ∀ state. EffectFn1 ReactComponentInstance (Nullabl
 setState :: ∀ state. ReactComponentInstance -> state -> (Effect Unit) -> Effect Unit
 setState = runEffectFn3 setState_
 foreign import setState_ :: ∀ state. EffectFn3 ReactComponentInstance state (Effect Unit) Unit
-
-getField :: ∀ @a. CanReceiveFromJavaScript a => String -> ReactComponentInstance -> Effect (Maybe a)
-getField field object = runEffectFn2 getField_ field object <#> readForeign @a
-foreign import getField_ :: EffectFn2 String ReactComponentInstance Foreign
-
-setField :: ∀ @a. CanPassToJavaScript a => String -> a -> ReactComponentInstance -> Effect Unit
-setField = runEffectFn3 setField_
-foreign import setField_ :: ∀ a. EffectFn3 String a ReactComponentInstance Unit
 
 -- | The equivalent of `this.state = x`, as opposed to `setState`, which is the
 -- | equivalent of `this.setState(x)`. This function is used in a component's

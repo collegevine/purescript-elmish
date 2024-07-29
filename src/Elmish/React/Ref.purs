@@ -31,7 +31,13 @@ instance CanPassToJavaScript (Ref a)
 -- | view :: State -> Dispatch Message -> ReactElement
 -- | view state dispatch =
 -- |   H.input_ "" { ref: callbackRef state.inputElement (dispatch <<< RefChanged), … }
+-- |
+-- | update :: State -> Message -> Transition Message State
+-- | update state = case _ of
+-- |   RefChanged ref -> pure state { inputElement = ref }
+-- |   …
 -- | ```
+-- |
 callbackRef :: forall el. Maybe el -> (Maybe el -> Effect Unit) -> Ref el
 callbackRef ref setRef = mkCallbackRef $ mkEffectFn1 \ref' -> case ref, Nullable.toMaybe ref' of
   Nothing, Nothing -> pure unit

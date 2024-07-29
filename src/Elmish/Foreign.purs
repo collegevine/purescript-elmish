@@ -195,7 +195,7 @@ instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Nullable a) whe
       | otherwise =
           case validateForeignType @a v of
             Valid -> Valid
-            Invalid err -> Invalid err { expected = "Nullable " <> err.expected }
+            Invalid err -> Invalid err { expected = if err.path == "" then "Nullable " <> err.expected else err.expected }
 
 instance CanPassToJavaScript a => CanPassToJavaScript (Opt a)
 instance CanReceiveFromJavaScript a => CanReceiveFromJavaScript (Opt a) where

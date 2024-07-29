@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.13.0
+
+### Changed
+* `ReactElement` is now a full `Monoid` with `empty` as identity and append
+  creating React.Fragment elements.
+* **Breaking**: module `Elmish.React.DOM` has been removed and its contents
+  moved to `Elmish.React`.
+* **Breaking**: module `Elmish.Trace` has been removed. Its sole export has been
+  part of the standard `debug` library for a while now.
+* Fixed a bug with `readForeign` and nested `Nullable`s: reading `[1,"foo",2]`
+  as `Nullable (Array Int)` would complain that the second element is bogus
+  (which is true) and incorrectly state that the expected type was `Nullable Int`.
+
 ## 0.12.0
 
 ### Changed

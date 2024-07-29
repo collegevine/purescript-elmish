@@ -19,6 +19,23 @@ export var hydrate_ = ReactDOM.hydrate;
 export var renderToString = (ReactDOMServer && ReactDOMServer.renderToString) || (_ => "");
 export var unmount_ = ReactDOM.unmountComponentAtNode
 
+export var fragment_ = React.Fragment;
+
+export var appendElement_ = a => b => {
+  const childrenOf = x => {
+    if (x === false || x === null || typeof x === 'undefined') return []
+    if (x.type === React.Fragment) {
+      const children = x.props?.children
+      if (children instanceof Array) return children
+      if (children === false || children === null || typeof children === 'undefined') return []
+      return [children]
+    }
+    return [x]
+  }
+  const allChildren = [...childrenOf(a), ...childrenOf(b)]
+  return allChildren.length === 0 ? false : React.createElement(React.Fragment, null, allChildren)
+}
+
 export function createElement_(component, props, children) {
   // The type of `children` is `Array ReactElement`. If we pass that in as
   // third parameter of `React.createElement` directly, React complains about

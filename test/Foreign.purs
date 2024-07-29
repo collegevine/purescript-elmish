@@ -5,7 +5,7 @@ import Prelude
 import Data.Array ((!!))
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
-import Data.Nullable (Nullable, notNull, null)
+import Data.Nullable (Nullable, notNull, null, toMaybe)
 import Elmish.Foreign (class CanReceiveFromJavaScript, readForeign, readForeign')
 import Foreign (unsafeToForeign)
 import Foreign.Object (Object)
@@ -56,6 +56,19 @@ spec = describe "Elmish.Foreign" do
       (read @{ x :: Nullable { y :: Int } } { x: null :: _ Int })
         `shouldEqual` Just { x: null }
 
+      (read' @(Nullable (Array Int)) null <#> toMaybe) `shouldEqual` Right Nothing
+      (read' @(Array (Nullable Int)) [f 42, f 5, f null] <#> map toMaybe) `shouldEqual` Right [Just 42, Just 5, Nothing]
+
+      (read' @(Nullable { x :: Int }) null <#> toMaybe) `shouldEqual` Right Nothing
+
+      let r = read' @(Nullable { x :: Int, y :: Nullable { z :: Int } }) { x: 42, y: null }
+      (r <#> toMaybe <#> map _.x) `shouldEqual` Right (Just 42)
+      (r <#> toMaybe <#> map _.y <#> map toMaybe) `shouldEqual` Right (Just Nothing)
+
+      let q = read @{ foo :: String, one :: Nullable Int } { foo: "bar", one: null }
+      (q <#> _.foo) `shouldEqual` Just "bar"
+      (q <#> _.one <#> toMaybe) `shouldEqual` Just Nothing
+
     it "treats missing record fields as null" do
       read { x: "foo" } `shouldEqual` Just { x: "foo", y: null :: _ Int }
 
@@ -69,6 +82,20 @@ spec = describe "Elmish.Foreign" do
 
       it "nullable" do
         (read' @(Nullable Int) "foo") `shouldEqual` Left "Expected Nullable Int but got: \"foo\""
+
+      it "nullable array" do
+        (read' @(Nullable (Array Int)) [f 42, f "foo"]) `shouldEqual` Left "[1]: expected Int but got: \"foo\""
+        (read' @(Nullable (Array Int)) [f 42, f 5, f "foo"]) `shouldEqual` Left "[2]: expected Int but got: \"foo\""
+
+      it "nullable record" do
+        (read' @(Nullable { x :: Int, y :: Boolean }) { x: 42, y: "foo" })
+          `shouldEqual` Left ".y: expected Boolean but got: \"foo\""
+
+        (read' @(Nullable { x :: Int, y :: { z :: Int } }) { x: 42, y: "foo" })
+          `shouldEqual` Left ".y: expected Object but got: \"foo\""
+
+        (read' @(Nullable { x :: Int, y :: { z :: Nullable Int } }) { x: 42, y: null })
+          `shouldEqual` Left ".y: expected Object but got: <null>"
 
       it "nested within array" do
         (read' @(Array Int) [f 42, f "foo"]) `shouldEqual` Left "[1]: expected Int but got: \"foo\""
