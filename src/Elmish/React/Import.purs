@@ -30,7 +30,7 @@
 -- |
 -- |
 -- |     -- PureScript
--- |     module MyComponent(Props, OptProps, myComponent) where
+-- |     module MyComponent(Props, myComponent) where
 -- |
 -- |     import Data.Undefined.NoProblem (Opt)
 -- |     import Elmish.React (createElement)
@@ -38,7 +38,7 @@
 -- |
 -- |     type Props = ( world :: String, hello :: Opt String, highlight :: Opt Boolean )
 -- |
--- |     myComponent :: ImportedReactComponentConstructor Props OptProps
+-- |     myComponent :: ImportedReactComponentConstructor Props
 -- |     myComponent = createElement myComponent_
 -- |
 -- |     foreign import myComponent_ :: ImportedReactComponent
@@ -46,7 +46,7 @@
 -- |
 -- |     -- PureScript use site
 -- |     import MyComponent (myComponent)
--- |     import Elmish.React.DOM (fragment)
+-- |     import Elmish.React (fragment) as H
 -- |
 -- |     view :: ...
 -- |     view = H.fragment
