@@ -321,4 +321,82 @@ This mode of composition works best under these conditions:
    `this.state` property), which turns out to be not guaranteed from occasional
    unwarranted reset.
 
-## Events from child components
+## Higher-order message pattern
+
+For more complex scenarios, you can design child components that store parent messages in their state and fire them as needed:
+
+```haskell
+module Form where
+
+type State msg =
+  { value :: String
+  , onSubmit :: msg
+  , onCancel :: msg
+  }
+
+data Message msg = Change String | ParentMessage msg
+
+init :: ∀ msg. { onSubmit :: msg, onCancel :: msg } -> Transition (Message msg) State
+init callbacks = pure
+  { value: ""
+  , onSubmit: callbacks.onSubmit
+  , onCancel: callbacks.onCancel
+  }
+
+view :: ∀ msg. State msg -> Dispatch msg -> ReactElement
+view state dispatch =
+  H.form ""
+  [ H.input_ ""
+    { value: state.value
+    , onChange: \e -> dispatch <| state.onChange E.inputText e
+    }
+  , H.button_ "" { onClick: dispatch <| state.onSubmit } "Submit"
+  , H.button_ "" { onClick: dispatch <| state.onCancel } "Cancel"
+  ]
+
+update :: ∀ msg. State msg -> (Message msg) -> Transition (Message msg) (State msg)
+update state (Change newValue) =
+  pure state { value = newValue }
+update state (ParentMessage _) =
+  pure state
+```
+
+Usage in parent:
+
+```haskell
+module Parent where
+
+data Message
+  = FormSubmitted
+  | FormCancelled
+  | FormMsg (Form.Message Message)
+
+type State =
+  { form :: Form.State Message
+  , formVisible :: Boolean
+  , submitted :: Boolean
+  }
+
+init :: Transition Message State
+init = do
+  form <- Form.init
+    { onSubmit: FormSubmitted
+    , onCancel: FormCancelled
+    }
+  pure { form, formVisible: true, submitted: false }
+
+update :: State -> Message -> Transition Message State
+update state (FormMsg (Form.ParentMessage m)) =
+  update state m  -- recursively handle parent message
+
+update state (FormMsg m) =
+  bimap FormMsg state { form = _ } $ Form.update state.form m
+
+update state FormSubmitted =
+  pure state { formVisible = false, submitted = true }
+
+update state FormCancelled =
+  pure state { formVisible = false }
+```
+
+This pattern allows child components to be highly reusable while maintaining type safety. The parent specifies exactly which messages to fire for different events.
