@@ -33,7 +33,7 @@ jobs:
       run: bundler exec jekyll build
 
     - name: Upload GH Pages artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-pages-artifact@v3
       with:
         path: docs/_site
         name: github-pages
@@ -46,9 +46,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build-docs
-    permissions:
-      pages: write
-      id-token: write
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
