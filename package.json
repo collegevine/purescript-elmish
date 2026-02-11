@@ -23,8 +23,8 @@
     }
   ],
   "scripts": {
-    "build": "spago build --no-psa",
-    "test": "spago -x test.dhall test --no-psa"
+    "build": "spago build",
+    "test": "spago test"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "7.4.0",
