@@ -1,38 +1,36 @@
 package:
   name: elmish
   publish:
-    version: 0.13.1
+    version: 0.14.0
     license: MIT
     location:
       githubOwner: collegevine
       githubRepo: purescript-elmish
   dependencies:
-  - aff
-  - argonaut-core
-  - arrays
-  - bifunctors
-  - console
-  - debug
-  - effect
-  - either
-  - foldable-traversable
-  - foreign
-  - foreign-object
-  - functions
-  - integers
-  - js-date
-  - maybe
-  - nullable
-  - partial
-  - prelude
-  - refs
-  - safe-coerce
-  - type-equality
-  - typelevel-prelude
-  - undefined-is-not-a-problem
-  - unsafe-coerce
-  - web-dom
-  - web-html
+    - aff: ">=8.0.0 <9.0.0"
+    - argonaut-core: ">=7.0.0 <8.0.0"
+    - arrays: ">=7.3.0 <8.0.0"
+    - bifunctors: ">=6.1.0 <7.0.0"
+    - console: ">=6.1.0 <7.0.0"
+    - debug: ">=6.0.2 <7.0.0"
+    - effect: ">=4.0.0 <5.0.0"
+    - either: ">=6.1.0 <7.0.0"
+    - foldable-traversable: ">=6.0.0 <7.0.0"
+    - foreign: ">=7.0.0 <8.0.0"
+    - foreign-object: ">=4.1.0 <5.0.0"
+    - functions: ">=6.0.0 <7.0.0"
+    - integers: ">=6.0.0 <7.0.0"
+    - js-date: ">=8.0.0 <9.0.0"
+    - maybe: ">=6.0.0 <7.0.0"
+    - nullable: ">=6.0.0 <7.0.0"
+    - partial: ">=4.0.0 <5.0.0"
+    - prelude: ">=6.0.2 <7.0.0"
+    - refs: ">=6.0.0 <7.0.0"
+    - typelevel-prelude: ">=7.0.0 <8.0.0"
+    - undefined-is-not-a-problem: ">=1.1.0 <2.0.0"
+    - unsafe-coerce: ">=6.0.0 <7.0.0"
+    - web-dom: ">=6.0.0 <7.0.0"
+    - web-html: ">=4.1.1 <5.0.0"
   test:
     main: Test.Main
     dependencies:
@@ -45,16 +43,16 @@ workspace:
   extraPackages:
     elmish-html:
       dependencies:
-      - prelude
-      - record
-      - elmish
+        - prelude
+        - record
+        - elmish
       git: https://github.com/collegevine/purescript-elmish-html.git
-      ref: v0.11.1
+      ref: v0.12.0
     elmish-testing-library:
       dependencies:
-      - aff-promise
-      - prelude
-      - elmish
+        - aff-promise
+        - prelude
+        - elmish
       git: https://github.com/collegevine/purescript-elmish-testing-library.git
       ref: v0.3.2
   packageSet:

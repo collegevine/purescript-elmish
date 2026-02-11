@@ -10,3 +10,4 @@
 /.purs*
 /.psa*
 /.vscode
+/.spec-results
