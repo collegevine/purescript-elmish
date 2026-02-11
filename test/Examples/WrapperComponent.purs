@@ -2,7 +2,7 @@ module Test.Examples.WrapperComponent where
 
 import Prelude
 
-import Elmish (ComponentDef, (<|))
+import Elmish (ComponentDef)
 import Elmish.Component (ComponentName(..), wrapWithLocalState)
 import Elmish.HTML.Styled as H
 
@@ -16,8 +16,8 @@ wrapperComponent className inner = { init: pure false, update, view }
     update _ s = pure s
 
     view s dispatch = H.fragment
-      [ H.button_ (className <> " t--show-child") { onClick: dispatch <| true } "Show"
-      , H.button_ (className <> " t--hide-child") { onClick: dispatch <| false } "Hide"
+      [ H.button_ (className <> " t--show-child") { onClick: H.handle \_ -> dispatch true } "Show"
+      , H.button_ (className <> " t--hide-child") { onClick: H.handle \_ -> dispatch false } "Hide"
       , if s
           then wrapWithLocalState (ComponentName "Inner") (const inner) unit
           else H.empty

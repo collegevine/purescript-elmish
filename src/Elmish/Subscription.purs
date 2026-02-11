@@ -60,8 +60,8 @@ import Prelude
 import Data.Maybe (Maybe, maybe)
 import Effect.Aff (Aff, launchAff_)
 import Effect.Class (class MonadEffect, liftEffect)
-import Elmish.Component (Transition', forks)
 import Elmish.Dispatch (Dispatch)
+import Elmish.Component (Transition', forks)
 
 -- | Represents an external event, such as network, times, JS worker, etc.
 -- |

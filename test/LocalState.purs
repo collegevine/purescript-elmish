@@ -5,7 +5,7 @@ import Prelude
 import Data.Array (length)
 import Effect.Aff (Milliseconds(..), delay)
 import Effect.Aff.Class (liftAff)
-import Elmish (fork, (<|))
+import Elmish (fork)
 import Elmish.Component (ComponentName(..), wrapWithLocalState)
 import Elmish.HTML.Styled as H
 import Elmish.Test (clickOn, exists, find, findAll, forEach, nearestEnclosingReactComponentName, testComponent, text, (>>))
@@ -107,10 +107,10 @@ spec = describe "Elmish.Component.wrapWithLocalState" do
               if state.showFirst then wrappedCounter state.initialCount else H.empty
           , H.div "t--wrapper-2" $
               if state.showSecond then wrappedCounter state.initialCount else H.empty
-          , H.button_ "t--toggle-first" { onClick: dispatch <| "ToggleFirst" } "."
-          , H.button_ "t--toggle-second" { onClick: dispatch <| "ToggleSecond" } "."
-          , H.button_ "t--toggle-both" { onClick: dispatch <| "ToggleBoth" } "."
-          , H.button_ "t--inc-initial-count" { onClick: dispatch <| "IncInitialCount" } "."
+          , H.button_ "t--toggle-first" { onClick: H.handle \_ -> dispatch "ToggleFirst" } "."
+          , H.button_ "t--toggle-second" { onClick: H.handle \_ -> dispatch "ToggleSecond" } "."
+          , H.button_ "t--toggle-both" { onClick: H.handle \_ -> dispatch "ToggleBoth" } "."
+          , H.button_ "t--inc-initial-count" { onClick: H.handle \_ -> dispatch "IncInitialCount" } "."
           ]
 
         update state = case _ of
@@ -127,7 +127,7 @@ spec = describe "Elmish.Component.wrapWithLocalState" do
           _ -> pure state
       , view: \state dispatch ->
           H.fragment
-          [ H.button_ "t--increase-increment" { onClick: dispatch <| "IncreaseIncrement" } "."
+          [ H.button_ "t--increase-increment" { onClick: H.handle \_ -> dispatch "IncreaseIncrement" } "."
           , H.p "t--increment" $ show state.increment
           , closureInner state.increment
           ]
@@ -141,8 +141,8 @@ spec = describe "Elmish.Component.wrapWithLocalState" do
           _ -> pure state
       , view: \state dispatch ->
           H.fragment
-          [ H.button_ "t--inc" { onClick: dispatch <| "Inc" } "."
-          , H.button_ "t--long-inc" { onClick: dispatch <| "LongInc" } "."
+          [ H.button_ "t--inc" { onClick: H.handle \_ -> dispatch "Inc" } "."
+          , H.button_ "t--long-inc" { onClick: H.handle \_ -> dispatch "LongInc" } "."
           , H.p "t--count" $ show $ state.count
           ]
       }
