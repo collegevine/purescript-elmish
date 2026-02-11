@@ -36,7 +36,7 @@ view =
     , H.text " library"
     ]
   , H.img { src: "/img/welcome.png", width: 100, height: 200 }
-  , H.button { onClick: dispatch Login } "Click here to login"
+  , H.button { onClick: H.handle \_ -> dispatch Login } "Click here to login"
   ]
 ```
 
@@ -82,7 +82,7 @@ import Elmish.HTML as H
 view =
   H.div { className: "border bg-light" }
   [ H.p { className: "mt-4 mb-3" } "Click this button:"
-  , H.button { className: "btn btn-primary px-4", onClick: dispatch ButtonClicked } "Click me!"
+  , H.button { className: "btn btn-primary px-4", onClick: H.handle \_ -> dispatch ButtonClicked } "Click me!"
   ]
 ```
 
@@ -125,7 +125,7 @@ import Elmish.HTML.Styled as H
 view =
   H.div "border bg-light"
   [ H.p "mt-4 mb-3" "Click this button:"
-  , H.button_ "btn btn-primary px-4" { onClick: foo } "Click me!"
+  , H.button_ "btn btn-primary px-4" { onClick: ... } "Click me!"
   ]
 ```
 
@@ -143,8 +143,10 @@ library simply directly maps that to PureScript:
 onClick :: EventHandler SyntheticEvent
 ```
 
-`EventHandler` is just an alias for `EffectFn1`, so that it can be passed
-directly to React and understood.
+`EventHandler` is conceptually a JavaScript function taking one parameter, so
+that it can be passed directly to React and understood. But in PureScript it's
+an opaque type (i.e. with hidden constructor). Values of this type can be
+created with the `handle` function.
 
 The `SyntheticEvent` type is a `newtype` wrapping a record that directly
 represents React's `SyntheticEvent` as [described in its
@@ -157,32 +159,19 @@ import Elmish.HTML.Events as E
 data Message = ... | ButtonClicked { when :: Number } | ...
 
 H.button_ "btn btn-primary"
-  { onClick: dispatch <| \(E.SyntheticEvent e) -> ButtonClicked { when: e.timestamp }
+  { onClick: H.handle \(E.SyntheticEvent e) -> dispatch $ ButtonClicked { when: e.timestamp }
   }
   "Click me!"
 ```
 
-The handy `<|` operator takes care of creating an `EventHandler` value (aka
-`EffectFn1`) in a bit more ergonomic way. It takes the
-`dispatch` function on the left and an `event -> message` function on the right,
-and takes care of piping through from one to the other.
-
-Its friend, the `<?|` operator does basically the same thing, except the
-function it takes on the right is `event -> Maybe message`, allowing to either
-dispatch a message or not, depending on some condition:
-
-```haskell
-  { onClick: dispatch <?| \(E.SyntheticEvent e) ->
-      if e.defaultPrevented then Nothing else Just ButtonClicked
-  }
-```
+The `handle` function takes care of creating an `EventHandler` from a PureScript
+function `event -> Effect Unit`.
 
 If you don't need to examine the event object (often happens with `onClick`
-events), you can pass just a `message` instead of an `event -> message`
-function:
+events), just use underscore for parameter name:
 
 ```haskell
-  { onClick: dispatch <| ButtonClicked
+  { onClick: H.handle \_ -> dispatch ButtonClicked
   }
 ```
 
@@ -193,8 +182,8 @@ the same way:
 
 ```haskell
 H.div_ ""
-  { onMouseMove: dispatch <| \(E.MouseMove e) -> MouseMoved { x: e.pageX, y: e.pageY }
-  , onKeyPress: dispatch <?| \(E.KeyboardEvent e) -> if e.key == "Enter" then Just EnterPressed else Nothing
+  { onMouseMove: H.handle \(E.MouseMove e) -> dispatch $ MouseMoved { x: e.pageX, y: e.pageY }
+  , onKeyPress: H.handle \(E.KeyboardEvent e) -> when (e.key == "Enter") $ dispatch EnterPressed
   }
 ```
 
@@ -212,7 +201,7 @@ which does all of that in one go:
 ```haskell
 H.input_ ""
   { value: ...
-  , onChange: dispatch <| \e -> InputChanged (E.inputText e)
+  , onChange: H.handle \e -> dispatch $ InputChanged (E.inputText e)
   }
 ```
 
@@ -237,15 +226,12 @@ dispatching a message. Examples may include `stopPropagation`, `preventDefault`,
 or dispatching multiple messages (a discouraged practice, but sometimes
 necessary nevetherless).
 
-In these situations, the lowest possible level of event handling may be
-employed: the `handleEffect` function. As the name implies, this function takes
-an effectful handler (either `Effect Unit` or an `event -> Effect Unit`
-function) and returns an `EventHandler` value suitable for passing as a prop to
-an element:
+This can be achieved trivially via the `do` notation (or your favourite way of
+combining effects):
 
 ```haskell
 H.button_ ""
-  { onClick: E.handleEffect \e -> do
+  { onClick: H.handle \e -> do
       E.preventDefault e
       E.stopPropagation e
       dispatch ButtonClicked
@@ -253,13 +239,13 @@ H.button_ ""
   "Click me!"
 
 H.input_ ""
-  { onChange: E.handleEffect \e -> do
+  { onChange: H.handle \e -> do
       dispatch $ InputChanged (E.inputText e)
       dispatch ResetSomething
   }
 
 H.div_ ""
-  { onClick: E.handleEffect do  -- no parameter
+  { onClick: H.handle \_ -> do
       window >>= location >>= setHash "foo"
       dispatch NavigatedToHashFoo
   }

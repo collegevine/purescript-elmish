@@ -31,15 +31,15 @@ view :: State -> Dispatch Message -> ReactElement
 view state dispatch =
   H.div ""
   [ H.div "" $ "The current count is: " <> show state.count
-  , button "increase" (dispatch <| Inc)
-  , button "decrease" (dispatch <| Dec)
+  , button "increase" (dispatch Inc)
+  , button "decrease" (dispatch Dec)
   ]
 
-button :: String -> E.EventHandler E.SyntheticEvent -> ReactElement
+button :: String -> Effect Unit -> ReactElement
 button text onClick =
   H.div ""
   [ H.text $ "To " <> text <> " the count, click here: "
-  , H.button_ "btn btn-primary" { onClick } text
+  , H.button_ "btn btn-primary" { onClick: H.handle \_ -> onClick } text
   ]
 ```
 
@@ -61,15 +61,15 @@ view :: State -> Dispatch Message -> ReactElement
 view state dispatch =
   H.div ""
   [ H.div "" $ "The current count is: " <> show state.count
-  , button { text: "increase", onClick: dispatch <| Inc }
-  , button { text: "decrease", onClick: dispatch <| Dec }
+  , button { text: "increase", onClick: dispatch Inc }
+  , button { text: "decrease", onClick: dispatch Dec }
   ]
 
-button :: { text :: String, onClick :: E.EventHandler E.SyntheticEvent } -> ReactElement
+button :: { text :: String, onClick :: Effect Unit } -> ReactElement
 button { text, onClick } =
   H.div ""
   [ H.text $ "To " <> text <> " the count, click here: "
-  , H.button_ "btn btn-primary" { onClick } text
+  , H.button_ "btn btn-primary" { onClick: H.handle \_ -> onClick } text
   ]
 ```
 
@@ -208,7 +208,7 @@ data Message = Toggle
 view :: { title :: String, content :: ReactElement } -> State -> Dispatch Message -> ReactElement
 view { title, content } state dispatch =
   H.div ""
-  [ H.div_ "bg-light" { onClick: dispatch <| Toggle } title
+  [ H.div_ "bg-light" { onClick: H.handle \_ -> dispatch Toggle } title
   , if collapsed
       then H.empty
       else H.div "" content
@@ -330,15 +330,19 @@ module Form where
 
 type State msg =
   { value :: String
+  , onChange :: String -> msg
   , onSubmit :: msg
   , onCancel :: msg
   }
 
 data Message msg = Change String | ParentMessage msg
 
-init :: ∀ msg. { onSubmit :: msg, onCancel :: msg } -> Transition (Message msg) State
+init :: ∀ msg.
+  { onChange :: String -> msg, onSubmit :: msg, onCancel :: msg }
+  -> Transition (Message msg) State
 init callbacks = pure
   { value: ""
+  , onChange: callbacks.onChange
   , onSubmit: callbacks.onSubmit
   , onCancel: callbacks.onCancel
   }
@@ -348,10 +352,10 @@ view state dispatch =
   H.form ""
   [ H.input_ ""
     { value: state.value
-    , onChange: \e -> dispatch <| state.onChange E.inputText e
+    , onChange: H.handle \e -> dispatch $ state.onChange (E.inputText e)
     }
-  , H.button_ "" { onClick: dispatch <| state.onSubmit } "Submit"
-  , H.button_ "" { onClick: dispatch <| state.onCancel } "Cancel"
+  , H.button_ "" { onClick: H.handle \_ -> dispatch state.onSubmit } "Submit"
+  , H.button_ "" { onClick: H.handle \_ -> dispatch state.onCancel } "Cancel"
   ]
 
 update :: ∀ msg. State msg -> (Message msg) -> Transition (Message msg) (State msg)
@@ -369,6 +373,7 @@ module Parent where
 data Message
   = FormSubmitted
   | FormCancelled
+  | FormValueChanged String
   | FormMsg (Form.Message Message)
 
 type State =
@@ -380,7 +385,8 @@ type State =
 init :: Transition Message State
 init = do
   form <- Form.init
-    { onSubmit: FormSubmitted
+    { onChange: FormValueChanged
+    , onSubmit: FormSubmitted
     , onCancel: FormCancelled
     }
   pure { form, formVisible: true, submitted: false }
@@ -391,6 +397,9 @@ update state (FormMsg (Form.ParentMessage m)) =
 
 update state (FormMsg m) =
   bimap FormMsg state { form = _ } $ Form.update state.form m
+
+update state (FormValueChanged s) =
+  ...
 
 update state FormSubmitted =
   pure state { formVisible = false, submitted = true }

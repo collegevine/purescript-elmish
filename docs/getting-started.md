@@ -112,7 +112,7 @@ HTML](../dom-elements#atomic-css-support) for more.
 To make that compile, you'll need the following imports:
 
 ```haskell
-import Elmish (Transition, Dispatch, ReactElement, (<|))
+import Elmish (Transition, Dispatch, ReactElement)
 import Elmish.HTML.Events as E  -- This is more convenient to import qualified
 import Elmish.HTML.Styled as H  -- This is more convenient to import qualified
 import Elmish.Boot (defaultMain) -- We'll need this in a moment
@@ -177,7 +177,7 @@ And finally, the `view` function should add a button:
 +      , H.strong "" state.word
        , H.text "! "
        ]
-+    , H.button_ "btn btn-primary mt-3" { onClick: dispatch <| ButtonClicked } "Click me!"
++    , H.button_ "btn btn-primary mt-3" { onClick: H.handle \_ -> dispatch ButtonClicked } "Click me!"
      ]
 ```
 
@@ -229,14 +229,14 @@ the text:
 +   [ H.input_ "d-block"
 +     { type: "text"
 +     , value: state.word
-+     , onChange: dispatch <| \event -> WordChanged (E.inputText event)
++     , onChange: H.handle \event -> dispatch $ WordChanged (E.inputText event)
 +     }
     , H.div "mt-3"
       [ H.text "Hello, "
       , H.strong "" state.word
       , H.text "! "
       ]
-    , H.button_ "btn btn-primary mt-3" { onClick: dispatch <| ButtonClicked } "Click me!"
+    , H.button_ "btn btn-primary mt-3" { onClick: H.handle \_ -> dispatch ButtonClicked } "Click me!"
     ]
 ```
 
@@ -257,8 +257,8 @@ line to the console.
 
 ```diff
 + import Effect.Class.Console (log)
-- import Elmish (Transition, Dispatch, ReactElement, (<|))
-+ import Elmish (Transition, Dispatch, ReactElement, forkVoid, (<|))
+- import Elmish (Transition, Dispatch, ReactElement)
++ import Elmish (Transition, Dispatch, ReactElement, forkVoid)
 
 ...
 
@@ -288,8 +288,8 @@ timer instead:
 ```diff
 + import Effect.Aff (Milliseconds(..), delay)
   import Effect.Class.Console (log)
-- import Elmish (Dispatch, ReactElement, Transition, forkVoid, (<|))
-+ import Elmish (Dispatch, ReactElement, Transition, fork, forkVoid, (<|))
+- import Elmish (Dispatch, ReactElement, Transition, forkVoid)
++ import Elmish (Dispatch, ReactElement, Transition, fork, forkVoid)
 
 ...
 
