@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.15.0
+
+### Changed
+
+* **Breaking**: This library no longer imports `react-dom`. Everything that
+  needed `react-dom` has moved to `elmish-html`:
+  * Module `Elmish.Boot` is gone. `boot`, `BootRecord`, and `defaultMain` are
+    now in `Elmish.HTML.Boot`, and are no longer re-exported from `Elmish`.
+  * `render`, `hydrate`, `renderToString`, and `unmount` are no longer in
+    `Elmish.React`. They are now in `Elmish.HTML.DOM`.
+
 ## 0.14.0
 
 ### Changed

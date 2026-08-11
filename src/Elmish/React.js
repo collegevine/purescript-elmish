@@ -1,6 +1,4 @@
 import React from "react";
-import ReactDOM from "react-dom";
-import ReactDOMServer from "react-dom/server.js";
 
 export function getState_(component) {
   return component.state && component.state.s;
@@ -13,11 +11,6 @@ export function setState_(component, state, callback) {
 export function assignState_(component, state) {
   return component.state = { s: state };
 }
-
-export var render_ = ReactDOM.render;
-export var hydrate_ = ReactDOM.hydrate;
-export var renderToString = (ReactDOMServer && ReactDOMServer.renderToString) || (_ => "");
-export var unmount_ = ReactDOM.unmountComponentAtNode
 
 export var fragment_ = React.Fragment;
 

@@ -45,7 +45,7 @@ data Message = Up | Down | Left | Right
 bounds :: Cell
 bounds = { x: 20, y: 20 }
 
-init :: Transition Aff Message State
+init :: Transition Message State
 init = pure $ (5..10) <#> \idx -> { x: idx, y: 10 }
 
 view :: State -> Dispatch Message -> ReactElement
@@ -64,7 +64,7 @@ view state dispatch =
       Just idx -> "rgb(255, " <> show (idx*45) <> ", 255)"
       Nothing -> "white"
 
-update :: State -> Message -> Transition Aff Message State
+update :: State -> Message -> Transition Message State
 update state msg = case msg of
   Up -> move 0 (-1)
   Down -> move 0 1

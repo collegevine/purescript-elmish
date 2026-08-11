@@ -1,7 +1,7 @@
 package:
   name: elmish
   publish:
-    version: 0.14.0
+    version: 0.15.0
     license: MIT
     location:
       githubOwner: collegevine
@@ -11,7 +11,6 @@ package:
     - argonaut-core: ">=7.0.0 <8.0.0"
     - arrays: ">=7.3.0 <8.0.0"
     - bifunctors: ">=6.1.0 <7.0.0"
-    - console: ">=6.1.0 <7.0.0"
     - debug: ">=6.0.2 <7.0.0"
     - effect: ">=4.0.0 <5.0.0"
     - either: ">=6.1.0 <7.0.0"
@@ -29,8 +28,6 @@ package:
     - typelevel-prelude: ">=7.0.0 <8.0.0"
     - undefined-is-not-a-problem: ">=1.1.0 <2.0.0"
     - unsafe-coerce: ">=6.0.0 <7.0.0"
-    - web-dom: ">=6.0.0 <7.0.0"
-    - web-html: ">=4.1.1 <5.0.0"
   test:
     main: Test.Main
     dependencies:
@@ -41,19 +38,12 @@ package:
       - elmish-html
 workspace:
   extraPackages:
+    # TODO: move these to the v0.13.0 / v0.4.0 tags once those releases are cut.
     elmish-html:
-      dependencies:
-        - prelude
-        - record
-        - elmish
       git: https://github.com/collegevine/purescript-elmish-html.git
-      ref: v0.12.0
+      ref: split-react
     elmish-testing-library:
-      dependencies:
-        - aff-promise
-        - prelude
-        - elmish
       git: https://github.com/collegevine/purescript-elmish-testing-library.git
-      ref: v0.3.2
+      ref: split-react
   packageSet:
     registry: 72.0.0

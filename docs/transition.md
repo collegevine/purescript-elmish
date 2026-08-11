@@ -140,11 +140,11 @@ be used to "issue" (or "dispatch") a message. For example:
 update state StartInc = do
   forks \{ dispatch } -> do
     delay (Milliseconds 1000.0)
-    dispatch Inc
+    liftEffect $ dispatch Inc
     delay (Milliseconds 2000.0)
-    dispatch Inc
+    liftEffect $ dispatch Inc
     delay (Milliseconds 3000.0)
-    dispatch Inc
+    liftEffect $ dispatch Inc
 
   pure state
 ```
@@ -158,15 +158,20 @@ At the most fundamental level, `Transition` is a pair of "new state" and "array
 of effects". This is how it's defined:
 
 ```haskell
-data Transition msg state = Transition state (Array (Command msg))
-type Command msg = (msg -> Effect Unit) -> Aff Unit
+data Transition' m msg state = Transition state (Array (Command m msg))
+type Command m msg = { dispatch :: msg -> Effect Unit, onStop :: m Unit -> Effect Unit } -> m Unit
+
+type Transition msg state = Transition' Aff msg state
 ```
 
 Here, the effects are called "commands", but that's not important. The name
-`Effect` was already taken. Every `Command` is an `Aff` computation that takes a
-`msg -> Effect Unit` function as a parameter. This is exactly what the `forks`
-function takes. And indeed, all the `forks` function does is add its parameter
-to the current `Transition`'s array of commands.
+`Effect` was already taken. Every `Command` is a computation in `m` (which is
+`Aff` for the plain `Transition` alias) taking a record of two functions:
+`dispatch` for issuing messages, and `onStop` for registering an action to run
+when the component is destroyed (see [Subscriptions](https://pursuit.purescript.org/packages/purescript-elmish/docs/Elmish.Subscription)).
+This is exactly what the `forks` function takes. And indeed, all the `forks`
+function does is add its parameter to the current `Transition`'s array of
+commands.
 
 Based on this definition, a `Transition` equivalent to one of the above examples
 could also be constructed directly by applying the `Transition` constructor,
@@ -177,12 +182,12 @@ update state Inc = Transition (state { count = state.count + 1 }) []
 update state Dec = Transition (state { count = state.count - 1 }) []
 update state StartInc = Transition state [incAfterDelay, printHello]
   where
-    incAfterDelay dispatch = do
+    incAfterDelay { dispatch } = do
       delay (Milliseconds 1000.0)
       r <- checkSomeCondition
-      if r then dispatch (Just Inc) else pure unit
+      when r $ liftEffect $ dispatch Inc
 
-    printHello dispatch =
+    printHello _ =
       Console.log "Hello!"
 ```
 
