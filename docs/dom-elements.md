@@ -35,7 +35,7 @@ view =
     , H.a { href: "https://github.com/collegevine/purescript-elmish-html" } "elmish-html"
     , H.text " library"
     ]
-  , H.img { src: "/img/welcome.png", width: 100, height: 200 }
+  , H.img { src: "/img/welcome.png", width: "100", height: "200" }
   , H.button { onClick: H.handle \_ -> dispatch Login } "Click here to login"
   ]
 ```
@@ -156,10 +156,10 @@ match on its constructor like this:
 ```haskell
 import Elmish.HTML.Events as E
 
-data Message = ... | ButtonClicked { when :: Number } | ...
+data Message = ... | ButtonClicked { when :: Int } | ...
 
 H.button_ "btn btn-primary"
-  { onClick: H.handle \(E.SyntheticEvent e) -> dispatch $ ButtonClicked { when: e.timestamp }
+  { onClick: H.handle \(E.SyntheticEvent e) -> dispatch $ ButtonClicked { when: e.timeStamp }
   }
   "Click me!"
 ```
@@ -182,7 +182,7 @@ the same way:
 
 ```haskell
 H.div_ ""
-  { onMouseMove: H.handle \(E.MouseMove e) -> dispatch $ MouseMoved { x: e.pageX, y: e.pageY }
+  { onMouseMove: H.handle \(E.MouseEvent e) -> dispatch $ MouseMoved { x: e.pageX, y: e.pageY }
   , onKeyPress: H.handle \(E.KeyboardEvent e) -> when (e.key == "Enter") $ dispatch EnterPressed
   }
 ```

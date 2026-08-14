@@ -10,12 +10,8 @@ module Elmish.React
   , empty
   , fragment
   , getState
-  , hydrate
   , setState
-  , render
-  , renderToString
   , text
-  , unmount
   , module Ref
   ) where
 
@@ -29,7 +25,6 @@ import Elmish.Foreign (class CanPassToJavaScript)
 import Elmish.React.Ref (Ref, callbackRef) as Ref
 import Prim.TypeError (Text, class Fail)
 import Unsafe.Coerce (unsafeCoerce)
-import Web.DOM as HTML
 
 -- | Instantiated subtree of React DOM. JSX syntax produces values of this type.
 foreign import data ReactElement :: Type
@@ -135,24 +130,6 @@ foreign import setState_ :: ∀ state. EffectFn3 ReactComponentInstance state (E
 assignState :: ∀ state. ReactComponentInstance -> state -> Effect Unit
 assignState = runEffectFn2 assignState_
 foreign import assignState_ :: ∀ state. EffectFn2 ReactComponentInstance state Unit
-
--- FFI import of ReactDOM.render
-render :: ReactElement -> HTML.Element -> Effect Unit
-render = runEffectFn2 render_
-foreign import render_ :: EffectFn2 ReactElement HTML.Element Unit
-
--- FFI import of ReactDOM.hydrate (used to instantiate server-side-rendered
--- components on the client side)
-hydrate :: ReactElement -> HTML.Element -> Effect Unit
-hydrate = runEffectFn2 hydrate_
-foreign import hydrate_ :: EffectFn2 ReactElement HTML.Element Unit
-
--- FFI import of ReactDOM.renderToString (used for server-side rendering)
-foreign import renderToString :: ReactElement -> String
-
-unmount :: HTML.Element -> Effect Unit
-unmount = runEffectFn1 unmount_
-foreign import unmount_ :: EffectFn1 HTML.Element Unit
 
 -- This instance allows including `ReactElement` in view arguments.
 instance CanPassToJavaScript ReactElement

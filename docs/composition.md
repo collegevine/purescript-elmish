@@ -209,13 +209,13 @@ view :: { title :: String, content :: ReactElement } -> State -> Dispatch Messag
 view { title, content } state dispatch =
   H.div ""
   [ H.div_ "bg-light" { onClick: H.handle \_ -> dispatch Toggle } title
-  , if collapsed
+  , if state.collapsed
       then H.empty
       else H.div "" content
   ]
 
 update :: State -> Message -> Transition Message State
-update { collapsed } Toggle = { collapsed: not collapsed }
+update { collapsed } Toggle = pure { collapsed: not collapsed }
 
 --------------------------------------------
 module Parent where
@@ -237,7 +237,7 @@ view :: State -> Dispatch Message -> ReactElement
 view = ...
   , CP.view { title: "Panel 1", content: H.text "Content 1" } state.panel1 (dispatch <<< CP1Msg)
   ...
-  , CP.view { title: "Panel 2", content: H.text "Content 2" } state.panel1 (dispatch <<< CP2Msg)
+  , CP.view { title: "Panel 2", content: H.text "Content 2" } state.panel2 (dispatch <<< CP2Msg)
   ...
 
 update :: State -> Message -> Transition Message State
@@ -339,7 +339,7 @@ data Message msg = Change String | ParentMessage msg
 
 init :: ∀ msg.
   { onChange :: String -> msg, onSubmit :: msg, onCancel :: msg }
-  -> Transition (Message msg) State
+  -> Transition (Message msg) (State msg)
 init callbacks = pure
   { value: ""
   , onChange: callbacks.onChange
@@ -347,23 +347,28 @@ init callbacks = pure
   , onCancel: callbacks.onCancel
   }
 
-view :: ∀ msg. State msg -> Dispatch msg -> ReactElement
+view :: ∀ msg. State msg -> Dispatch (Message msg) -> ReactElement
 view state dispatch =
   H.form ""
   [ H.input_ ""
     { value: state.value
-    , onChange: H.handle \e -> dispatch $ state.onChange (E.inputText e)
+    , onChange: H.handle \e -> dispatch $ Change (E.inputText e)
     }
-  , H.button_ "" { onClick: H.handle \_ -> dispatch state.onSubmit } "Submit"
-  , H.button_ "" { onClick: H.handle \_ -> dispatch state.onCancel } "Cancel"
+  , H.button_ "" { onClick: H.handle \_ -> dispatch $ ParentMessage state.onSubmit } "Submit"
+  , H.button_ "" { onClick: H.handle \_ -> dispatch $ ParentMessage state.onCancel } "Cancel"
   ]
 
 update :: ∀ msg. State msg -> (Message msg) -> Transition (Message msg) (State msg)
-update state (Change newValue) =
+update state (Change newValue) = do
+  fork $ pure $ ParentMessage $ state.onChange newValue
   pure state { value = newValue }
 update state (ParentMessage _) =
   pure state
 ```
+
+The `Change` message does double duty: it updates the form's own `value`, and it
+forks off the parent's `onChange` message wrapped in `ParentMessage`, which the
+parent then unwraps and handles as its own.
 
 Usage in parent:
 
@@ -384,7 +389,7 @@ type State =
 
 init :: Transition Message State
 init = do
-  form <- Form.init
+  form <- lmap FormMsg $ Form.init
     { onChange: FormValueChanged
     , onSubmit: FormSubmitted
     , onCancel: FormCancelled

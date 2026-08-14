@@ -115,7 +115,7 @@ To make that compile, you'll need the following imports:
 import Elmish (Transition, Dispatch, ReactElement)
 import Elmish.HTML.Events as E  -- This is more convenient to import qualified
 import Elmish.HTML.Styled as H  -- This is more convenient to import qualified
-import Elmish.Boot (defaultMain) -- We'll need this in a moment
+import Elmish.HTML.Boot (defaultMain) -- We'll need this in a moment
 ```
 
 Now all that remains is to hook that up to the entry point. To do that, put the
