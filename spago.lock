@@ -18,9 +18,6 @@
               "bifunctors": ">=6.1.0 <7.0.0"
             },
             {
-              "console": ">=6.1.0 <7.0.0"
-            },
-            {
               "debug": ">=6.0.2 <7.0.0"
             },
             {
@@ -70,12 +67,6 @@
             },
             {
               "unsafe-coerce": ">=6.0.0 <7.0.0"
-            },
-            {
-              "web-dom": ">=6.0.0 <7.0.0"
-            },
-            {
-              "web-html": ">=4.1.1 <5.0.0"
             }
           ]
         },
@@ -669,21 +660,11 @@
     "extra_packages": {
       "elmish-html": {
         "git": "https://github.com/collegevine/purescript-elmish-html.git",
-        "ref": "v0.12.0",
-        "dependencies": [
-          "elmish",
-          "prelude",
-          "record"
-        ]
+        "ref": "v0.13.0"
       },
       "elmish-testing-library": {
         "git": "https://github.com/collegevine/purescript-elmish-testing-library.git",
-        "ref": "v0.3.2",
-        "dependencies": [
-          "aff-promise",
-          "elmish",
-          "prelude"
-        ]
+        "ref": "v0.4.0"
       }
     }
   },
@@ -707,21 +688,6 @@
         "tailrec",
         "transformers",
         "unsafe-coerce"
-      ]
-    },
-    "aff-promise": {
-      "type": "registry",
-      "version": "4.0.0",
-      "integrity": "sha256-Jgp3y+NWuuAmwz2V3LlWoX+AvxqfVglY77N5zTw8xnI=",
-      "dependencies": [
-        "aff",
-        "control",
-        "effect",
-        "either",
-        "exceptions",
-        "foreign",
-        "prelude",
-        "transformers"
       ]
     },
     "ansi": {
@@ -948,21 +914,42 @@
     "elmish-html": {
       "type": "git",
       "url": "https://github.com/collegevine/purescript-elmish-html.git",
-      "rev": "7d43d36d35da921d8f12a70db595dd1c89d2151e",
+      "rev": "18fbf57af185ae3f030f0683ecf9abd3166a433d",
       "dependencies": [
+        "console",
+        "effect",
         "elmish",
+        "foreign",
+        "foreign-object",
+        "maybe",
         "prelude",
-        "record"
+        "record",
+        "typelevel-prelude",
+        "unsafe-coerce",
+        "web-dom",
+        "web-events",
+        "web-html"
       ]
     },
     "elmish-testing-library": {
       "type": "git",
       "url": "https://github.com/collegevine/purescript-elmish-testing-library.git",
-      "rev": "f867a4c57f2f98fc731aa80506ecae22e57e78e2",
+      "rev": "4edea03ce60e895cbc9b7b27e60c3ed02ceeb735",
       "dependencies": [
-        "aff-promise",
+        "aff",
+        "arrays",
+        "datetime",
+        "effect",
         "elmish",
-        "prelude"
+        "elmish-html",
+        "exceptions",
+        "foldable-traversable",
+        "maybe",
+        "nullable",
+        "prelude",
+        "transformers",
+        "web-dom",
+        "web-html"
       ]
     },
     "enums": {

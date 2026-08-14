@@ -38,12 +38,11 @@ package:
       - elmish-html
 workspace:
   extraPackages:
-    # TODO: move these to the v0.13.0 / v0.4.0 tags once those releases are cut.
     elmish-html:
       git: https://github.com/collegevine/purescript-elmish-html.git
-      ref: split-react
+      ref: v0.13.0
     elmish-testing-library:
       git: https://github.com/collegevine/purescript-elmish-testing-library.git
-      ref: split-react
+      ref: v0.4.0
   packageSet:
     registry: 72.0.0
