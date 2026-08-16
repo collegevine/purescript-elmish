@@ -1,7 +1,7 @@
 package:
   name: elmish
   publish:
-    version: 0.15.0
+    version: 0.15.1
     license: MIT
     location:
       githubOwner: collegevine
@@ -40,9 +40,9 @@ workspace:
   extraPackages:
     elmish-html:
       git: https://github.com/collegevine/purescript-elmish-html.git
-      ref: v0.13.0
+      ref: v0.14.0
     elmish-testing-library:
       git: https://github.com/collegevine/purescript-elmish-testing-library.git
-      ref: v0.4.0
+      ref: v0.5.0
   packageSet:
     registry: 72.0.0

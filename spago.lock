@@ -660,11 +660,11 @@
     "extra_packages": {
       "elmish-html": {
         "git": "https://github.com/collegevine/purescript-elmish-html.git",
-        "ref": "v0.13.0"
+        "ref": "v0.14.0"
       },
       "elmish-testing-library": {
         "git": "https://github.com/collegevine/purescript-elmish-testing-library.git",
-        "ref": "v0.4.0"
+        "ref": "v0.5.0"
       }
     }
   },
@@ -914,7 +914,7 @@
     "elmish-html": {
       "type": "git",
       "url": "https://github.com/collegevine/purescript-elmish-html.git",
-      "rev": "18fbf57af185ae3f030f0683ecf9abd3166a433d",
+      "rev": "f05e3d9364ddba57e1e96a301807e632a2a15bdd",
       "dependencies": [
         "console",
         "effect",
@@ -934,7 +934,7 @@
     "elmish-testing-library": {
       "type": "git",
       "url": "https://github.com/collegevine/purescript-elmish-testing-library.git",
-      "rev": "4edea03ce60e895cbc9b7b27e60c3ed02ceeb735",
+      "rev": "ff3866d6e74fe0c01fa17c804818b24e61415333",
       "dependencies": [
         "aff",
         "arrays",
