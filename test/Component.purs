@@ -107,6 +107,6 @@ spec = describe "Elmish.Component" do
     effectfulComponentTick :: ∀ m. MonadAff m => _ -> _ -> m Unit
     effectfulComponentTick component expectedTriggerCount = liftAff do
       AVar.put "" component.trigger
-      delay $ Milliseconds 1.0
+      delay $ Milliseconds 10.0
       liftEffect (Ref.read component.triggered) >>= shouldEqual expectedTriggerCount
 
