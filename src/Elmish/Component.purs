@@ -6,7 +6,7 @@ module Elmish.Component
     , ComponentDef'
     , ComponentReturnCallback
     , transition
-    , fork, forks, forkVoid, forkMaybe
+    , fork, forks, forkVoid, forkMaybe, sync
     , withTrace
     , nat
     , construct
@@ -17,12 +17,13 @@ module Elmish.Component
 
 import Prelude
 
-import Data.Array ((:))
+import Data.Array (foldM, mapMaybe, (:))
 import Data.Bifunctor (bimap, lmap, rmap) as Bifunctor
 import Data.Bifunctor (class Bifunctor)
 import Data.Foldable (sequence_)
 import Data.Function.Uncurried (Fn2, runFn2)
-import Data.Maybe (Maybe, fromMaybe, maybe)
+import Data.Maybe (Maybe(..), fromMaybe, maybe)
+import Data.Tuple.Nested (type (/\), (/\))
 import Debug as Debug
 import Effect (Effect, foreachE)
 import Effect.Aff (Aff, Milliseconds(..), delay, launchAff_)
@@ -70,11 +71,19 @@ type Transition msg state = Transition' Aff msg state
 -- | "unmounted").
 -- |
 -- | See `forks` for a more detailed explanation.
-type Command m msg = { dispatch :: Dispatch msg, onStop :: m Unit -> Effect Unit } -> m Unit
+data Command m msg
+  = SyncCommand msg
+  | AsyncCommand (AsyncCommand m msg)
+
+type AsyncCommand m msg = { dispatch :: Dispatch msg, onStop :: m Unit -> Effect Unit } -> m Unit
 
 instance Functor m => Bifunctor (Transition' m) where
     bimap f g (Transition s cmds) =
-      Transition (g s) (cmds <#> \cmd { dispatch, onStop } -> cmd { dispatch: dispatch <<< f, onStop })
+      Transition (g s) (mapCmd <$> cmds)
+      where
+        mapCmd = case _ of
+          SyncCommand msg -> SyncCommand (f msg)
+          AsyncCommand cmd -> AsyncCommand \{ dispatch, onStop } -> cmd { dispatch: dispatch <<< f, onStop }
 instance Functor (Transition' m msg) where
     map f (Transition x cmds) = Transition (f x) cmds
 instance Apply (Transition' m msg) where
@@ -92,7 +101,7 @@ instance Monad (Transition' m msg)
 -- | effects producing messages - and constructs a `Transition'` out of them
 transition :: ∀ m state msg. Bind m => MonadEffect m => state -> Array (m msg) -> Transition' m msg state
 transition s cmds =
-    Transition s $ cmds <#> \cmd { dispatch } -> do
+    Transition s $ cmds <#> \cmd -> AsyncCommand \{ dispatch } -> do
         msg <- cmd
         liftEffect $ dispatch msg
 
@@ -162,13 +171,13 @@ fork cmd = transition unit [cmd]
 -- |         forks listenToUrl
 -- |         pure state
 -- |
--- |     countTo10 :: Command Aff Message
+-- |     countTo10 :: AsyncCommand Aff Message
 -- |     countTo10 { dispatch } =
 -- |         for_ (1..10) \n ->
 -- |             delay $ Milliseconds 1000.0
 -- |             dispatch $ Count n
 -- |
--- |     listenToUrl :: Command Aff Message
+-- |     listenToUrl :: AsyncCommand Aff Message
 -- |     listenToUrl { dispatch, onStop } =
 -- |         listener <-
 -- |           window >>= addEventListener "popstate" do
@@ -178,8 +187,8 @@ fork cmd = transition unit [cmd]
 -- |         onStop $
 -- |            window >>= removeEventListener listener
 -- |
-forks :: ∀ m message. Command m message -> Transition' m message Unit
-forks cmd = Transition unit [cmd]
+forks :: ∀ m message. AsyncCommand m message -> Transition' m message Unit
+forks cmd = Transition unit [AsyncCommand cmd]
 
 -- | Similar to `fork` (see comments there for detailed explanation), but the
 -- | effect doesn't produce any messages, it's a fire-and-forget sort of effect.
@@ -192,6 +201,12 @@ forkMaybe :: ∀ m message. MonadEffect m => m (Maybe message) -> Transition' m 
 forkMaybe cmd = forks \{ dispatch } -> do
     msg <- cmd
     liftEffect $ maybe (pure unit) dispatch msg
+
+-- | Enqueue a new message for immediate processing after the current update.
+-- | The message will be processed synchronously, without re-rendering the UI in
+-- | between. This is sometimes useful for better factoring without "flickering".
+sync :: ∀ m message. message -> Transition' m message Unit
+sync msg = Transition unit [SyncCommand msg]
 
 -- | Definition of a component according to The Elm Architecture. Consists of
 -- | three functions - `init`, `view`, `update`, - that together describe the
@@ -260,13 +275,18 @@ bindComponent :: ∀ msg state
     -> ComponentDef msg state        -- ^ The component definition
     -> ReactElement
 bindComponent cmpt stateStrategy = \def -> -- Explicit lambda to make sure `def` isn't captured by closures under `where`
-    runFn2 instantiateBaseComponent cmpt
-      { def
-      , init: let (Transition s _) = def.init in (stateStrategy { initialState: s }).initialize
-      , render
-      , componentDidMount: let (Transition _ cmds) = def.init in runCmds cmds
-      , componentWillUnmount: setUnmounted true <> stopSubscriptions
-      }
+    let Transition s cmds = def.init
+        sync /\ asyncCmdsA = splitCommands cmds
+        state0 /\ asyncCmdsB = multiStepUpdate s sync def.update
+        asyncCmds0 = asyncCmdsA <> asyncCmdsB
+    in
+      runFn2 instantiateBaseComponent cmpt
+        { def
+        , init: (stateStrategy { initialState: state0 }).initialize
+        , render
+        , componentDidMount: runCmds asyncCmds0
+        , componentWillUnmount: setUnmounted true <> stopSubscriptions
+        }
     where
         getState component = do
           Transition s _ <- instancePropDef component <#> _.init
@@ -286,13 +306,40 @@ bindComponent cmpt stateStrategy = \def -> -- Explicit lambda to make sure `def`
         dispatchMsg component msg = unlessM (getUnmounted component) do
           oldState <- getState component
           update <- instancePropDef component <#> _.update
-          let Transition newState cmds = update oldState msg
-          setState component newState $ runCmds cmds component
+          let newState /\ asyncCmds = multiStepUpdate oldState [msg] update
+          setState component newState $ runCmds asyncCmds component
 
-        runCmds :: Array (Command Aff msg) -> ReactComponentInstance -> Effect Unit
+        -- We loop the `update` function over the messages until no new sync
+        -- messages are produced, then we return the accumulated async
+        -- commands.
+        multiStepUpdate ::
+          state -- Initial state
+          -> Array msg -- Messages to process right now
+          -> (state -> msg -> Transition' Aff msg state) -- component's update function
+          -> state /\ Array (AsyncCommand Aff msg)
+        multiStepUpdate state0 msgs0 update = go state0 msgs0 []
+          where
+            go state [] asyncCmds =
+              state /\ asyncCmds
+            go state msgs asyncCmds = do
+              let Transition newState cmds = foldM update state msgs
+                  sync /\ async = splitCommands cmds
+              go newState sync (asyncCmds <> async)
+
+        splitCommands :: Array (Command Aff msg) -> (Array msg /\ Array (AsyncCommand Aff msg))
+        splitCommands cmds = (mapMaybe isSync cmds) /\ (mapMaybe isAsync cmds)
+          where
+            isSync = case _ of
+              SyncCommand msg -> Just msg
+              AsyncCommand _ -> Nothing
+            isAsync = case _ of
+              SyncCommand _ -> Nothing
+              AsyncCommand cmd -> Just cmd
+
+        runCmds :: Array (AsyncCommand Aff msg) -> ReactComponentInstance -> Effect Unit
         runCmds cmds component = foreachE cmds runCmd
           where
-            runCmd :: Command Aff msg -> Effect Unit
+            runCmd :: AsyncCommand Aff msg -> Effect Unit
             runCmd cmd = launchAff_ do
               delay $ Milliseconds 0.0 -- Make sure this call is actually async
               cmd { dispatch: liftEffect <<< dispatchMsg component, onStop: addSubscription component }
@@ -339,7 +386,9 @@ nat map def =
     }
     where
         mapTransition (Transition state cmds) = Transition state (mapCmd <$> cmds)
-        mapCmd cmd { dispatch, onStop } = map $ cmd { dispatch, onStop: onStop <<< map }
+        mapCmd = case _ of
+          SyncCommand msg -> SyncCommand msg
+          AsyncCommand f -> AsyncCommand \{ dispatch, onStop } -> map $ f { dispatch, onStop: onStop <<< map }
 
 -- | Creates a React component that can be bound to a varying `ComponentDef'`,
 -- | returns a function that performs the binding.
