@@ -11,3 +11,4 @@
 /.psa*
 /.vscode
 /.spec-results
+.omp/

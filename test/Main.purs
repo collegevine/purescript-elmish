@@ -10,6 +10,7 @@ import Test.ReactElement as ReactElement
 import Test.Spec.Reporter (specReporter)
 import Test.Spec.Runner.Node (runSpecAndExitProcess)
 import Test.Subscriptions as Subscriptions
+import Test.Sync as Sync
 
 main :: Effect Unit
 main = runSpecAndExitProcess [specReporter] do
@@ -17,4 +18,5 @@ main = runSpecAndExitProcess [specReporter] do
   Component.spec
   LocalState.spec
   Subscriptions.spec
+  Sync.spec
   ReactElement.spec

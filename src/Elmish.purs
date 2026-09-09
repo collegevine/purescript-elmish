@@ -5,7 +5,7 @@ module Elmish
     , module Elmish.Subscription
     ) where
 
-import Elmish.Component (ComponentDef, ComponentDef', Transition, Transition'(..), bimap, construct, fork, forks, forkVoid, forkMaybe, lmap, nat, rmap, transition, withTrace)
+import Elmish.Component (ComponentDef, ComponentDef', Transition, Transition'(..), bimap, construct, fork, forks, forkVoid, forkMaybe, sync, lmap, nat, rmap, transition, withTrace)
 import Elmish.Dispatch (EventHandler, Dispatch, handle)
 import Elmish.React (ReactComponent, ReactElement, Ref, callbackRef, createElement, createElement')
 import Elmish.Subscription (subscribe, subscribeMaybe)
